@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}پنل مدیریت{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+  <aside class="sidebar">
+    <div class="sidebar-logo">بوتو</div>
+    <nav>
+      <a href="/admin/dashboard">داشبورد</a>
+      <a href="/admin/jobs">جاب‌ها</a>
+      <a href="/admin/posts">پست‌ها</a>
+      <a href="/admin/leads">لیدها</a>
+      <a href="/admin/catalog">کاتالوگ</a>
+      <a href="/admin/logout" class="logout">خروج</a>
+    </nav>
+  </aside>
+  <main class="admin-main">{% block content %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}زغال بوتو | فروش و توزیع زغال{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <h1>زغال باکیفیت بوتو</h1>
+    <p>تامین‌کننده زغال صنعتی و خانگی در سراسر ایران</p>
+    <a href="/contact" class="btn-primary">درخواست قیمت</a>
+  </div>
+</section>
+
+<section class="features container">
+  <div class="feature-card">
+    <h3>کیفیت تضمینی</h3>
+    <p>زغال درجه یک با حرارت بالا و خاکستر کم</p>
+  </div>
+  <div class="feature-card">
+    <h3>تحویل سریع</h3>
+    <p>ارسال به تمام نقاط کشور</p>
+  </div>
+  <div class="feature-card">
+    <h3>قیمت رقابتی</h3>
+    <p>بهترین قیمت برای خرید عمده</p>
+  </div>
+</section>
+
+{% if catalogs %}
+<section class="catalogs container">
+  <h2>کاتالوگ محصولات</h2>
+  <div class="catalog-grid">
+    {% for cat in catalogs %}
+    <a href="{{ cat.public_url }}" class="catalog-item" target="_blank">
+      <span>{{ cat.title }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

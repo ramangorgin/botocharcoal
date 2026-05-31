@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}پست‌ها{% endblock %}
+{% block content %}
+<h1>پست‌ها</h1>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>عنوان</th>
+      <th>وب‌سایت</th>
+      <th>اینستاگرام</th>
+      <th>تاریخ</th>
+      <th>عملیات</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for post in posts %}
+    <tr>
+      <td>{{ post.title }}</td>
+      <td><span class="badge badge-{{ post.website_status }}">{{ post.website_status }}</span></td>
+      <td><span class="badge badge-{{ post.instagram_status }}">{{ post.instagram_status }}</span></td>
+      <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+      <td><a href="/admin/posts/{{ post.id }}">مشاهده</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">پستی وجود ندارد.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

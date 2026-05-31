@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}لیدها{% endblock %}
+{% block content %}
+<h1>لیدها</h1>
+<table class="data-table">
+  <thead>
+    <tr><th>نام</th><th>تلفن</th><th>شهر</th><th>پیام</th><th>تماس گرفته شد</th><th>عملیات</th></tr>
+  </thead>
+  <tbody>
+    {% for lead in leads %}
+    <tr class="{{ 'contacted' if lead.contacted }}">
+      <td>{{ lead.name or '—' }}</td>
+      <td>{{ lead.phone }}</td>
+      <td>{{ lead.city or '—' }}</td>
+      <td>{{ lead.message or '—' }}</td>
+      <td>{{ '✓' if lead.contacted else '✗' }}</td>
+      <td>
+        {% if not lead.contacted %}
+        <form method="post" action="/admin/leads/{{ lead.id }}/contacted">
+          <button type="submit" class="btn-sm">تماس گرفته شد</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">لیدی ثبت نشده است.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

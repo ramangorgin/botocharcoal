@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}جاب #{{ job.id }}{% endblock %}
+{% block content %}
+<h1>جاب #{{ job.id }}</h1>
+
+<div class="detail-grid">
+  <div class="detail-row"><label>موضوع</label><span>{{ job.topic }}</span></div>
+  <div class="detail-row"><label>لحن</label><span>{{ job.tone }}</span></div>
+  <div class="detail-row"><label>وضعیت</label>
+    <span class="badge badge-{{ job.status }}">{{ job.status }}</span></div>
+  <div class="detail-row"><label>تعداد تلاش</label><span>{{ job.retry_count }}</span></div>
+  {% if job.error_message %}
+  <div class="detail-row error"><label>خطا</label><pre>{{ job.error_message }}</pre></div>
+  {% endif %}
+</div>
+
+{% if job.generated_blog_title %}
+<h2>محتوای تولیدشده</h2>
+<div class="detail-grid">
+  <div class="detail-row"><label>عنوان بلاگ</label><span>{{ job.generated_blog_title }}</span></div>
+  <div class="detail-row"><label>اسلاگ</label><span>{{ job.generated_blog_slug }}</span></div>
+  <div class="detail-row"><label>کپشن اینستاگرام</label><pre>{{ job.generated_caption }}</pre></div>
+  <div class="detail-row"><label>هشتگ‌ها</label><pre>{{ job.generated_hashtags }}</pre></div>
+</div>
+{% endif %}
+
+{% if job.status == 'failed' %}
+<form method="post" action="/admin/jobs/{{ job.id }}/retry">
+  <button type="submit" class="btn-warning">تلاش مجدد</button>
+</form>
+{% endif %}
+{% endblock %}

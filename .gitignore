@@ -1,0 +1,66 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+env/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# -----------------------------
+# Logs / runtime
+# -----------------------------
+logs/
+*.log
+
+# -----------------------------
+# DB / local data
+# -----------------------------
+*.sqlite
+*.sqlite3
+*.db
+
+# -----------------------------
+# Media / uploads (keep out of git)
+# -----------------------------
+media/
+uploads/
+
+# -----------------------------
+# Alembic
+# -----------------------------
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# -----------------------------
+# Editor / OS
+# -----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# -----------------------------
+# Env secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Node (if later)
+# -----------------------------
+node_modules/

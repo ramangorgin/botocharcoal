@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}مقالات | زغال بوتو{% endblock %}
+{% block content %}
+<div class="container blog-list">
+  <h1>مقالات</h1>
+  {% for post in posts %}
+  <article class="post-card">
+    <h2><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h2>
+    <time>{{ post.published_to_website_at.strftime('%Y/%m/%d') if post.published_to_website_at }}</time>
+  </article>
+  {% else %}
+  <p>هنوز مقاله‌ای منتشر نشده است.</p>
+  {% endfor %}
+</div>
+{% endblock %}

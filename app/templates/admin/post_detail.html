@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+<h1>{{ post.title }}</h1>
+
+<div class="detail-grid">
+  <div class="detail-row"><label>اسلاگ</label><span>{{ post.slug }}</span></div>
+  <div class="detail-row"><label>وضعیت وب‌سایت</label>
+    <span class="badge badge-{{ post.website_status }}">{{ post.website_status }}</span></div>
+  <div class="detail-row"><label>وضعیت اینستاگرام</label>
+    <span class="badge badge-{{ post.instagram_status }}">{{ post.instagram_status }}</span></div>
+  {% if post.instagram_media_id %}
+  <div class="detail-row"><label>Instagram Media ID</label>
+    <span>{{ post.instagram_media_id }}</span></div>
+  {% endif %}
+</div>
+
+<h2>تصاویر</h2>
+<div class="asset-grid">
+  {% for asset in assets %}
+  <div class="asset-card">
+    <img src="{{ asset.public_url }}" alt="asset {{ asset.sort_order }}">
+    <span class="badge">{{ asset.role }}</span>
+  </div>
+  {% else %}
+  <p>تصویری ندارد.</p>
+  {% endfor %}
+</div>
+
+<h2>متن بلاگ</h2>
+<div class="blog-preview">{{ post.body_html | safe }}</div>
+
+<div class="action-bar">
+  {% if post.website_status == 'draft' %}
+  <form method="post" action="/admin/posts/{{ post.id }}/publish" style="display:inline">
+    <button type="submit" class="btn-primary">انتشار در وب‌سایت</button>
+  </form>
+  {% else %}
+  <form method="post" action="/admin/posts/{{ post.id }}/unpublish" style="display:inline">
+    <button type="submit" class="btn-warning">برگشت به پیش‌نویس</button>
+  </form>
+  <a href="/blog/{{ post.slug }}" target="_blank" class="btn-secondary">مشاهده در سایت</a>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}کاتالوگ | زغال بوتو{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>کاتالوگ محصولات</h1>
+  <div class="catalog-grid">
+    {% for cat in catalogs %}
+    <div class="catalog-card">
+      <h3>{{ cat.title }}</h3><a href="{{ cat.public_url }}" class="btn-secondary" target="_blank">دانلود PDF</a>
+    </div>
+    {% else %}
+    <p>کاتالوگی موجود نیست.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

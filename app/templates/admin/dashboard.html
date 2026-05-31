@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}داشبورد{% endblock %}
+{% block content %}
+<h1>داشبورد</h1>
+
+<div class="stats-grid">
+  <div class="stat-card"><span>{{ total_posts }}</span><label>پست</label></div>
+  <div class="stat-card"><span>{{ total_leads }}</span><label>لید</label></div>
+</div>
+
+<h2>وضعیت سیستم</h2>
+<table class="health-table">
+  <tr><td>دیتابیس</td>
+      <td class="{{ 'ok' if health.database else 'fail' }}">{{ '✓' if health.database else '✗' }}</td></tr>
+  <tr><td>Redis</td>
+      <td class="{{ 'ok' if health.redis else 'fail' }}">{{ '✓' if health.redis else '✗' }}</td></tr>
+  <tr><td>فضای مدیا</td>
+      <td class="{{ 'ok' if health.media_writable else 'fail' }}">{{ '✓' if health.media_writable else '✗' }}</td></tr>
+  <tr><td>OpenAI Key</td>
+      <td class="{{ 'ok' if health.openai_key_set else 'fail' }}">{{ '✓' if health.openai_key_set else '✗' }}</td></tr>
+  <tr><td>Instagram Token</td>
+      <td class="{{ 'ok' if health.instagram_token_set else 'fail' }}">{{ '✓' if health.instagram_token_set else '✗' }}</td></tr>
+</table>
+
+<h2>جاب‌های اخیر</h2>
+<table class="data-table">
+  <thead>
+    <tr><th>موضوع</th><th>وضعیت</th><th>تاریخ</th><th>جزئیات</th></tr>
+  </thead>
+  <tbody>
+    {% for job in recent_jobs %}
+    <tr>
+      <td>{{ job.topic }}</td>
+      <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
+      <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td><a href="/admin/jobs/{{ job.id }}">مشاهده</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">جابی ثبت نشده است.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="action-bar">
+  <a href="/admin/jobs/create" class="btn-primary">+ ایجاد جاب جدید</a>
+</div>
+{% endblock %}

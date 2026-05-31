@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}ایجاد جاب جدید{% endblock %}
+{% block content %}
+<h1>ایجاد جاب جدید</h1>
+{% if error %}<div class="alert-error">{{ error }}</div>{% endif %}
+
+<form method="post" action="/admin/jobs/create" class="admin-form">
+  <div class="form-group">
+    <label>موضوع روزانه *</label>
+    <input type="text" name="topic" required
+           placeholder="مثال: مزایای زغال فشرده برای کباب‌پزی">
+  </div>
+  <div class="form-group">
+    <label>لحن محتوا</label>
+    <select name="tone">
+      <option value="رسمی و حرفه‌ای">رسمی و حرفه‌ای</option>
+      <option value="صمیمی و دوستانه">صمیمی و دوستانه</option>
+      <option value="آموزشی">آموزشی</option>
+      <option value="تبلیغاتی">تبلیغاتی</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>متن CTA</label>
+    <input type="text" name="cta_text" placeholder="مثال: همین الان سفارش دهید">
+  </div>
+  <div class="form-group">
+    <label>تعداد تصاویر اینستاگرام (۱ تا ۱۰)</label>
+    <input type="number" name="image_count" value="4" min="1" max="10">
+  </div>
+  <button type="submit" class="btn-primary">شروع پردازش</button>
+</form>
+{% endblock %}

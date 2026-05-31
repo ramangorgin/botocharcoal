@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ورود به پنل</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="login-page">
+  <form method="post" action="/admin/login" class="login-form">
+    <h1>ورود</h1>
+    {% if error %}<div class="alert-error">{{ error }}</div>{% endif %}
+    <input type="text" name="username" placeholder="نام کاربری" required autofocus>
+    <input type="password" name="password" placeholder="رمز عبور" required>
+    <button type="submit">ورود</button>
+  </form>
+</body>
+</html>

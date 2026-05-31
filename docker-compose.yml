@@ -1,0 +1,143 @@
+# ==================================================
+# Botocharcoal — Docker Compose
+# Services: web, postgres, redis, worker, beat
+# ==================================================
+
+services:
+  # --------------------------------------------------
+  # PostgreSQL
+  # --------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-botocharcoal}
+      POSTGRES_USER: ${POSTGRES_USER:-botocharcoal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-botocharcoal}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------
+  # Redis
+  # --------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------
+  # Web (FastAPI + Gunicorn)
+  # --------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://botocharcoal:password@postgres:5432/botocharcoal}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TEXT_MODEL: ${TEXT_MODEL:-gpt-4o}
+      IMAGE_MODEL: ${IMAGE_MODEL:-dall-e-3}
+      GRAPH_API_VERSION: ${GRAPH_API_VERSION:-v20.0}
+      IG_LONG_LIVED_ACCESS_TOKEN: ${IG_LONG_LIVED_ACCESS_TOKEN:-}
+      IG_BUSINESS_ACCOUNT_ID: ${IG_BUSINESS_ACCOUNT_ID:-}
+      MEDIA_ROOT: ${MEDIA_ROOT:-/app/media}
+      MEDIA_URL: ${MEDIA_URL:-/media/}
+      ADMIN_SESSION_MAX_AGE: ${ADMIN_SESSION_MAX_AGE:-86400}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --------------------------------------------------
+  # Celery Worker
+  # --------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    command: celery -A app.tasks.celery_app.celery_app worker -l INFO --concurrency=4
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://botocharcoal:password@postgres:5432/botocharcoal}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TEXT_MODEL: ${TEXT_MODEL:-gpt-4o}
+      IMAGE_MODEL: ${IMAGE_MODEL:-dall-e-3}
+      GRAPH_API_VERSION: ${GRAPH_API_VERSION:-v20.0}
+      IG_LONG_LIVED_ACCESS_TOKEN: ${IG_LONG_LIVED_ACCESS_TOKEN:-}
+      IG_BUSINESS_ACCOUNT_ID: ${IG_BUSINESS_ACCOUNT_ID:-}
+      MEDIA_ROOT: ${MEDIA_ROOT:-/app/media}
+      MEDIA_URL: ${MEDIA_URL:-/media/}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --------------------------------------------------
+  # Celery Beat (scheduled tasks)
+  # --------------------------------------------------
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    command: celery -A app.tasks.celery_app.celery_app beat -l INFO --scheduler celery.schedules.schedulers:PersistentScheduler
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://botocharcoal:password@postgres:5432/botocharcoal}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TEXT_MODEL: ${TEXT_MODEL:-gpt-4o}
+      IMAGE_MODEL: ${IMAGE_MODEL:-dall-e-3}
+      GRAPH_API_VERSION: ${GRAPH_API_VERSION:-v20.0}
+      IG_LONG_LIVED_ACCESS_TOKEN: ${IG_LONG_LIVED_ACCESS_TOKEN:-}
+      IG_BUSINESS_ACCOUNT_ID: ${IG_BUSINESS_ACCOUNT_ID:-}
+      MEDIA_ROOT: ${MEDIA_ROOT:-/app/media}
+      MEDIA_URL: ${MEDIA_URL:-/media/}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
