@@ -13,9 +13,16 @@ class Job(Base):
     tone: Mapped[str | None] = mapped_column(String(128))
     cta_text: Mapped[str | None] = mapped_column(String(256))
     image_count: Mapped[int] = mapped_column(Integer, default=4)
-    status: Mapped[str] = mapped_column(
-        SAEnum(JobStatus, name="jobstatus"), default=JobStatus.PENDING
+
+    status: Mapped[JobStatus] = mapped_column(
+        SAEnum(
+            JobStatus,
+            name="jobstatus",
+            values_callable=lambda enum: [e.value for e in enum],
+        ),
+        default=JobStatus.PENDING,
     )
+
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     error_message: Mapped[str | None] = mapped_column(Text)
     logs_text: Mapped[str | None] = mapped_column(Text)
@@ -29,9 +36,11 @@ class Job(Base):
 
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

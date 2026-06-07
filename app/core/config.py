@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     BASE_URL: str = "http://localhost:8000"
-    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    ALLOWED_HOSTS: str = "*"
 
     DATABASE_URL: str = "postgresql+asyncpg://botocharcoal:password@localhost:5432/botocharcoal"
     REDIS_URL: str = "redis://localhost:6379/0"
