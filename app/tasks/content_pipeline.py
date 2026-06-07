@@ -113,7 +113,8 @@ def run_content_pipeline(self, job_id: int) -> dict:
                 job.status = JobStatus.COMPLETED
                 job.finished_at = datetime.now(timezone.utc)
                 await db.commit()
-                logger.info("pipeline_completed", job_id=job_id, post_id=post.id)return {"job_id": job_id, "post_id": post.id}
+                logger.info("pipeline_completed", job_id=job_id, post_id=post.id)
+                return {"job_id": job_id, "post_id": post.id}
 
             except Exception as exc:
                 job.status = JobStatus.FAILED
