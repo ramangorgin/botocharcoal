@@ -3,7 +3,7 @@
 # Multi-stage build for a lean production image.
 # ==================================================
 
-FROM python:3.12-slim AS base
+FROM python:3.11-slim AS base
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -34,7 +34,7 @@ RUN pip install --no-cache-dir -e ".[dev]"
 FROM base AS production
 
 # Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /app ./
 
