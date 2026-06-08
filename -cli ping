@@ -1,0 +1,23 @@
+[0;1;32m●[0m redis-server.service - Advanced key-value store
+     Loaded: loaded (]8;;file://prsvds.botocharcoal.ir/lib/systemd/system/redis-server.service/lib/systemd/system/redis-server.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Sun 2026-06-07 21:33:37 +0330; 21min ago
+       Docs: ]8;;http://redis.io/documentation,http://redis.io/documentation,]8;;
+             ]8;;man:redis-server(1)man:redis-server(1)]8;;
+   Main PID: 123425 (redis-server)
+     Status: "Ready to accept connections"
+      Tasks: 5[0;38;5;245m (limit: 4643)[0m
+     Memory: 8.4M
+        CPU: 4.710s
+     CGroup: /system.slice/redis-server.service
+             └─[0;38;5;245m123425 "/usr/bin/redis-server 127.0.0.1:6379"[0m
+
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * Loading RDB produced by version 7.0.15
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * RDB age 787 seconds
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * RDB memory usage when created 0.84 Mb
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * RDB is base AOF
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * Done loading RDB, keys loaded: 0, keys expired: 0.
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * DB loaded from base file appendonly.aof.1.base.rdb: 0.001 seconds
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * DB loaded from append only file: 0.001 seconds
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+Jun 07 21:33:37 prsvds.botocharcoal.ir redis-server[123425]: 123425:M 07 Jun 2026 21:33:37.407 * Ready to accept connections
+Jun 07 21:33:37 prsvds.botocharcoal.ir systemd[1]: Started redis-server.service - Advanced key-value store.
