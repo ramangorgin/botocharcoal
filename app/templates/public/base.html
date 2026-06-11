@@ -22,7 +22,7 @@
 <body>
     <div class="preloader" id="preloader" aria-label="در حال بارگذاری">
         <div class="preloader__inner">
-            <img src="/static/logos/logo.png" alt="Botocharcoal" class="preloader__logo">
+            <img src="/static/logos/logo-transparent.png" alt="Botocharcoal" class="preloader__logo">
             <div class="preloader__ring"></div>
             <p class="preloader__text">Botocharcoal</p>
         </div>
@@ -32,10 +32,9 @@
         <div class="container">
             <div class="nav">
                 <a href="/" class="brand" aria-label="Botocharcoal">
-                    <img src="/static/logos/logo.png" alt="Botocharcoal" class="brand__logo">
+                    <img src="/static/logos/logo-transparent.png" alt="Botocharcoal" class="brand__logo">
                     <div class="brand__meta">
-                        <span class="brand__title">Botocharcoal</span>
-                        <span class="brand__subtitle">Premium Charcoal</span>
+                        <span class="brand__title">BOTOCHARCOAL</span>
                     </div>
                 </a>
 
@@ -75,10 +74,10 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="site-footer" id="contact">
+    <footer class="site-footer" id="footer">
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-card footer-brand">
+                <div class="footer-brand">
                     <a href="#top" class="brand brand--footer" aria-label="Botocharcoal">
                         <img src="/static/logos/logo.png" alt="Botocharcoal" class="brand__logo">
                         <div class="brand__meta">
@@ -88,30 +87,42 @@
                     </a>
 
                     <p class="footer-text article-text">
-                        Botocharcoal بر ارائه‌ی زغال باکیفیت با تجربه‌ای حرفه‌ای، شفاف و قابل‌اعتماد تمرکز دارد.
-                        برای مشاوره و ثبت سفارش، تنها راه ارتباطی، دایرکت پیج اینستاگرام برند است.
+                        بوتوچارکول روی تامین دقیق، پاسخ‌گویی مستقیم و تحویل منظم تمرکز دارد.
+                        سفارش و هماهنگی فقط از طریق اینستاگرام انجام می‌شود.
                     </p>
                 </div>
 
-                <div class="footer-card">
+                <div class="footer-block">
                     <h3 class="footer-title">لینک‌های صفحه</h3>
                     <ul class="footer-links">
-                        <li><a href="#contact">تماس</a></li>
-                        <li><a href="#about">درباره</a></li>
                         <li><a href="#products">محصولات</a></li>
                         <li><a href="#articles">مقالات</a></li>
+                        <li><a href="#about">درباره</a></li>
+                        <li><a href="#contact">تماس</a></li>
                     </ul>
                 </div>
 
-                <div class="footer-card">
+                <div class="footer-block">
                     <h3 class="footer-title">ارتباط</h3>
                     <ul class="footer-links">
-                        <li>
-                            <a href="https://instagram.com/botocharcoal" target="_blank" rel="noopener noreferrer">
-                                Instagram / @botocharcoal
-                            </a>
-                        </li>
-                        <li class="footer-note">ثبت سفارش فقط از طریق دایرکت اینستاگرام انجام می‌شود.</li>
+                        <li style="direction: ltr;"><a href="https://instagram.com/botocharcoal" target="_blank" rel="noopener noreferrer">
+                        <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        >
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                        </svg>
+                        Instagram
+                        </a></li>
                     </ul>
                 </div>
             </div>

@@ -51,27 +51,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const placeholderSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
-    <defs>
-    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-    <stop offset="0%" stop-color="#242424"/>
-    <stop offset="100%" stop-color="#333333"/>
-    </linearGradient>
-    </defs>
-    <rect width="800" height="500" fill="url(#g)"/>
-    <circle cx="640" cy="120" r="120" fill="rgba(230,81,0,0.16)"/>
-    <rect x="170" y="120" width="460" height="240" rx="28" fill="#2A2A2A" stroke="#444444" stroke-width="3"/>
-    <circle cx="280" cy="205" r="28" fill="#8B1E1E"/>
-    <path d="M330 300l88-102 120 128H250z" fill="#E65100"/>
-    <text x="400" y="410" text-anchor="middle" fill="#BDBDBD" font-size="28" font-family="Arial, sans-serif">
-    No image available
-    </text>
+      <defs>
+        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#242424"/>
+          <stop offset="100%" stop-color="#333333"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="500" fill="url(#g)"/>
+      <circle cx="635" cy="118" r="118" fill="#E65100" fill-opacity="0.14"/>
+      <rect x="178" y="124" width="444" height="232" rx="26" fill="#2A2A2A" stroke="#444444" stroke-width="3"/>
+      <path d="M292 292l82-96 113 122H248z" fill="#E65100"/>
+      <circle cx="289" cy="206" r="27" fill="#8B1E1E"/>
+      <path d="M350 174h144M350 204h110M350 234h132" stroke="#BDBDBD" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
     </svg>
     `)}`;
 
     document.querySelectorAll("img[data-fallback='placeholder']").forEach((img) => {
       img.addEventListener("error", () => {
         img.src = placeholderSvg;
-        img.alt = "No image available";
+        img.alt = "بدون تصویر";
       });
     });
 
