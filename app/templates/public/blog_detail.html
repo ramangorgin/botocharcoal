@@ -58,13 +58,11 @@
      ═══════════════════════════════════════════════════════ -->
 <article class="blog-content">
 
-  <!-- Table of Contents -->
-  <nav class="toc" aria-label="فهرست مطالب">
+  <!-- Table of Contents - Dynamic -->
+  <nav class="toc" aria-label="فهرست مطالب" id="toc">
     <div class="toc__title">📑 فهرست مطالب</div>
-    <ul class="toc__list">
-      <li class="toc__item"><a href="#introduction" class="toc__link">مقدمه</a></li>
-      <li class="toc__item"><a href="#main-content" class="toc__link">محتوای اصلی</a></li>
-      <li class="toc__item"><a href="#conclusion" class="toc__link">نتیجه‌گیری</a></li>
+    <ul class="toc__list" id="tocList">
+      <li class="toc__item"><a href="#article-body" class="toc__link">محتوای مقاله</a></li>
     </ul>
   </nav>
 
@@ -132,69 +130,48 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
-     Related Articles
+     Related Articles - Dynamic
      ═══════════════════════════════════════════════════════ -->
+{% if related_posts %}
 <section class="section reveal" style="background: var(--clr-charcoal);">
   <div class="container">
     <h2 style="text-align: center; margin-bottom: var(--sp-3xl);">مقالات مرتبط</h2>
 
     <div class="grid grid--3">
-      <article class="blog-card">
-        <div class="blog-card__image" style="background: linear-gradient(135deg, var(--clr-charcoal-light), var(--clr-natural-brown));">
-          <div class="blog-card__image-placeholder">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-        </div>
-        <div class="blog-card__body">
-          <div class="blog-card__meta">
-            <span class="blog-card__topic">راهنما</span>
-          </div>
-          <h3 class="blog-card__title"><a href="/blog">نحوه انتخاب زغال مناسب</a></h3>
-          <p class="blog-card__excerpt">هنگام خرید زغال، نکات مهمی وجود دارد که باید توجه شود...</p>
-          <div class="blog-card__footer">
-            <span>۵ دقیقه</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="blog-card">
-        <div class="blog-card__image" style="background: linear-gradient(135deg, var(--clr-charcoal-light), var(--clr-burnt-red));">
-          <div class="blog-card__image-placeholder">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-        </div>
-        <div class="blog-card__body">
-          <div class="blog-card__meta">
-            <span class="blog-card__topic">فناوری</span>
-          </div>
-          <h3 class="blog-card__title"><a href="/blog">تکنولوژی‌های نوین در معادن</a></h3>
-          <p class="blog-card__excerpt">روش‌های جدید و تکنولوژی‌های پیشرو برای استخراج زغال...</p>
-          <div class="blog-card__footer">
-            <span>۷ دقیقه</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="blog-card">
-        <div class="blog-card__image" style="background: linear-gradient(135deg, var(--clr-charcoal-light), var(--clr-ember));">
-          <div class="blog-card__image-placeholder">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-        </div>
-        <div class="blog-card__body">
-          <div class="blog-card__meta">
-            <span class="blog-card__topic">محیط‌زیست</span>
-          </div>
-          <h3 class="blog-card__title"><a href="/blog">زغال و پایداری محیط‌زیست</a></h3>
-          <p class="blog-card__excerpt">چگونه می‌توانیم از زغال به روش‌های پایدار استفاده کنیم...</p>
-          <div class="blog-card__footer">
-            <span>۶ دقیقه</span>
-          </div>
-        </div>
-      </article>
+     {% for rp in related_posts %}
+     {% set rp_post = rp.post %}
+     {% set rp_cover = rp.cover %}
+     <article class="blog-card">
+       <a href="/blog/{{ rp_post.slug }}" class="blog-card__image" aria-label="{{ rp_post.title }}">
+         {% if rp_cover %}
+           <img src="{{ rp_cover.file_path }}" alt="{{ rp_post.title }}" loading="lazy" style="width:100%;height:180px;object-fit:cover;">
+         {% else %}
+           <div class="blog-card__image-placeholder" style="height:180px;">
+             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+           </div>
+         {% endif %}
+       </a>
+       <div class="blog-card__body">
+         <div class="blog-card__meta">
+           {% if rp_post.topic %}
+           <span class="blog-card__topic">{{ rp_post.topic }}</span>
+           {% endif %}
+         </div>
+         <h3 class="blog-card__title"><a href="/blog/{{ rp_post.slug }}">{{ rp_post.title }}</a></h3>
+         <p class="blog-card__excerpt">{{ rp_post.body_html | striptags | truncate(120) }}</p>
+         <div class="blog-card__footer">
+           {% set rp_wc = rp_post.body_html | striptags | split(' ') | length %}
+           {% set rp_rt = (rp_wc / 200) | round | int %}
+           {% if rp_rt < 1 %}{% set rp_rt = 1 %}{% endif %}
+           <span>{% if rp_rt == 1 %}۱{% else %}{{ "{:,}".format(rp_rt).replace(',', '٬') }}{% endif %} دقیقه</span>
+         </div>
+       </div>
+     </article>
+     {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- ═══════════════════════════════════════════════════════
      Contact CTA
@@ -229,6 +206,31 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) el.textContent = toPersian(readingTime) + ' دقیقه مطالعه';
   }
 
+  // Generate TOC from H2/H3 headings
+  var tocList = document.getElementById('tocList');
+  if (tocList && articleBody) {
+    var headings = articleBody.querySelectorAll('h2, h3');
+    var existingLinks = tocList.querySelectorAll('a');
+    if (existingLinks.length <= 1) {
+      tocList.innerHTML = '';
+    }
+    headings.forEach(function(heading, index) {
+      var level = heading.tagName.toLowerCase();
+      var text = heading.textContent.trim();
+      if (!heading.id) {
+        heading.id = 'heading-' + index;
+      }
+      var li = document.createElement('li');
+      li.className = 'toc__item' + (level === 'h3' ? ' toc__item--nested' : '');
+      var a = document.createElement('a');
+      a.href = '#' + heading.id;
+      a.className = 'toc__link';
+      a.textContent = text;
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  }
+
   // Smooth scroll for anchor links
   document.querySelectorAll('.blog-content a[href^="#"], .toc__link').forEach(function(link) {
     link.addEventListener('click', function(e) {
@@ -241,6 +243,18 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Reading progress bar
+  var progressBar = document.querySelector('.reading-progress');
+  if (progressBar) {
+    window.addEventListener('scroll', function() {
+      var articleTop = progressBar.offsetTop;
+      var articleHeight = document.querySelector('.blog-content') ? document.querySelector('.blog-content').offsetHeight : 1000;
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      var progress = Math.min(Math.max((scrollTop - articleTop) / articleHeight * 100, 0), 100);
+      progressBar.style.width = progress + '%';
+    });
+  }
 });
 </script>
 {% endblock %}

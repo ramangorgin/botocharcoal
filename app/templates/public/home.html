@@ -41,7 +41,7 @@
             </div>
             <div class="trust-bar__item">
                 <strong>Consistent</strong>
-                <span>هویت بصری یکپارچه</span>
+                <span>زغال مرغوب اندونزیایی</span>
             </div>
             <div class="trust-bar__item">
                 <strong>Fast</strong>
@@ -124,7 +124,9 @@
                                 <path d="M9.2 16.2L4.8 11.8l-1.6 1.6 6 6 12-12-1.6-1.6z" fill="currentColor"/>
                             </svg>
                         </span>
-                        <span>هویت بصری هماهنگ با فضای محصول</span>
+                        <span>
+                        واردکننده از اندونزی
+                        </span>
                     </div>
                     <div class="check-list__item">
                         <span class="icon-wrap small success">
@@ -166,61 +168,44 @@
             </p>
         </div>
 
+        {% if recent_posts %}
         <div class="grid grid--3">
-            <article class="article-card reveal">
-                <div class="article-card__media article-card__placeholder" aria-label="بدون تصویر">
-                    <div class="article-card__placeholder-inner">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
-                        </svg>
-                        <span>بدون تصویر</span>
-                    </div>
-                </div>
+            {% for post in recent_posts %}
+            <article class="article-card reveal{% if loop.index == 2 %} reveal-delay-1{% elif loop.index == 3 %} reveal-delay-2{% endif %}">
+                <a href="/blog/{{ post.slug }}" class="article-card__media" aria-label="{{ post.title }}">
+                    {% if post.cover %}
+                        <img src="{{ post.cover.file_path }}" alt="{{ post.title }}" loading="lazy" style="width:100%;height:200px;object-fit:cover;border-radius:var(--radius-lg);">
+                    {% else %}
+                        <div class="article-card__placeholder">
+                            <div class="article-card__placeholder-inner">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" style="opacity:0.4;">
+                                    <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                        </div>
+                    {% endif %}
+                </a>
                 <div class="article-card__body">
-                    <h3>راهنمای انتخاب زغال مناسب</h3>
+                    {% if post.topic %}
+                    <span class="text-link" style="font-size:var(--fs-xs);color:var(--clr-ember);display:block;margin-bottom:var(--sp-sm);">{{ post.topic }}</span>
+                    {% endif %}
+                    <h3><a href="/blog/{{ post.slug }}" style="color:inherit;text-decoration:none;">{{ post.title }}</a></h3>
                     <p class="article-text">
-                        نکات اصلی برای انتخاب محصول مناسب با توجه به نوع مصرف، حجم سفارش و انتظار از کیفیت.
+                        {{ post.body_html | striptags | truncate(160) }}
                     </p>
-                    <a href="#" class="text-link">مطالعه بیشتر</a>
+                    <a href="/blog/{{ post.slug }}" class="text-link">مطالعه بیشتر</a>
                 </div>
             </article>
-
-            <article class="article-card reveal reveal-delay-1">
-                <div class="article-card__media article-card__placeholder" aria-label="بدون تصویر">
-                    <div class="article-card__placeholder-inner">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
-                        </svg>
-                        <span>بدون تصویر</span>
-                    </div>
-                </div>
-                <div class="article-card__body">
-                    <h3>چطور کیفیت زغال را در خرید عمده ارزیابی کنیم؟</h3>
-                    <p class="article-text">
-                        چند معیار ساده برای بررسی ثبات سوختن، ظاهر محصول و هماهنگی سفارش‌های عمده.
-                    </p>
-                    <a href="#" class="text-link">مطالعه بیشتر</a>
-                </div>
-            </article>
-
-            <article class="article-card reveal reveal-delay-2">
-                <div class="article-card__media article-card__placeholder" aria-label="بدون تصویر">
-                    <div class="article-card__placeholder-inner">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
-                        </svg>
-                        <span>بدون تصویر</span>
-                    </div>
-                </div>
-                <div class="article-card__body">
-                    <h3>نکات سفارش برای رستوران، کافه و مصرف خانگی</h3>
-                    <p class="article-text">
-                        مرور کوتاه تفاوت‌های کلیدی میان مصرف روزمره و سفارش‌های تجاری برای انتخاب دقیق‌تر.
-                    </p>
-                    <a href="#" class="text-link">مطالعه بیشتر</a>
-                </div>
-            </article>
+            {% endfor %}
         </div>
+        <div style="text-align:center;margin-top:var(--sp-2xl);">
+            <a href="/blog" class="btn btn-outline" style="margin-top: 5rem;">مشاهده همه مقالات</a>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:var(--sp-3xl) 0;">
+            <p style="font-size:var(--fs-lg);color:var(--clr-text-muted);">هیچ مقاله‌ای هنوز منتشر نشده.</p>
+        </div>
+        {% endif %}
     </div>
 </section>
 

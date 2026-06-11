@@ -3,8 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% block meta_description %}Botocharcoal | زغال باکیفیت برای مصارف خانگی، رستورانی و صنعتی{% endblock %}">
+    <meta name="description" content="{% block meta_description %}بوتوچارکول| زغال باکیفیت برای مصارف خانگی، رستورانی و صنعتی. سفارش و هماهنگی فقط از طریق دایرکت اینستاگرام.{% endblock %}">
+    <meta name="keywords" content="زغال, زغال خانگی, زغال رستورانی, زغال صنعتی, زغال باربیکیو, بوتو زغال, botocharcoal, زغال مرغوب, خرید زغال">
+    <meta name="author" content="بوتو زغال">
+    <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1C1C1C">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.url | replace(request.url.path, '') if request.url else 'https://botocharcoal.com' }}">
+    <meta property="og:title" content="{% block og_title %}بوتوچارکول| زغال مرغوب اندونزیایی{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}بوتو زغال، عرضه‌کننده زغال باکیفیت برای مصارف خانگی، رستورانی و صنعتی. ثبت سفارش فقط از طریق دایرکت اینستاگرام.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}/static/logos/logo.png{% endblock %}">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:site_name" content="بوتو زغال">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}بوتوچارکول| زغال مرغوب اندونزیایی{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}بوتو زغال، عرضه‌کننده زغال باکیفیت برای مصارف خانگی، رستورانی و صنعتی.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}/static/logos/logo.png{% endblock %}">
+
+    <link rel="canonical" href="{{ request.url if request.url else 'https://botocharcoal.com' }}">
 
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png">
@@ -16,7 +36,7 @@
     <link rel="stylesheet" href="/static/css/fonts.css">
     <link rel="stylesheet" href="/static/css/main.css">
 
-    <title>{% block title %}Botocharcoal | Premium Charcoal{% endblock %}</title>
+    <title>{% block title %}بوتوچارکول| زغال مرغوب اندونزیایی{% endblock %}</title>
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -76,59 +96,49 @@
 
     <footer class="site-footer" id="footer">
         <div class="container">
-            <div class="footer-grid">
+            <div class="footer-grid footer-grid--expanded">
+                <!-- Brand Column -->
                 <div class="footer-brand">
                     <a href="#top" class="brand brand--footer" aria-label="Botocharcoal">
-                        <img src="/static/logos/logo.png" alt="Botocharcoal" class="brand__logo">
+                        <img src="/static/logos/logo.png" alt="بوتوچارکول- زغال باکیفیت اندونزیایی" class="brand__logo brand__logo--footer">
                         <div class="brand__meta">
-                            <span class="brand__title">Botocharcoal</span>
-                            <span class="brand__subtitle">Premium Charcoal</span>
+                            <span class="brand__title">BOTOCHARCOAL</span>
+                            <span class="brand__subtitle">بوتوچارکول | زغال مرغوب اندونزیایی</span>
                         </div>
                     </a>
 
-                    <p class="footer-text article-text">
-                        بوتوچارکول روی تامین دقیق، پاسخ‌گویی مستقیم و تحویل منظم تمرکز دارد.
-                        سفارش و هماهنگی فقط از طریق اینستاگرام انجام می‌شود.
+                    <p class="footer-description article-text" style="text-align: justify; max-width: 400px;">
+                        بوتوچارکول با سال‌ها تجربه در صنعت زغال، بهترین محصولات زغال را برای مصارف خانگی، رستورانی و صنعتی عرضه می‌کند. ما متعهد به ارائه محصول باکیفیت، قیمت منصفانه و خدمات پس از فروش عالی هستیم. تمام فرآیند خرید از انتخاب محصول تا تحویل نهایی با نظارت دقیق تیم متخصص ما انجام می‌شود.
                     </p>
                 </div>
 
+                <!-- Quick Links Column -->
                 <div class="footer-block">
-                    <h3 class="footer-title">لینک‌های صفحه</h3>
+                    <h3 class="footer-title">دسترسی سریع</h3>
                     <ul class="footer-links">
                         <li><a href="#products">محصولات</a></li>
-                        <li><a href="#articles">مقالات</a></li>
-                        <li><a href="#about">درباره</a></li>
-                        <li><a href="#contact">تماس</a></li>
+                        <li><a href="/blog">مقالات</a></li>
+                        <li><a href="#about">درباره ما</a></li>
+                        <li><a href="#contact">تماس با ما</a></li>
                     </ul>
                 </div>
 
+                <!-- Categories Column -->
                 <div class="footer-block">
-                    <h3 class="footer-title">ارتباط</h3>
+                    <h3 class="footer-title">دسته‌بندی محصولات</h3>
                     <ul class="footer-links">
-                        <li style="direction: ltr;"><a href="https://instagram.com/botocharcoal" target="_blank" rel="noopener noreferrer">
-                        <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        >
-                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                        </svg>
-                        Instagram
-                        </a></li>
+                        <li><a href="/catalog">زغال خانگی</a></li>
+                        <li><a href="/catalog">زغال رستورانی</a></li>
+                        <li><a href="/catalog">زغال صنعتی</a></li>
+                        <li><a href="/catalog">زغال باربیکیو</a></li>
                     </ul>
                 </div>
             </div>
 
             <div class="footer-bottom">
-                <p>© 2026 Botocharcoal. All rights reserved.</p>
+                <div class="footer-bottom__inner">
+                    <p>© 2026 BOTOCHARCOAL - All Rights Reserved. </p>
+                </div>
             </div>
         </div>
     </footer>
