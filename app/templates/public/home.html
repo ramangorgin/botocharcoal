@@ -1,38 +1,322 @@
 {% extends "base.html" %}
-{% block title %}زغال بوتو | فروش و توزیع زغال{% endblock %}
+
+{% block title %}Botocharcoal | Premium Charcoal{% endblock %}
+{% block meta_description %}Botocharcoal | زغال باکیفیت برای مصرف خانگی، رستورانی و صنعتی. ثبت سفارش فقط از طریق دایرکت اینستاگرام.{% endblock %}
+
 {% block content %}
-<section class="hero">
-  <div class="container">
-    <h1>زغال باکیفیت بوتو</h1>
-    <p>تامین‌کننده زغال صنعتی و خانگی در سراسر ایران</p>
-    <a href="/contact" class="btn-primary">درخواست قیمت</a>
-  </div>
+<section class="hero hero--modern reveal">
+    <div class="container">
+        <div class="hero__grid">
+            <div class="hero__content">
+                <div class="hero__badge">
+                    <span class="hero__badge-dot"></span>
+                    Premium Charcoal Supply
+                </div>
+
+                <div class="hero__brand-mark">
+                    <img src="/static/brand/logo.png" alt="Botocharcoal" class="hero__logo">
+                    <div>
+                        <p class="hero__eyebrow">Botocharcoal</p>
+                        <h1 class="hero__title">
+                            زغال باکیفیت برای
+                            <span class="text-gradient">مصرف حرفه‌ای و روزمره</span>
+                        </h1>
+                    </div>
+                </div>
+
+                <p class="hero__subtitle article-text">
+                    اگر دنبال زغالی هستی که هم از نظر کیفیت سوزش، هم ماندگاری، هم ظاهر و هم تجربه‌ی مصرف
+                    قابل اتکا باشد، Botocharcoal روی انتخاب دقیق محصول و ارائه‌ی حرفه‌ای تمرکز کرده.
+                    برای ثبت سفارش، تنها راه ارتباطی دایرکت پیج اینستاگرام ماست.
+                </p>
+
+                <div class="hero__actions">
+                    <a href="https://instagram.com/botocharcoal" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn--lg">
+                        ثبت سفارش در اینستاگرام
+                    </a>
+                    <a href="#products" class="btn btn-outline btn--lg">
+                        مشاهده محصولات
+                    </a>
+                </div>
+
+                <div class="hero__trust">
+                    <div class="trust-chip">
+                        <span class="icon-wrap">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2l7 3v6c0 5-3.4 9.3-7 11-3.6-1.7-7-6-7-11V5l7-3z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>انتخاب محصول با تمرکز بر کیفیت</span>
+                    </div>
+
+                    <div class="trust-chip">
+                        <span class="icon-wrap">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 6h11v8H4zM15 9h3l2 2v3h-5zM7 18a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>ارسال و هماهنگی سفارش با دقت بیشتر</span>
+                    </div>
+
+                    <div class="trust-chip">
+                        <span class="icon-wrap">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm4.3 7.3l-5.2 5.9-3.4-3.1 1.4-1.5 1.9 1.7 3.8-4.3 1.5 1.3z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>ثبت سفارش فقط از طریق دایرکت اینستاگرام</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero__visual reveal reveal-delay-1">
+                <div class="hero-card hero-card--primary">
+                    <div class="hero-card__glow"></div>
+                    <img src="/static/brand/logo.png" alt="Botocharcoal" class="hero-card__logo">
+                    <div class="hero-card__content">
+                        <p class="hero-card__label">Brand Focus</p>
+                        <h2>Modern. Warm. Reliable.</h2>
+                        <p class="article-text">
+                            طراحی تجربه‌ی برند بر پایه‌ی حس حرفه‌ای، گرم، مینیمال و انسانی شکل گرفته؛
+                            نه شلوغ، نه مصنوعی، نه اغراق‌آمیز.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <strong>Premium</strong>
+                        <span>کیفیت انتخاب‌شده</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>Direct</strong>
+                        <span>سفارش در Instagram</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>Modern</strong>
+                        <span>تجربه‌ی برند یکپارچه</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
-<section class="features container">
-  <div class="feature-card">
-    <h3>کیفیت تضمینی</h3>
-    <p>زغال درجه یک با حرارت بالا و خاکستر کم</p>
-  </div>
-  <div class="feature-card">
-    <h3>تحویل سریع</h3>
-    <p>ارسال به تمام نقاط کشور</p>
-  </div>
-  <div class="feature-card">
-    <h3>قیمت رقابتی</h3>
-    <p>بهترین قیمت برای خرید عمده</p>
-  </div>
+<section class="trust-bar reveal">
+    <div class="container">
+        <div class="trust-bar__grid">
+            <div class="trust-bar__item">
+                <strong>Premium</strong>
+                <span>تمرکز بر کیفیت محصول</span>
+            </div>
+            <div class="trust-bar__item">
+                <strong>Direct</strong>
+                <span>ثبت سفارش در دایرکت اینستاگرام</span>
+            </div>
+            <div class="trust-bar__item">
+                <strong>Consistent</strong>
+                <span>هویت بصری یکپارچه</span>
+            </div>
+            <div class="trust-bar__item">
+                <strong>Responsive</strong>
+                <span>تجربه‌ی روان روی موبایل و دسکتاپ</span>
+            </div>
+        </div>
+    </div>
 </section>
 
-{% if catalogs %}
-<section class="catalogs container">
-  <h2>کاتالوگ محصولات</h2>
-  <div class="catalog-grid">
-    {% for cat in catalogs %}
-    <a href="{{ cat.public_url }}" class="catalog-item" target="_blank">
-      <span>{{ cat.title }}</span></a>
-    {% endfor %}
-  </div>
+<section class="section reveal" id="products">
+    <div class="container">
+        <div class="section-header section-header--center">
+            <span class="section-kicker">محصولات</span>
+            <h2>محصولات Botocharcoal</h2>
+            <p class="article-text">
+                این بخش برای معرفی دسته‌های اصلی محصول طراحی شده تا کاربر خیلی سریع مسیر مناسب خودش را پیدا کند.
+            </p>
+        </div>
+
+        <div class="grid grid--3">
+            <article class="feature-card reveal">
+                <div class="feature-card__icon bg-ember">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2c1 3-1 4.5-1 6.5S13 11 13 13a3 3 0 11-6 0c0-2.1 1.3-3.3 2.6-4.6C11 7.1 12.4 5.9 12 2z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h3>زغال مصرف خانگی</h3>
+                <p class="article-text">
+                    مناسب برای استفاده‌ی روزمره با تمرکز روی تجربه‌ی تمیزتر، پایدارتر و رضایت‌بخش‌تر.
+                </p>
+            </article>
+
+            <article class="feature-card reveal reveal-delay-1">
+                <div class="feature-card__icon bg-red">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16v10H4zM7 4h10v3H7zM9 17v3m6-3v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>زغال مناسب رستوران و کافه</h3>
+                <p class="article-text">
+                    برای کسب‌وکارهایی که ثبات کیفیت، ظاهر مناسب و تجربه‌ی مطمئن در سرو برایشان مهم است.
+                </p>
+            </article>
+
+            <article class="feature-card reveal reveal-delay-2">
+                <div class="feature-card__icon bg-brown">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 12h18M6 8h12M8 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>زغال برای مصارف حرفه‌ای</h3>
+                <p class="article-text">
+                    گزینه‌هایی برای مصرف‌کننده‌هایی که نگاه جدی‌تر و حرفه‌ای‌تر به کیفیت و کارایی دارند.
+                </p>
+            </article>
+        </div>
+    </div>
 </section>
-{% endif %}
+
+<section class="section section--alt reveal" id="about">
+    <div class="container">
+        <div class="two-col">
+            <div class="panel reveal">
+                <span class="section-kicker">درباره برند</span>
+                <h2>چرا Botocharcoal؟</h2>
+                <p class="article-text">
+                    Botocharcoal صرفاً یک نام برای فروش محصول نیست؛ ایده‌ی اصلی این برند ساختن یک تجربه‌ی
+                    حرفه‌ای، قابل اعتماد و خوش‌هویت برای مخاطبی است که کیفیت را جدی می‌گیرد.
+                </p>
+                <p class="article-text">
+                    در این صفحه عمداً همه‌چیز ساده، گرم، قابل فهم و انسانی نگه داشته شده تا کاربر حس کند با
+                    یک برند واقعی و دقیق روبه‌رو است، نه یک ویترین شلوغ و بی‌هویت.
+                </p>
+            </div>
+
+            <div class="panel panel--accent reveal reveal-delay-1">
+                <div class="check-list">
+                    <div class="check-list__item">
+                        <span class="icon-wrap small success">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.2L4.8 11.8l-1.6 1.6 6 6 12-12-1.6-1.6z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>هویت بصری هماهنگ با فضای محصول</span>
+                    </div>
+                    <div class="check-list__item">
+                        <span class="icon-wrap small success">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.2L4.8 11.8l-1.6 1.6 6 6 12-12-1.6-1.6z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>تمرکز بر معرفی روشن و مستقیم</span>
+                    </div>
+                    <div class="check-list__item">
+                        <span class="icon-wrap small success">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.2L4.8 11.8l-1.6 1.6 6 6 12-12-1.6-1.6z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>سفارش فقط از طریق دایرکت اینستاگرام</span>
+                    </div>
+                    <div class="check-list__item">
+                        <span class="icon-wrap small success">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.2L4.8 11.8l-1.6 1.6 6 6 12-12-1.6-1.6z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span>طراحی ریسپانسیو و تجربه‌ی روان روی موبایل</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section reveal" id="articles">
+    <div class="container">
+        <div class="section-header section-header--center">
+            <span class="section-kicker">مقالات</span>
+            <h2>محتوای آموزشی و مقالات</h2>
+            <p class="article-text">
+                برای متن‌های طولانی و مقاله‌ها از فونت Shabnam استفاده شده تا خوانایی در پاراگراف‌های بلند بهتر شود.
+            </p>
+        </div>
+
+        <div class="grid grid--3">
+            <article class="article-card reveal">
+                <div class="article-card__media article-card__placeholder" aria-label="placeholder image">
+                    <div class="article-card__placeholder-inner">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
+                        </svg>
+                        <span>No image available</span>
+                    </div>
+                </div>
+                <div class="article-card__body">
+                    <h3>راهنمای انتخاب زغال مناسب</h3>
+                    <p class="article-text">
+                        اگر یک مقاله تصویر نداشته باشد، این placeholder جای آن را می‌گیرد تا طراحی صفحه نشکند و ظاهر کارت‌ها
+                        یکپارچه باقی بماند.
+                    </p>
+                    <a href="#" class="text-link">مطالعه بیشتر</a>
+                </div>
+            </article>
+
+            <article class="article-card reveal reveal-delay-1">
+                <div class="article-card__media">
+                    <img
+                        src="/static/brand/non-existent-article-image.jpg"
+                        alt="مقاله Botocharcoal"
+                        data-fallback="placeholder">
+                </div>
+                <div class="article-card__body">
+                    <h3>چطور کیفیت زغال را بهتر تشخیص بدهیم؟</h3>
+                    <p class="article-text">
+                        اگر تصویر یک مقاله به هر دلیل لود نشود، جاوااسکریپت به‌صورت خودکار برایش placeholder قرار می‌دهد.
+                    </p>
+                    <a href="#" class="text-link">مطالعه بیشتر</a>
+                </div>
+            </article>
+
+            <article class="article-card reveal reveal-delay-2">
+                <div class="article-card__media article-card__placeholder" aria-label="placeholder image">
+                    <div class="article-card__placeholder-inner">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
+                        </svg>
+                        <span>Article image placeholder</span>
+                    </div>
+                </div>
+                <div class="article-card__body">
+                    <h3>تفاوت زغال برای مصرف خانگی و حرفه‌ای</h3>
+                    <p class="article-text">
+                        این ساختار هم از نظر UX منظم‌تر است، هم باعث می‌شود نبود تصویر در بخشی از محتوا ظاهر صفحه را خراب نکند.
+                    </p>
+                    <a href="#" class="text-link">مطالعه بیشتر</a>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section section--cta reveal" id="contact">
+    <div class="container">
+        <div class="cta-panel">
+            <div class="cta-panel__content">
+                <span class="section-kicker">تماس و سفارش</span>
+                <h2>برای ثبت سفارش، مستقیم به Instagram پیام بده</h2>
+                <p class="article-text">
+                    در این سایت هیچ ایمیل، تلگرام یا راه ارتباطی دیگری قرار داده نشده.
+                    تنها مسیر رسمی ارتباط و ثبت سفارش، دایرکت پیج اینستاگرام
+                    <strong>@botocharcoal</strong>
+                    است.
+                </p>
+            </div>
+            <div class="cta-panel__actions">
+                <a href="https://instagram.com/botocharcoal" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn--lg">
+                    رفتن به پیج اینستاگرام
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

@@ -11,8 +11,8 @@ gunicorn==22.0.0
 
 # ASGI database driver + ORM
 sqlalchemy[asyncio]==2.0.30
-asyncpg==0.29.0
-psycopg2-binary==2.9.9
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
 
 # Alembic migrations
 alembic==1.13.1
@@ -40,7 +40,7 @@ python-multipart==0.0.9
 python-slugify==8.0.4
 
 # Image processing
-Pillow==10.3.0
+Pillow==10.4.0
 
 # Retry logic for API calls
 tenacity==8.3.0

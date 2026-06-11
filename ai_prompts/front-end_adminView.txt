@@ -1,0 +1,5 @@
+    and also another part for the admin that can login via a hidden uri and enter the admin pannel where he can:
+        - manage posts on the website: create, edit, index, show.
+        - manage posts on the Instagram: create, edit, index, show.
+        - see the status of AI's token for creating website & Instagram's content automatically every day under the eyes of the admin and Instagram's API for publishing Instagram posts automatically into the page.
+        - see the demo of the contents that arrived from AI and before publishing into the website and in the Instagram's page. (a complete persian error messages for when automatic publishing into Instagram would fail due to internet sitiuation or when admin)

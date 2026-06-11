@@ -57,6 +57,11 @@ async def catalog(request: Request, db: AsyncSession = Depends(get_db)):
     return templates.TemplateResponse("catalog.html", {"request": request, "catalogs": catalogs})
 
 
+@router.get("/about", response_class=HTMLResponse)
+async def about(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
 @router.get("/contact", response_class=HTMLResponse)
 async def contact(request: Request):
     return templates.TemplateResponse("contact.html", {"request": request})
