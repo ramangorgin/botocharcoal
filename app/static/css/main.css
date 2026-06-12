@@ -1222,3 +1222,227 @@ button {
     transform: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   Blog Detail Page — Complete Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* ---------------------------------------------------------
+ *   Blog Redesign System
+ * --------------------------------------------------------- */
+
+:root {
+  --post-max-width: 740px;
+  --clr-bg-dark: #0a0a0a;
+  --clr-surface-card: #141414;
+  --clr-accent: #ff4d4d; /* رنگ برند شما برای تاکید */
+  --text-main: #e0e0e0;
+  --text-muted: #a0a0a0;
+}
+
+/* نوار پیشرفت */
+.reading-progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  z-index: 1001;
+}
+
+.reading-progress-bar {
+  height: 100%;
+  background: var(--clr-accent);
+  width: 0%;
+  transition: width 0.1s ease;
+  box-shadow: 0 0 10px var(--clr-accent);
+}
+
+/* کانتینر محدود شده برای خوانایی بهتر */
+.container-narrow {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.blog-post-wrapper {
+  padding-top: 60px;
+}
+
+/* هدر مقاله */
+.blog-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.breadcrumb {
+  font-size: 0.9rem;
+  color: var(--clr-accent);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.post-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.2;
+  font-weight: 800;
+  margin-bottom: 25px;
+  color: #fff;
+}
+
+.post-meta-refined {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* تصویر شاخص */
+.featured-image-wrapper {
+  max-width: 1100px;
+  margin: 0 auto 60px;
+  padding: 0 20px;
+}
+
+.featured-image {
+  width: 100%;
+  height: auto;
+  max-height: 550px;
+  object-fit: cover;
+  border-radius: 24px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+/* چیدمان محتوا و سایدبار */
+.post-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 50px;
+  align-items: start;
+}
+
+/* سایدبار و فهرست مطالب */
+.post-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.toc-refined {
+  background: var(--clr-surface-card);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #222;
+}
+
+.toc-header {
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.toc-item a {
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  padding: 8px 0;
+  transition: 0.3s;
+}
+
+.toc-item a:hover {
+  color: var(--clr-accent);
+  transform: translateX(-5px);
+}
+
+.toc-subitem {
+  padding-right: 15px;
+  border-right: 1px solid #333;
+}
+
+/* استایل بدنه متن (بسیار مهم برای خوانایی) */
+.post-content {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--text-main);
+}
+
+.post-content h2 {
+  font-size: 1.8rem;
+  margin: 50px 0 25px;
+  color: #fff;
+  position: relative;
+}
+
+.post-content h2::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -10px;
+  width: 40px;
+  height: 4px;
+  background: var(--clr-accent);
+  border-radius: 2px;
+}
+
+.post-content p {
+  margin-bottom: 25px;
+}
+
+/* فوتر مقاله و اشتراک گذاری */
+.post-footer {
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid #222;
+}
+
+.share-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  color: #fff;
+  font-size: 1.2rem;
+  transition: 0.3s;
+}
+
+.share-btn.tg:hover { background: #0088cc; }
+.share-btn.wa:hover { background: #25d366; }
+
+/* ریسپانسیو */
+@media (max-width: 992px) {
+  .post-layout {
+    grid-template-columns: 1fr;
+  }
+  .post-sidebar {
+    display: none; /* مخفی کردن سایدبار در موبایل برای سادگی */
+  }
+  .post-title {
+    font-size: 2.2rem;
+  }
+}

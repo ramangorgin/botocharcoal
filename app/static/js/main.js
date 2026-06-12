@@ -79,13 +79,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!href || href === "#") return;
 
         const target = document.querySelector(href);
-        if (!target) return;
+        if (target) {
+          // Target exists on current page — scroll to it
+          event.preventDefault();
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+          return;
+        }
 
-        event.preventDefault();
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
+        // Target does NOT exist on this page (e.g., nav links on blog_detail)
+        // Redirect to homepage + hash instead of doing nothing
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/" && currentPath !== "/index.html") {
+          event.preventDefault();
+          window.location.href = href;
+        }
       });
     });
 });

@@ -3,258 +3,202 @@
 {% block title %}{{ post.title }} | بوتو زغال{% endblock %}
 
 {% block content %}
+<!-- نوار پیشرفت مطالعه -->
+<div class="reading-progress-container">
+<div class="reading-progress-bar" id="progressBar"></div>
+</div>
 
-<!-- Reading Progress Bar -->
-<div class="reading-progress"></div>
+<article class="blog-post-wrapper">
+<header class="blog-header">
+<div class="container-narrow">
+<nav class="breadcrumb">
+<a href="/blog">مقالات</a>
+<span class="separator">/</span>
+<span class="current">{{ post.topic }}</span>
+</nav>
 
-<!-- ═══════════════════════════════════════════════════════
-     Blog Hero
-     ═══════════════════════════════════════════════════════ -->
-<section class="blog-hero">
-  <div class="container">
-    <a href="/blog" style="display: inline-flex; align-items: center; gap: var(--sp-sm); color: var(--clr-ember); font-size: var(--fs-sm); margin-bottom: var(--sp-lg); text-decoration: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      بازگشت به مقالات
-    </a>
+<h1 class="post-title">{{ post.title }}</h1>
 
-    <h1>{{ post.title }}</h1>
+<div class="post-meta-refined">
+<div class="meta-item">
+<i class="ph-calendar-blank"></i>
+<time id="postDate" datetime="{{ post.published_to_website_at.isoformat() if post.published_to_website_at else '' }}">
+{{ post_persian_date if post_persian_date else 'منتشر نشده' }}
+</time>
+</div>
+<div class="meta-item">
+<i class="ph-clock"></i>
+<span id="readTimeText">در حال محاسبه...</span>
+</div>
+<div class="meta-item">
+<i class="ph-tag"></i>
+<span>{{ post.topic }}</span>
+</div>
+</div>
+</div>
+</header>
 
-    <div class="blog-meta">
-      <div class="blog-meta__item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        {% if post.published_to_website_at %}
-        <time datetime="{{ post.published_to_website_at.isoformat() }}">
-          {{ post.published_to_website_at.strftime('%d %B %Y') }}
-        </time>
-        {% endif %}
-      </div>
-
-      {% if post.topic %}
-      <div class="blog-meta__item">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        {{ post.topic }}
-      </div>
-      {% endif %}
-
-      <div class="blog-meta__item" id="readingTime">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="readTimeText">در حال محاسبه...</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════
-     Featured Image
-     ═══════════════════════════════════════════════════════ -->
 {% if cover %}
-<div style="max-width: var(--container-max); margin: 0 auto; padding: var(--sp-3xl) var(--sp-lg) 0;">
-  <img src="{{ cover.file_path }}" alt="{{ post.title }}" style="width: 100%; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); max-height: 500px; object-fit: cover;">
+<div class="featured-image-wrapper">
+<img src="{{ cover.file_path }}" alt="{{ post.title }}" class="featured-image">
 </div>
 {% endif %}
 
-<!-- ═══════════════════════════════════════════════════════
-     Blog Content
-     ═══════════════════════════════════════════════════════ -->
-<article class="blog-content">
+<div class="container-narrow">
+<div class="post-layout"><aside class="post-sidebar">
+<nav class="toc-refined" id="toc">
+<div class="toc-header">فهرست مطالب</div>
+<ul class="toc-list" id="tocList"></ul>
+</nav>
+</aside>
 
-  <!-- Table of Contents - Dynamic -->
-  <nav class="toc" aria-label="فهرست مطالب" id="toc">
-    <div class="toc__title">📑 فهرست مطالب</div>
-    <ul class="toc__list" id="tocList">
-      <li class="toc__item"><a href="#article-body" class="toc__link">محتوای مقاله</a></li>
-    </ul>
-  </nav>
-
-  <!-- Article Body from HTML -->
-  <div id="article-body">
-    {% if post.body_html %}
-      {{ post.body_html | safe }}
-    {% else %}
-      <h2 id="introduction">مقدمه</h2>
-      <p>این مقاله درباره {{ post.topic }} است و تلاش می‌کند اطلاعات مفیدی برای شما فراهم کند.</p>
-
-      <h2 id="main-content">محتوای اصلی</h2>
-      <p>{{ post.title }} یکی از مهم‌ترین مباحث در صنعت زغال است. در این بخش به تفصیل بیشتر می‌پردازیم.</p>
-
-      <h3>نکات کلیدی</h3>
-      <ul>
-        <li>نکته اول: معلومات کلیدی</li>
-        <li>نکته دوم: توجه به جزئیات</li>
-        <li>نکته سوم: عملی‌کردن دانش</li>
-      </ul>
-
-      <h2 id="conclusion">نتیجه‌گیری</h2>
-      <p>در نهایت، این مقاله تلاش داشت تا شما را از چیزهای مهم آگاه کند. برای سوالات بیشتر با ما تماس بگیرید.</p>
-    {% endif %}
-  </div>
-
-  <!-- Hashtags -->
-  {% if post.hashtags %}
-  <div style="margin-top: var(--sp-2xl); display: flex; align-items: center; gap: var(--sp-sm); flex-wrap: wrap; justify-content: center;">
-    {% for tag in post.hashtags.split() %}
-    <span style="padding: 4px 12px; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: var(--radius-full); font-size: var(--fs-xs); color: var(--clr-text-muted);">#{{ tag | replace('#', '') }}</span>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <!-- Share Section -->
-  <div class="share-buttons">
-    <span class="share-buttons__text">این مقاله را به اشتراک بگذارید:</span>
-    <div style="display: flex; gap: var(--sp-sm); flex-wrap: wrap;">
-      <a href="https://t.me/share/url?url={{ request.url }}&text={{ post.title }}" class="btn btn-ghost btn--sm" target="_blank" rel="noopener">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9 4Z"/><path d="M22 2 11 13"/></svg>
-        تلگرام
-      </a>
-      <a href="https://www.instagram.com/botocharcoal" class="btn btn-ghost btn--sm" target="_blank" rel="noopener">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-        اینستاگرام
-      </a>
-    </div>
-  </div>
-</article>
-
-<!-- ═══════════════════════════════════════════════════════
-     Author Card
-     ═══════════════════════════════════════════════════════ -->
-<section class="section" style="padding-top: 0;">
-  <div class="container">
-    <div class="author-card">
-      <div class="author-card__avatar">👨‍💼</div>
-      <div class="author-card__info">
-        <h4>تیم تخصصی بوتو زغال</h4>
-        <p>نویسندگان بوتو زغال متخصصان صنعت هستند که سال‌ها تجربه در این حوزه دارند. آن‌ها برای اطلاع‌رسانی و آموزش به جامعه متعهد هستند.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════
-     Related Articles - Dynamic
-     ═══════════════════════════════════════════════════════ -->
-{% if related_posts %}
-<section class="section reveal" style="background: var(--clr-charcoal);">
-  <div class="container">
-    <h2 style="text-align: center; margin-bottom: var(--sp-3xl);">مقالات مرتبط</h2>
-
-    <div class="grid grid--3">
-     {% for rp in related_posts %}
-     {% set rp_post = rp.post %}
-     {% set rp_cover = rp.cover %}
-     <article class="blog-card">
-       <a href="/blog/{{ rp_post.slug }}" class="blog-card__image" aria-label="{{ rp_post.title }}">
-         {% if rp_cover %}
-           <img src="{{ rp_cover.file_path }}" alt="{{ rp_post.title }}" loading="lazy" style="width:100%;height:180px;object-fit:cover;">
-         {% else %}
-           <div class="blog-card__image-placeholder" style="height:180px;">
-             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-           </div>
-         {% endif %}
-       </a>
-       <div class="blog-card__body">
-         <div class="blog-card__meta">
-           {% if rp_post.topic %}
-           <span class="blog-card__topic">{{ rp_post.topic }}</span>
-           {% endif %}
-         </div>
-         <h3 class="blog-card__title"><a href="/blog/{{ rp_post.slug }}">{{ rp_post.title }}</a></h3>
-         <p class="blog-card__excerpt">{{ rp_post.body_html | striptags | truncate(120) }}</p>
-         <div class="blog-card__footer">
-           {% set rp_wc = rp_post.body_html | striptags | split(' ') | length %}
-           {% set rp_rt = (rp_wc / 200) | round | int %}
-           {% if rp_rt < 1 %}{% set rp_rt = 1 %}{% endif %}
-           <span>{% if rp_rt == 1 %}۱{% else %}{{ "{:,}".format(rp_rt).replace(',', '٬') }}{% endif %} دقیقه</span>
-         </div>
-       </div>
-     </article>
-     {% endfor %}
-    </div>
-  </div>
-</section>
+<main class="post-content" id="article-body">
+{% if post.body_html %}
+{{ post.body_html | safe }}
+{% else %}
+<p>محتوایی برای نمایش وجود ندارد.</p>
 {% endif %}
 
-<!-- ═══════════════════════════════════════════════════════
-     Contact CTA
-     ═══════════════════════════════════════════════════════ -->
-<section class="cta-section reveal">
-  <div class="cta-section__content">
-    <h2>سوالی دارید؟</h2>
-    <p>تیم متخصص ما آماده پاسخگویی به سوالات شما درباره محصولات و خدمات است</p>
-    <div class="cta-section__actions">
-      <a href="/contact" class="btn btn-white btn--lg">تماس با ما</a>
-      <a href="https://t.me/botocharcoal" class="btn btn-outline btn--lg" target="_blank" rel="noopener">پیام در تلگرام</a>
-    </div>
-  </div>
+{% if post.hashtags %}
+<div class="post-tags">
+{% for tag in post.hashtags.split() %}
+<a href="#" class="tag-link">#{{ tag | replace('#', '') }}</a>
+{% endfor %}
+</div>
+{% endif %}
+
+<footer class="post-footer">
+<div class="share-box">
+<span>اشتراک‌گذاری:</span>
+<a href="https://t.me/share/url?url={{ request.url }}&text={{ post.title }}" class="share-btn tg" title="تلگرام">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.17.17 0 0 0-.07-.2c-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.35-.49.96-.75 3.78-1.65 6.31-2.73 7.57-3.24C15.29 8.07 16.04 7.81 16.64 8.8z"/>
+</svg>
+</a>
+<a href="https://wa.me/?text={{ post.title }} {{ request.url }}" class="share-btn wa" title="واتس‌اپ">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.52 14.08c-.23.65-1.36 1.24-1.86 1.32-.5.08-1.13.11-1.82-.12-.42-.14-.96-.32-1.65-.63-2.9-1.26-4.79-4.18-4.93-4.37-.14-.2-1.14-1.52-1.14-2.9s.72-2.06.98-2.34c.26-.28.56-.35.75-.35l.54.01c.17 0 .41-.07.64.49.24.57.8 1.96.87 2.1.07.14.11.3.02.48-.09.17-.14.28-.27.43l-.41.48c-.14.14-.28.29-.12.57.16.28.71 1.17 1.52 1.9 1.05.94 1.93 1.23 2.21 1.37.28.14.44.12.6-.07.16-.2.69-.8.87-1.08.18-.28.36-.23.6-.14.24.09 1.53.72 1.79.85.26.14.43.2.5.31.06.12.06.68-.17 1.33z"/>
+</svg>
+</a>
+</div>
+</footer></main>
+</div>
+</div>
+</article>
+
+{% if related_posts %}
+<section class="related-posts-section">
+<div class="container">
+<h2 class="section-title">پیشنهاد مطالعه بیشتر</h2>
+<div class="related-posts-container">
+{% for rp in related_posts %}
+<div class="related-card">
+{% if rp.cover %}<img src="{{ rp.cover.file_path }}" alt="{{ rp.post.title }}">
+{% else %}
+<div class="related-placeholder">بدون تصویر</div>
+{% endif %}
+<div class="related-card-content">
+<span class="related-card-date">
+{{ rp.persian_date if rp.persian_date else '' }}
+</span><a href="/blog/{{ rp.post.slug }}" class="related-card-title">{{ rp.post.title }}</a>
+{% if rp.post.summary %}
+<p class="related-card-summary">{{ rp.post.summary[:100] }}...</p>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
 </section>
+{% endif %}
 
 {% endblock %}
 
 {% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/blog_detail.css') }}">
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Calculate reading time
-  var articleBody = document.getElementById('article-body');
-  if (articleBody) {
-    var text = articleBody.textContent || '';
-    var words = text.trim().split(/\s+/).filter(function(w) { return w.length > 0; }).length;
-    var readingTime = Math.ceil(words / 200);
-    var persianNums = '۰۱۲۳۴۵۶۷۸۹';
-    var toPersian = function(n) {
-      return String(n).replace(/[0-9]/g, function(d) { return persianNums[d]; });
-    };
-    var el = document.getElementById('readTimeText');
-    if (el) el.textContent = toPersian(readingTime) + ' دقیقه مطالعه';
-  }
+/* Botocharcoal — Blog Detail Page Script */
 
-  // Generate TOC from H2/H3 headings
-  var tocList = document.getElementById('tocList');
-  if (tocList && articleBody) {
-    var headings = articleBody.querySelectorAll('h2, h3');
-    var existingLinks = tocList.querySelectorAll('a');
-    if (existingLinks.length <= 1) {
-      tocList.innerHTML = '';
+// --- تبدیل اعداد به فارسی ---
+function toPersian(n) {
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+// --- محاسبه زمان مطالعه ---
+(function() {
+    try {
+        var article = document.getElementById('article-body');
+        if (article) {
+            var text = (article.textContent || article.innerText || '').trim();
+            var words = text.length > 0 ? text.split(/\s+/).filter(function(w) { return w.length > 0; }).length : 0;
+            var time = Math.max(1, Math.ceil(words / 200));
+            var readTimeEl = document.getElementById('readTimeText');
+            if (readTimeEl) {
+                readTimeEl.textContent = toPersian(time) + ' دقیقه مطالعه';
+            }
+        }
+    } catch (e) {
+        console.warn('Reading time calculation failed:', e);
     }
-    headings.forEach(function(heading, index) {
-      var level = heading.tagName.toLowerCase();
-      var text = heading.textContent.trim();
-      if (!heading.id) {
-        heading.id = 'heading-' + index;
-      }
-      var li = document.createElement('li');
-      li.className = 'toc__item' + (level === 'h3' ? ' toc__item--nested' : '');
-      var a = document.createElement('a');
-      a.href = '#' + heading.id;
-      a.className = 'toc__link';
-      a.textContent = text;
-      li.appendChild(a);
-      tocList.appendChild(li);
-    });
-  }
+})();
 
-  // Smooth scroll for anchor links
-  document.querySelectorAll('.blog-content a[href^="#"], .toc__link').forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      var targetId = this.getAttribute('href');
-      if (targetId === '#') return;
-      var target = document.querySelector(targetId);
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  });
+// --- تولید فهرست مطالب ---
+(function() {
+    try {
+        var article = document.getElementById('article-body');
+        var tocList = document.getElementById('tocList');
+        if (article && tocList) {
+            var headings = article.querySelectorAll('h2, h3');
+            if (headings.length > 0) {
+                for (var i = 0; i < headings.length; i++) {
+                    var h = headings[i];
+                    h.id = 'heading-' + i;
+                    var li = document.createElement('li');
+                    li.className = h.tagName === 'H3' ? 'toc-subitem' : 'toc-item';
+                    var headingText = h.textContent || h.innerText || 'بدون عنوان';
+                    var a = document.createElement('a');
+                    a.href = '#heading-' + i;
+                    a.textContent = headingText;
+                    li.innerHTML = '';
+                    li.appendChild(a);
+                    tocList.appendChild(li);
+                }
 
-  // Reading progress bar
-  var progressBar = document.querySelector('.reading-progress');
-  if (progressBar) {
-    window.addEventListener('scroll', function() {
-      var articleTop = progressBar.offsetTop;
-      var articleHeight = document.querySelector('.blog-content') ? document.querySelector('.blog-content').offsetHeight : 1000;
-      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      var progress = Math.min(Math.max((scrollTop - articleTop) / articleHeight * 100, 0), 100);
-      progressBar.style.width = progress + '%';
-    });
-  }
-});
+                // اسکرول نرم TOC
+                tocList.addEventListener('click', function (e) {
+                    var a = e.target.closest('a');
+                    if (!a) return;
+                    e.preventDefault();
+                    var target = document.querySelector(a.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        console.warn('TOC generation failed:', e);
+    }
+})();
+
+// --- نوار پیشرفت مطالعه ---
+(function() {
+    try {
+        var bar = document.getElementById('progressBar');
+        if (bar) {
+            window.addEventListener('scroll', function () {
+                var scrolled = document.documentElement.scrollTop;
+                var total = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                if (total > 0) {
+                    bar.style.width = (scrolled / total * 100) + '%';
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Progress bar failed:', e);
+    }
+})();
 </script>
 {% endblock %}
+
+

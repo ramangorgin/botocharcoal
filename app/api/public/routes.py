@@ -12,6 +12,7 @@ from app.core.constants import PostWebsiteStatus
 from app.schemas.lead import LeadCreateSchema
 from app.services.lead_service import create_lead
 from app.core.config import settings
+import jdatetime
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/public")
@@ -87,6 +88,11 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
     if not post_raw:
         return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
     post = Post(**dict(post_raw))
+    # Convert publish date to Persian (Jalali) using jdatetime
+    post_persian_date = None
+    if post.published_to_website_at:
+        pers_dt = jdatetime.datetime.fromgregorian(datetime=post.published_to_website_at)
+        post_persian_date = pers_dt.strftime('%d %B %Y')
     cover = (await db.execute(
         text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
         {"post_id": post.id}
@@ -114,7 +120,11 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                 {"post_id": rp.id}
             )).mappings().one_or_none()
             rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
-            related_posts.append({"post": rp, "cover": rcover})
+            rp_persian_date = None
+            if rp.published_to_website_at:
+                pers_dt = jdatetime.datetime.fromgregorian(datetime=rp.published_to_website_at)
+                rp_persian_date = pers_dt.strftime('%d %B %Y')
+            related_posts.append({"post": rp, "cover": rcover, "persian_date": rp_persian_date})
     # Fallback: if no related by topic, get latest 3
     if not related_posts:
         latest_raw = (await db.execute(
@@ -135,10 +145,15 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                 {"post_id": rp.id}
             )).mappings().one_or_none()
             rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
-            related_posts.append({"post": rp, "cover": rcover})
+            rp_persian_date = None
+            if rp.published_to_website_at:
+                pers_dt = jdatetime.datetime.fromgregorian(datetime=rp.published_to_website_at)
+                rp_persian_date = pers_dt.strftime('%d %B %Y')
+            related_posts.append({"post": rp, "cover": rcover, "persian_date": rp_persian_date})
     return templates.TemplateResponse("blog_detail.html", {
         "request": request,
         "post": post,
+        "post_persian_date": post_persian_date,
         "cover": cover,
         "related_posts": related_posts
     })
