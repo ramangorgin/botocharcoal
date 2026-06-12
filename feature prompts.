@@ -1,3 +1,9 @@
+we import colas from Indonesia and have the license of a good company from Indonesia.
+
+404 template page isn't showing when entering a url that doesn't exist.
+
+the button: مطالعهٔ بیشتر on home.html in blog's section gives 500 error (not even showing the right template) and breaks. while it must use blog_details.html template to render datas coming from database.
+
 remove the whole auto_publish_on_Instagram_by_API thing. I'm not going to use Instagram's API to auto publish the posts that AI creates. instead, I need to see a demo of the post that should be published on Instagram and do it my self as the admin manualy (implement the seeing of a demo of what's going to be posted with the abitily to download the images and copy the caption for easyier use for admin.)
 
 I need to sattle a gitlab or a more proper altearnative just for this project inside the production server so that I could push there and also have a full Deployment's yaml CI/CD pipeline so everything would be sync with local and productionable.

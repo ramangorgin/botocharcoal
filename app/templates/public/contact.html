@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}تماس با بوتو زغال | سفارش و مشاوره{% endblock %}
+{% block meta_description %}تماس با بوتو زغال - ثبت سفارش، مشاوره و راهنمایی از طریق فرم تماس، اینستاگرام و تلگرام.{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════
+     Contact Hero
+     ═══════════════════════════════════════════════════════ -->
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero__badge" style="margin-bottom: var(--sp-xl);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      تماس با ما
+    </div>
+    <h1>با ما در <span class="text-accent">ارتباط باشید</span></h1>
+    <p class="page-hero__subtitle">سوالی دارید؟ می‌خواهید سفارش ثبت کنید؟ ما آماده پاسخگویی هستیم.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     Contact Methods
+     ═══════════════════════════════════════════════════════ -->
+<section class="section reveal">
+  <div class="container">
+    <div class="section-header section-header--center">
+      <span class="section-kicker">راه‌های ارتباطی</span>
+      <h2>از هر طریقی که راحت‌ترید، با ما حرف بزنید</h2>
+    </div>
+
+    <div class="contact-cards">
+      <div class="contact-card reveal">
+        <div class="contact-card__icon bg-ember">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+        </div>
+        <h3>اینستاگرام</h3>
+        <p class="article-text">
+          رسمی‌ترین مسیر ثبت سفارش و مشاوره، دایرکت اینستاگرام ماست.
+        </p>
+        <a href="https://instagram.com/botocharcoal" class="btn btn-primary btn--sm" target="_blank" rel="noopener">
+          @botocharcoal
+        </a>
+      </div>
+
+      <div class="contact-card reveal reveal-delay-1">
+        <div class="contact-card__icon bg-brown">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9 4Z"/><path d="M22 2 11 13"/></svg>
+        </div>
+        <h3>تلگرام</h3>
+        <p class="article-text">
+          برای پیگیری سفارش و ارتباط سریع‌تر، در تلگرام پیام دهید.
+        </p>
+        <a href="https://t.me/botocharcoal" class="btn btn-primary btn--sm" target="_blank" rel="noopener">
+          @botocharcoal
+        </a>
+      </div>
+
+      <div class="contact-card reveal reveal-delay-2">
+        <div class="contact-card__icon bg-success">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>فرم تماس</h3>
+        <p class="article-text">
+          اگر ترجیح می‌دهید از طریق همین سایت پیام بفرستید، فرم زیر را پر کنید.
+        </p>
+        <a href="#contact-form" class="btn btn-primary btn--sm">
+          پر کردن فرم
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     Contact Form
+     ═══════════════════════════════════════════════════════ -->
+<section class="section section--alt reveal" id="contact-form">
+  <div class="container container--narrow">
+    <div class="section-header section-header--center" style="margin-bottom: var(--sp-2xl);">
+      <span class="section-kicker">فرم درخواست</span>
+      <h2>پیام خود را برای ما بنویسید</h2>
+      <p class="article-text">
+        نام، شماره تماس و شهر خود را وارد کنید. تیم ما در اسرع وقت با شما ارتباط خواهد گرفت.
+      </p>
+    </div>
+
+    {% if success %}
+    <div class="form-success">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div>
+        <strong>پیام شما با موفقیت ارسال شد</strong>
+        <p class="article-text" style="margin-bottom: 0;">
+          تیم ما در اسرع وقت با شما تماس خواهد گرفت.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="form-error">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>
+        <strong>خطا در ارسال پیام</strong>
+        <p class="article-text" style="margin-bottom: 0;">
+          لطفاً دوباره تلاش کنید یا از طریق اینستاگرام پیام دهید.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+
+    <form action="/contact" method="POST" class="contact-form">
+      <div class="contact-form__row">
+        <div class="form-group">
+          <label for="name">نام و نام خانوادگی</label>
+          <input type="text" id="name" name="name" placeholder="مثلاً: علی محمدی" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="phone">شماره تماس <span style="color: var(--clr-ember);">*</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="۰۹۱۲۳۴۵۶۷۸۹" autocomplete="tel" required>
+        </div>
+      </div>
+
+      <div class="contact-form__row">
+        <div class="form-group">
+          <label for="city">شهر</label>
+          <input type="text" id="city" name="city" placeholder="مثلاً: تهران">
+        </div>
+      </div>
+
+      <div class="form-group form-group--wide">
+        <label for="message">پیام شما</label>
+        <textarea id="message" name="message" rows="5" placeholder="پیام یا درخواست خود را بنویسید..."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn--lg form-submit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        ارسال پیام
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     FAQ Quick Section
+     ═══════════════════════════════════════════════════════ -->
+<section class="section reveal">
+  <div class="container container--narrow">
+    <div class="section-header section-header--center" style="margin-bottom: var(--sp-2xl);">
+      <span class="section-kicker">سؤالات متداول</span>
+      <h2>پیش از تماس، اینجا را ببینید</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <h4>چگونه می‌توانم سفارش ثبت کنم؟</h4>
+        <p class="article-text">
+          رسمی‌ترین مسیر ثبت سفارش، دایرکت اینستاگرام @botocharcoal است. محصول خود را انتخاب کنید و در دایرکت به ما اطلاع دهید.
+        </p>
+      </div>
+
+      <div class="faq-item reveal reveal-delay-1">
+        <h4>آیا ارسال به سراسر ایران دارید؟</h4>
+        <p class="article-text">
+          بله، محموله‌ها از طریق شرکت‌های باربری معتبر به سراسر ایران ارسال می‌شوند.
+        </p>
+      </div>
+
+      <div class="faq-item reveal reveal-delay-2">
+        <h4>کیفیت محصولات چگونه تضمین می‌شود؟</h4>
+        <p class="article-text">
+          تمام محموله‌های ما دارای گواهی مبدأ و بازرسی کیفی هستند و از تولیدکننده معتبر اندونزی وارد می‌شوند.
+        </p>
+      </div>
+
+      <div class="faq-item reveal reveal-delay-3">
+        <h4>حداقل تعداد برای سفارش چقدر است؟</h4>
+        <p class="article-text">
+          برای اطلاع از شرایط سفارش و حداقل حجم، لطفاً از طریق اینستاگرام یا فرم تماس با ما در میان باشید.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Contact Cards */
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-xl);
+}
+
+.contact-card {
+  padding: var(--sp-2xl);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  transition: var(--transition-normal);
+}
+
+.contact-card:hover {
+  border-color: var(--clr-ember);
+  transform: translateY(-4px);
+}
+
+.contact-card__icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  margin: 0 auto var(--sp-lg);
+  color: white;
+}
+
+.contact-card h3 {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  margin-bottom: var(--sp-sm);
+}
+
+.contact-card .article-text {
+  margin-bottom: var(--sp-lg);
+}
+
+/* Form Success/Error */
+.form-success,
+.form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-md);
+  padding: var(--sp-lg);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--sp-xl);
+}
+
+.form-success {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.form-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.form-success svg,
+.form-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Contact Form */
+.contact-form {
+  padding: var(--sp-2xl);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+}
+
+.contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-lg);
+  margin-bottom: var(--sp-lg);
+}
+
+.form-group {
+  margin-bottom: var(--sp-lg);
+}
+
+.form-group--wide {
+  margin-bottom: var(--sp-xl);
+}
+
+.form-group label {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--clr-text);
+  margin-bottom: var(--sp-sm);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--clr-charcoal);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  color: var(--clr-text);
+  font-family: inherit;
+  font-size: var(--fs-base);
+  transition: var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--clr-ember);
+  box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.15);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--clr-text-muted);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-submit {
+  width: 100%;
+}
+
+/* FAQ */
+.faq-list {
+  display: grid;
+  gap: var(--sp-md);
+}
+
+.faq-item {
+  padding: var(--sp-xl);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+}
+
+.faq-item h4 {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  margin-bottom: var(--sp-sm);
+  color: var(--clr-text);
+}
+
+.faq-item .article-text {
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contact-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .contact-form__row {
+    grid-template-columns: 1fr;
+  }
+  
+  .page-hero h1 {
+    font-size: var(--fs-2xl);
+  }
+}
+</style>
+{% endblock %}

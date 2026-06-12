@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -7,13 +8,23 @@ from app.db.session import get_db
 from app.db.models.post import Post
 from app.db.models.catalog import Catalog
 from app.db.models.media_asset import MediaAsset
-from app.core.constants import PostWebsiteStatus, MediaRole
+from app.core.constants import PostWebsiteStatus
 from app.schemas.lead import LeadCreateSchema
 from app.services.lead_service import create_lead
 from app.core.config import settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/public")
+
+
+# Custom Jinja2 filter: split string by delimiter
+def _split_filter(value, delim=' '):
+    """Split a string by delimiter (Jinja2 doesn't have split built-in)."""
+    if isinstance(value, str):
+        return value.split(delim)
+    return []
+
+templates.env.filters["split"] = _split_filter
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -60,10 +71,9 @@ async def blog_index(request: Request, db: AsyncSession = Depends(get_db)):
     for row in posts_raw:
         post = Post(**dict(row))
         cover_result = (await db.execute(
-            select(MediaAsset)
-            .where(MediaAsset.post_id == post.id, MediaAsset.role == MediaRole.BLOG_COVER)
-            .limit(1)
-        )).scalar_one_or_none()
+            text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
+            {"post_id": post.id}
+        )).mappings().one_or_none()
         posts_with_covers.append({"post": post, "cover": cover_result})
     return templates.TemplateResponse("blog_index.html", {"request": request, "posts": posts_with_covers})
 
@@ -78,10 +88,11 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
         return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
     post = Post(**dict(post_raw))
     cover = (await db.execute(
-        select(MediaAsset)
-        .where(MediaAsset.post_id == post.id, MediaAsset.role == MediaRole.BLOG_COVER)
-        .limit(1)
-    )).scalar_one_or_none()
+        text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
+        {"post_id": post.id}
+    )).mappings().one_or_none()
+    if cover:
+        cover = MediaAsset(**dict(cover))
     # Fetch related posts (same topic, excluding current post)
     related_posts = []
     if post.topic:
@@ -98,11 +109,11 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
         )).mappings().all()
         for row in related_raw:
             rp = Post(**dict(row))
-            rcover = (await db.execute(
-                select(MediaAsset)
-                .where(MediaAsset.post_id == rp.id, MediaAsset.role == MediaRole.BLOG_COVER)
-                .limit(1)
-            )).scalar_one_or_none()
+            rcover_raw = (await db.execute(
+                text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
+                {"post_id": rp.id}
+            )).mappings().one_or_none()
+            rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
             related_posts.append({"post": rp, "cover": rcover})
     # Fallback: if no related by topic, get latest 3
     if not related_posts:
@@ -119,11 +130,11 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
         )).mappings().all()
         for row in latest_raw:
             rp = Post(**dict(row))
-            rcover = (await db.execute(
-                select(MediaAsset)
-                .where(MediaAsset.post_id == rp.id, MediaAsset.role == MediaRole.BLOG_COVER)
-                .limit(1)
-            )).scalar_one_or_none()
+            rcover_raw = (await db.execute(
+                text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
+                {"post_id": rp.id}
+            )).mappings().one_or_none()
+            rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
             related_posts.append({"post": rp, "cover": rcover})
     return templates.TemplateResponse("blog_detail.html", {
         "request": request,
