@@ -14,6 +14,25 @@ from app.services.lead_service import create_lead
 from app.core.config import settings
 import jdatetime
 
+# Persian month names for display
+MONTHS_PERSIAN = [
+    '', 'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد',
+    'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+]
+PERSIAN_DIGITS = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+
+def to_persian_digits(s):
+    return str(s).translate(PERSIAN_DIGITS)
+
+def format_persian_date(dt):
+    if not dt:
+        return ''
+    jalali = jdatetime.datetime.fromgregorian(datetime=dt)
+    day = to_persian_digits(jalali.day)
+    month = MONTHS_PERSIAN[jalali.month - 1]
+    year = to_persian_digits(jalali.year)
+    return f'{day} {month} {year}'
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/public")
 
@@ -89,10 +108,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
         return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
     post = Post(**dict(post_raw))
     # Convert publish date to Persian (Jalali) using jdatetime
-    post_persian_date = None
-    if post.published_to_website_at:
-        pers_dt = jdatetime.datetime.fromgregorian(datetime=post.published_to_website_at)
-        post_persian_date = pers_dt.strftime('%d %B %Y')
+    post_persian_date = format_persian_date(post.published_to_website_at)
     cover = (await db.execute(
         text("SELECT * FROM media_assets WHERE post_id = :post_id AND role = 'blog_cover' ORDER BY sort_order LIMIT 1"),
         {"post_id": post.id}
@@ -120,11 +136,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                 {"post_id": rp.id}
             )).mappings().one_or_none()
             rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
-            rp_persian_date = None
-            if rp.published_to_website_at:
-                pers_dt = jdatetime.datetime.fromgregorian(datetime=rp.published_to_website_at)
-                rp_persian_date = pers_dt.strftime('%d %B %Y')
-            related_posts.append({"post": rp, "cover": rcover, "persian_date": rp_persian_date})
+            related_posts.append({"post": rp, "cover": rcover, "persian_date": format_persian_date(rp.published_to_website_at)})
     # Fallback: if no related by topic, get latest 3
     if not related_posts:
         latest_raw = (await db.execute(
@@ -145,11 +157,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                 {"post_id": rp.id}
             )).mappings().one_or_none()
             rcover = MediaAsset(**dict(rcover_raw)) if rcover_raw else None
-            rp_persian_date = None
-            if rp.published_to_website_at:
-                pers_dt = jdatetime.datetime.fromgregorian(datetime=rp.published_to_website_at)
-                rp_persian_date = pers_dt.strftime('%d %B %Y')
-            related_posts.append({"post": rp, "cover": rcover, "persian_date": rp_persian_date})
+            related_posts.append({"post": rp, "cover": rcover, "persian_date": format_persian_date(rp.published_to_website_at)})
     return templates.TemplateResponse("blog_detail.html", {
         "request": request,
         "post": post,

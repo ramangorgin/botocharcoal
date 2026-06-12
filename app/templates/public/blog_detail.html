@@ -70,16 +70,26 @@
 <footer class="post-footer">
 <div class="share-box">
 <span>اشتراک‌گذاری:</span>
-<a href="https://t.me/share/url?url={{ request.url }}&text={{ post.title }}" class="share-btn tg" title="تلگرام">
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.17.17 0 0 0-.07-.2c-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.35-.49.96-.75 3.78-1.65 6.31-2.73 7.57-3.24C15.29 8.07 16.04 7.81 16.64 8.8z"/>
-</svg>
+<div class="share-links">
+<a href="https://t.me/share/url?url={{ request.url }}&text={{ post.title }}" class="share-btn tg" title="تلگرام" target="_blank" rel="noopener">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="m22 2-11 11"/></svg>
 </a>
-<a href="https://wa.me/?text={{ post.title }} {{ request.url }}" class="share-btn wa" title="واتس‌اپ">
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.52 14.08c-.23.65-1.36 1.24-1.86 1.32-.5.08-1.13.11-1.82-.12-.42-.14-.96-.32-1.65-.63-2.9-1.26-4.79-4.18-4.93-4.37-.14-.2-1.14-1.52-1.14-2.9s.72-2.06.98-2.34c.26-.28.56-.35.75-.35l.54.01c.17 0 .41-.07.64.49.24.57.8 1.96.87 2.1.07.14.11.3.02.48-.09.17-.14.28-.27.43l-.41.48c-.14.14-.28.29-.12.57.16.28.71 1.17 1.52 1.9 1.05.94 1.93 1.23 2.21 1.37.28.14.44.12.6-.07.16-.2.69-.8.87-1.08.18-.28.36-.23.6-.14.24.09 1.53.72 1.79.85.26.14.43.2.5.31.06.12.06.68-.17 1.33z"/>
-</svg>
+<a href="https://wa.me/?text={{ post.title }}%20{{ request.url }}" class="share-btn wa" title="واتس‌اپ" target="_blank" rel="noopener">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1zm5 0a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1zm0 4a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1z"/></svg>
 </a>
+<a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ post.title }}" class="share-btn tw" title="ایکس (توییتر)" target="_blank" rel="noopener">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg>
+</a>
+<a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}&title={{ post.title }}" class="share-btn li" title="لینکدین" target="_blank" rel="noopener">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+</a>
+<a href="https://www.instagram.com/" class="share-btn ig" title="اینستاگرام" target="_blank" rel="noopener">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+</a>
+<button class="share-btn copy-btn" onclick="copyLink()" title="کپی لینک">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+</button>
+</div>
 </div>
 </footer></main>
 </div>
@@ -90,19 +100,26 @@
 <section class="related-posts-section">
 <div class="container">
 <h2 class="section-title">پیشنهاد مطالعه بیشتر</h2>
-<div class="related-posts-container">
+<div class="related-posts-carousel">
 {% for rp in related_posts %}
 <div class="related-card">
-{% if rp.cover %}<img src="{{ rp.cover.file_path }}" alt="{{ rp.post.title }}">
+<div class="card-img">
+{% if rp.cover %}
+<img src="{{ rp.cover.file_path }}" alt="{{ rp.post.title }}">
 {% else %}
-<div class="related-placeholder">بدون تصویر</div>
+<div class="placeholder-icon">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+</div>
 {% endif %}
-<div class="related-card-content">
+</div>
+<div class="related-card-body">
 <span class="related-card-date">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 {{ rp.persian_date if rp.persian_date else '' }}
-</span><a href="/blog/{{ rp.post.slug }}" class="related-card-title">{{ rp.post.title }}</a>
+</span>
+<a href="/blog/{{ rp.post.slug }}" class="related-card-title">{{ rp.post.title }}</a>
 {% if rp.post.summary %}
-<p class="related-card-summary">{{ rp.post.summary[:100] }}...</p>
+<p class="related-card-excerpt">{{ rp.post.summary[:120] }}</p>
 {% endif %}
 </div>
 </div>
@@ -198,6 +215,33 @@ function toPersian(n) {
         console.warn('Progress bar failed:', e);
     }
 })();
+
+// --- کپی لینک ---
+function copyLink() {
+    var url = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            showToast('لینک مقاله کپی شد');
+        });
+    }
+}
+
+function showToast(message) {
+    var existing = document.querySelector('.share-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'share-toast';
+    toast.textContent = message;
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        setTimeout(function() {
+            toast.remove();
+        }, 300);
+    }, 2500);
+}
 </script>
 {% endblock %}
 
