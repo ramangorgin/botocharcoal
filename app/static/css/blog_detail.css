@@ -94,7 +94,6 @@
 }
 
 .blog-header {
-  padding-top: 4rem;
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--bc-border);
 }
@@ -118,6 +117,7 @@
   flex-wrap: wrap;
   gap: 2.5rem;
   padding-bottom: 2rem;
+  padding-top: 0.8rem;
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -139,7 +139,7 @@
 }
 
 .meta-item time {
-  direction: ltr;
+  direction: rtl;
   display: inline-block;
 }
 
@@ -417,13 +417,6 @@
 
 .post-content figure {
   margin-bottom: 2.25rem;
-}
-
-.post-content figcaption {
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--bc-text-muted);
-  margin-top: 1rem;
 }
 
 .post-content hr {

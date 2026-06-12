@@ -1393,8 +1393,8 @@ button {
   content: '';
   position: absolute;
   right: 0;
-  bottom: -10px;
-  width: 40px;
+  bottom: -2px;
+  width: 70px;
   height: 4px;
   background: var(--clr-accent);
   border-radius: 2px;
