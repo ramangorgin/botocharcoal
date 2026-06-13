@@ -3,119 +3,86 @@
 {% block title %}مقالات | بوتو زغال{% endblock %}
 
 {% block content %}
-
-<!-- ═══════════════════════════════════════════════════════
-     Page Hero
-     ═══════════════════════════════════════════════════════ -->
+<!-- Hero Section -->
 <section class="blog-hero">
-  <div class="container">
-    <div class="hero__badge" style="margin-bottom: var(--sp-xl);">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      وبلاگ بوتو زغال
+    <div class="container-narrow">
+        <h1 class="blog-hero-title">مقالات و راهنماها</h1>
+        <p class="blog-hero-subtitle">آخرین مقالات، راهنماها و نکات تخصصی درباره زغال و صنعت باربیکیو</p>
     </div>
-    <h1>مقالات و <span class="text-accent">دانش صنعتی</span></h1>
-    <p class="hero__subtitle">اطلاعات تخصصی، نکات کاربردی و آخرین اخبار صنعت زغال از زبان متخصصان</p>
-  </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════
-     Blog Intro
-     ═══════════════════════════════════════════════════════ -->
-<section class="section reveal">
-  <div class="container container--narrow">
-    <p style="font-size: var(--fs-md); text-align: center; color: var(--clr-text-muted);">
-      مقالات ما توسط تیم متخصص صنعت زغال تهیه می‌شود. از راهنمای انتخاب محصول تا تحلیل بازار و تکنولوژی‌های نوین.
-    </p>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════
-     Blog Posts Grid
-     ═══════════════════════════════════════════════════════ -->
-{% if posts %}
-<section class="section reveal" style="padding-top: 0;">
-  <div class="container">
-    <div class="grid grid--3">
-      {% for p in posts %}
-      {% set post = p.post %}
-      {% set cover = p.cover %}
-      {% set word_count = post.body_html | striptags | split(' ') | length %}
-      {% set read_time = (word_count / 200) | round | int %}
-      {% if read_time < 1 %}{% set read_time = 1 %}{% endif %}
-      <article class="blog-card">
-        <a href="/blog/{{ post.slug }}" class="blog-card__image" aria-label="{{ post.title }}">
-          {% if cover %}
-            <img src="{{ cover.file_path }}" alt="{{ post.title }}" loading="lazy" style="width:100%;height:220px;object-fit:cover;">
-          {% else %}
-            <div class="blog-card__image-placeholder" style="height:220px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-          {% endif %}
-        </a>
-
-        <div class="blog-card__body">
-          <div class="blog-card__meta">
-            {% if post.topic %}
-            <span class="blog-card__topic">{{ post.topic }}</span>
-            {% endif %}
-            {% if post.published_to_website_at %}
-            <time datetime="{{ post.published_to_website_at.isoformat() }}">
-              {{ post.published_to_website_at.strftime('%Y %B') }}
-            </time>
-            {% endif %}
-          </div>
-
-          <h3 class="blog-card__title">
-            <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
-          </h3>
-
-          <p class="blog-card__excerpt">
-            {{ post.body_html | striptags | truncate(200) }}
-          </p>
-
-          <div class="blog-card__footer">
-            <span>
-              {% if read_time == 1 %}۱{% else %}{{ "{:,}".format(read_time).replace(',', '٬') }}{% endif %} دقیقه
-            </span>
-            <a href="/blog/{{ post.slug }}" class="btn btn-primary btn--sm">ادامه مطلب</a>
-          </div>
+<!-- Blog Posts Grid -->
+<section class="blog-posts-section">
+    <div class="container">
+        {% if posts %}
+        <div class="blog-posts-grid">
+            {% for item in posts %}
+            {% set post = item.post %}
+            {% set cover = item.cover %}
+            <article class="blog-card">
+                {% if cover %}
+                <div class="blog-card-image">
+                    <img src="{{ cover.file_path }}" alt="{{ post.title }}" loading="lazy">
+                </div>
+                {% else %}
+                <div class="blog-card-image blog-card-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                        <circle cx="9" cy="9" r="2"/>
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <div class="blog-card-body">
+                    <div class="blog-card-meta">
+                        <time class="blog-card-date">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                                <line x1="16" x2="16" y1="2" y2="6"/>
+                                <line x1="8" x2="8" y1="2" y2="6"/>
+                                <line x1="3" x2="21" y1="10" y2="10"/>
+                            </svg>
+                            {% if post.published_to_website_at %}
+                                {{ post.published_to_website_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                به‌زودی
+                            {% endif %}
+                        </time>
+                        {% if post.topic %}
+                        <span class="blog-card-topic">{{ post.topic }}</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="blog-card-title">
+                        <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
+                    </h2>
+                    {% if post.body_html %}
+                    <p class="blog-card-excerpt">{{ post.body_html | striptags | truncate(150) }}</p>
+                    {% endif %}
+                    <a href="/blog/{{ post.slug }}" class="blog-card-link">
+                        ادامه مطلب
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                            <path d="M19 12H5"/>
+                            <path d="m12 19-7-7 7-7"/>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
         </div>
-      </article>
-      {% endfor %}
+        {% else %}
+        <div class="blog-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+            </svg>
+            <h3>هنوز مقاله‌ای منتشر نشده</h3>
+            <p>به‌زودی مقالات آموزشی و تخصصی زیادی منتشر خواهد شد.</p>
+        </div>
+        {% endif %}
     </div>
-  </div>
 </section>
-{% else %}
-<section class="section reveal">
-  <div class="container" style="text-align: center;">
-    <p style="font-size: var(--fs-lg); color: var(--clr-text-muted);">
-      هیچ مقاله‌ای هنوز منتشر نشده.
-    </p>
-  </div>
-</section>
-{% endif %}
-
-<!-- ═══════════════════════════════════════════════════════
-     Stay Connected CTA
-     ═══════════════════════════════════════════════════════ -->
-<section class="cta-section reveal">
-  <div class="cta-section__content">
-    <h2>به جمع خوانندگان ما بپیوندید</h2>
-    <p>آخرین مقالات و اخبار صنعت زغال را از طریق شبکه‌های اجتماعی دنبال کنید</p>
-    <div class="cta-section__actions">
-      <a href="https://instagram.com/botocharcoal" class="btn btn-white btn--lg" target="_blank" rel="noopener">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-        اینستاگرام
-      </a>
-      <a href="https://t.me/botocharcoal" class="btn btn-outline btn--lg" target="_blank" rel="noopener">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9 4Z"/><path d="M22 2 11 13"/></svg>
-        تلگرام
-      </a>
-    </div>
-  </div>
-</section>
-
 {% endblock %}
 
 {% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/blog.css') }}">
 {% endblock %}

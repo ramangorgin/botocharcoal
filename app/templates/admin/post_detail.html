@@ -1,45 +1,178 @@
 {% extends "base.html" %}
-{% block title %}{{ post.title }}{% endblock %}
+
+{% block title %}جزئیات: {{ post.title }} | پنل مدیریت{% endblock %}
+
+{% block header_title %}نوشته: {{ post.title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
 {% block content %}
-<h1>{{ post.title }}</h1>
+<div class="admin-post-detail">
+    <!-- Post Info Card -->
+    <div class="admin-form-card admin-form-card--info">
+        <div class="admin-post-detail__header">
+            <div class="admin-post-detail__meta">
+                <div class="admin-post-detail__meta-item">
+                    <span class="admin-post-detail__meta-label">وضعیت سایت:</span>
+                    <span class="admin-status-badge admin-status-badge--{% if post.website_status == 'PUBLISHED' %}success{% else %}warning{% endif %}">
+                        {% if post.website_status == 'PUBLISHED' %}منتشر شده{% else %}پیش‌نویس{% endif %}
+                    </span>
+                </div>
+                <div class="admin-post-detail__meta-item">
+                    <span class="admin-post-detail__meta-label">وضعیت اینستاگرام:</span>
+                    <span class="admin-status-badge admin-status-badge--{% if post.instagram_status == 'PUBLISHED' %}success{% else %}secondary{% endif %}">
+                        {% if post.instagram_status == 'PUBLISHED' %}منتشر شده{% else %}در انتظار{% endif %}
+                    </span>
+                </div>
+                <div class="admin-post-detail__meta-item">
+                    <span class="admin-post-detail__meta-label">تاریخ ایجاد:</span>
+                    <span>{{ post.created_at.strftime('%Y-%m-%d %H:%M') if post.created_at else '—' }}</span>
+                </div>
+                <div class="admin-post-detail__meta-item">
+                    <span class="admin-post-detail__meta-label">تاریخ انتشار:</span>
+                    <span>{{ post.published_to_website_at.strftime('%Y-%m-%d %H:%M') if post.published_to_website_at else '—' }}</span>
+                </div>
+            </div>
+        </div>
 
-<div class="detail-grid">
-  <div class="detail-row"><label>اسلاگ</label><span>{{ post.slug }}</span></div>
-  <div class="detail-row"><label>وضعیت وب‌سایت</label>
-    <span class="badge badge-{{ post.website_status }}">{{ post.website_status }}</span></div>
-  <div class="detail-row"><label>وضعیت اینستاگرام</label>
-    <span class="badge badge-{{ post.instagram_status }}">{{ post.instagram_status }}</span></div>
-  {% if post.instagram_media_id %}
-  <div class="detail-row"><label>Instagram Media ID</label>
-    <span>{{ post.instagram_media_id }}</span></div>
-  {% endif %}
+        {% if post.hashtags %}
+        <div class="admin-post-detail__hashtags">
+            <span class="admin-post-detail__hashtags-label">هشتگ‌ها:</span>
+            <div class="admin-tags-list">
+                {% for tag in post.hashtags.split() %}
+                <span class="admin-tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="admin-post-detail__actions">
+            <a href="/admin/posts/edit/{{ post.id }}" class="admin-btn admin-btn--primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>ویرایش</span>
+            </a>
+            <button type="button" class="admin-btn admin-btn--danger" onclick="confirmDeletePost()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                <span>حذف</span>
+            </button>
+        </div>
+    </div>
+
+    {% if post.meta_title or post.meta_description or post.og_title or post.og_description or post.og_image %}
+    <!-- SEO Information -->
+    <div class="admin-form-card admin-form-card--info">
+        <h3 class="admin-form-section__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            سئو (SEO)
+        </h3>
+        {% if post.meta_title %}
+        <div class="admin-detail-row">
+            <strong>عنوان Meta:</strong>
+            <span>{{ post.meta_title }}</span>
+        </div>
+        {% endif %}
+        {% if post.meta_description %}
+        <div class="admin-detail-row">
+            <strong>توضیحات Meta:</strong>
+            <span>{{ post.meta_description }}</span>
+        </div>
+        {% endif %}
+        {% if post.og_title %}
+        <div class="admin-detail-row">
+            <strong>عنوان OG:</strong>
+            <span>{{ post.og_title }}</span>
+        </div>
+        {% endif %}
+        {% if post.og_description %}
+        <div class="admin-detail-row">
+            <strong>توضیحات OG:</strong>
+            <span>{{ post.og_description }}</span>
+        </div>
+        {% endif %}
+        {% if post.og_image %}
+        <div class="admin-detail-row">
+            <strong>تصویر OG:</strong>
+            <span>{{ post.og_image }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Body Content -->
+    <div class="admin-form-card admin-form-card--body">
+        <h3>محتوای نوشته</h3>
+        <div class="admin-post-detail__content">{{ post.body_html | safe }}</div>
+    </div>
+
+    <!-- Instagram Caption -->
+    {% if post.instagram_caption %}
+    <div class="admin-form-card">
+        <h3>کپشن اینستاگرام</h3>
+        <div class="admin-post-detail__caption">{{ post.instagram_caption }}</div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
 
-<h2>تصاویر</h2>
-<div class="asset-grid">
-  {% for asset in assets %}
-  <div class="asset-card">
-    <img src="{{ asset.public_url }}" alt="asset {{ asset.sort_order }}">
-    <span class="badge">{{ asset.role }}</span>
-  </div>
-  {% else %}
-  <p>تصویری ندارد.</p>
-  {% endfor %}
-</div>
+{% block scripts %}
+<script src="/static/vendors/sweetalert2/sweetalert2.min.js"></script>
+<script>
+async function confirmDeletePost() {
+    const result = await Swal.fire({
+        title: 'حذف نوشته',
+        text: 'آیا مطمئن هستید که می‌خواهید این نوشته را حذف کنید؟ این عمل قابل بازگشت نیست.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'بله، حذف شود',
+        cancelButtonText: 'لغو'
+    });
 
-<h2>متن بلاگ</h2>
-<div class="blog-preview">{{ post.body_html | safe }}</div>
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch('/admin/posts/delete/{{ post.id }}', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
 
-<div class="action-bar">
-  {% if post.website_status == 'draft' %}
-  <form method="post" action="/admin/posts/{{ post.id }}/publish" style="display:inline">
-    <button type="submit" class="btn-primary">انتشار در وب‌سایت</button>
-  </form>
-  {% else %}
-  <form method="post" action="/admin/posts/{{ post.id }}/unpublish" style="display:inline">
-    <button type="submit" class="btn-warning">برگشت به پیش‌نویس</button>
-  </form>
-  <a href="/blog/{{ post.slug }}" target="_blank" class="btn-secondary">مشاهده در سایت</a>
-  {% endif %}
-</div>
+            if (response.ok) {
+                Swal.fire({
+                    title: 'حذف شد!',
+                    text: 'نوشته با موفقیت حذف شد.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                setTimeout(() => { window.location.href = '/admin/posts'; }, 1000);
+            } else {
+                Swal.fire({
+                    title: 'خطا!',
+                    text: 'در حذف نوشته خطایی رخ داد.',
+                    icon: 'error'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'خطا!',
+                text: 'در ارتباط با سرور خطایی رخ داد.',
+                icon: 'error'
+            });
+        }
+    }
+}
+</script>
 {% endblock %}

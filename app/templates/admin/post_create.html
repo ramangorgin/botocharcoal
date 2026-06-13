@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}ایجاد نوشته جدید | پنل مدیریت{% endblock %}
+
+{% block header_title %}ایجاد نوشته جدید{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/vendors/select2/select2.min.css">
+<link rel="stylesheet" href="/static/vendors/jalalidatepicker/jalalidatepicker.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-post-form">
+    <form method="post" id="postForm" class="admin-form-card">
+        <div class="admin-form-grid">
+            <!-- Title -->
+            <div class="admin-form-group">
+                <label for="title" class="admin-form-label">عنوان نوشته <span class="admin-required">*</span></label>
+                <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="512" value="{{ post.title if post else '' }}">
+            </div>
+
+            <!-- Slug -->
+            <div class="admin-form-group">
+                <label for="slug" class="admin-form-label">اسلاگ</label>
+                <input type="text" id="slug" name="slug" class="admin-form-input" placeholder="slug-auto-generated" value="{{ post.slug if post else '' }}">
+                <small class="admin-form-hint">اگر خالی بگذارید، از عنوان تولید می‌شود</small>
+            </div>
+
+            <!-- Topic -->
+            <div class="admin-form-group">
+                <label for="topic" class="admin-form-label">موضوع</label>
+                <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" value="{{ post.topic if post else '' }}">
+            </div>
+
+            <!-- Website Status -->
+            <div class="admin-form-group">
+                <label for="website_status" class="admin-form-label">وضعیت سایت</label>
+                <select id="website_status" name="website_status" class="admin-form-input admin-form-select">
+                    <option value="DRAFT" {% if post and post.website_status == 'DRAFT' %}selected{% endif %}>پیش‌نویس</option>
+                    <option value="PUBLISHED" {% if post and post.website_status == 'PUBLISHED' %}selected{% endif %}>منتشر شده</option>
+                </select>
+            </div>
+
+            <!-- Publish Date -->
+            <div class="admin-form-group">
+                <label for="publish_date" class="admin-form-label">تاریخ انتشار</label>
+                <input type="text" id="publish_date" name="publish_date" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
+                <small class="admin-form-hint">فرمت: YYYY/MM/DD یا انتخاب از تقویم</small>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="admin-form-section">
+            <label for="body_html" class="admin-form-label">محتوای نوشته</label>
+            <textarea id="body_html" name="body_html" rows="20">{{ post.body_html if post else '' }}</textarea>
+        </div>
+
+        <!-- Instagram Caption -->
+        <div class="admin-form-section">
+            <label for="instagram_caption" class="admin-form-label">کپشن اینستاگرام</label>
+            <textarea id="instagram_caption" name="instagram_caption" rows="8">{{ post.instagram_caption if post else '' }}</textarea>
+        </div>
+
+        <!-- Hashtags -->
+        <div class="admin-form-section">
+            <label for="hashtags" class="admin-form-label">هشتگ‌ها</label>
+            <select id="hashtags" name="hashtags" class="admin-form-input admin-form-select2" multiple>
+                {% if post and post.hashtags %}
+                {% for tag in post.hashtags.split() %}
+                <option value="{{ tag }}" selected>{{ tag }}</option>
+                {% endfor %}
+                {% endif %}
+                <option value="#زغال">زغال</option>
+                <option value="#زغال_خانگی">زغال خانگی</option>
+                <option value="#زغال_رستورانی">زغال رستورانی</option>
+                <option value="#زغال_صنعتی">زغال صنعتی</option>
+                <option value="#باربیکیو">باربیکیو</option>
+                <option value="#کباب">کباب</option>
+                <option value="#باربکیو">باربکیو</option>
+                <option value="#بوتو_زغال">بوتو زغال</option>
+            </select>
+            <small class="admin-form-hint">هشتگ‌ها را انتخاب کنید (با نگه داشتن Ctrl چندتایی انتخاب کنید)</small>
+        </div>
+
+        <!-- SEO Section -->
+        <div class="admin-form-section admin-form-section--seo">
+            <h3 class="admin-form-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                سئو (SEO)
+            </h3>
+            <div class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label for="meta_title" class="admin-form-label">عنوان Meta</label>
+                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو" maxlength="256" value="{{ post.meta_title if post else '' }}">
+                    <small class="admin-form-hint">حداکثر ۶۰ کاراکتر</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="meta_description" class="admin-form-label">توضیحات Meta</label>
+                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو" maxlength="512">{{ post.meta_description if post else '' }}</textarea>
+                    <small class="admin-form-hint">حداکثر ۱۶۰ کاراکتر</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="og_title" class="admin-form-label">عنوان OG</label>
+                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان شبکه اجتماعی" maxlength="512" value="{{ post.og_title if post else '' }}">
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="og_description" class="admin-form-label">توضیحات OG</label>
+                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات شبکه اجتماعی">{{ post.og_description if post else '' }}</textarea>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="og_image" class="admin-form-label">تصویر OG</label>
+                    <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی" value="{{ post.og_image if post else '' }}">
+                    <small class="admin-form-hint">URL تصویر برای اشتراک در شبکه‌های اجتماعی</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="admin-form-actions">
+            <button type="submit" class="admin-btn admin-btn--primary admin-btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>ذخیره نوشته</span>
+            </button>
+            <a href="/admin/posts" class="admin-btn admin-btn--outline admin-btn--lg">
+                <span>لغو</span>
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/vendors/jquery/jquery.min.js"></script>
+<script src="/static/vendors/select2/js/select2.min.js"></script>
+<script src="/static/vendors/jalalidatepicker/jalalidatepicker.min.js"></script>
+<script src="/static/vendors/ckeditor5/ckeditor.js"></script>
+<script src="/static/js/admin.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show success message if redirected after creation
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('msg') && urlParams.get('msg') === 'created') {
+        setTimeout(() => showPersianToast('نوشته با موفقیت ایجاد شد', 'success', 4000));
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CKEditor
+    const bodyEditor = document.getElementById('body_html');
+    if (bodyEditor) {
+        ClassicEditor
+            .create(bodyEditor, {
+                toolbar: [
+                    'heading', '|',
+                    'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                    'blockQuote', 'insertTable', '|',
+                    'undo', 'redo'
+                ],
+                language: 'fa',
+                placeholder: 'محتوای نوشته را وارد کنید...'
+            })
+            .catch(function(error) {
+                console.error('CKEditor error:', error);
+            });
+    }
+
+    // Initialize Select2
+    const hashtagsSelect = document.getElementById('hashtags');
+    if (hashtagsSelect) {
+        $(hashtagsSelect).select2({
+            placeholder: 'هشتگ‌ها را انتخاب کنید',
+            allowClear: true,
+            dir: 'rtl'
+        });
+    }
+
+    // Initialize Jalali Datepicker
+    const publishDate = document.getElementById('publish_date');
+    if (publishDate) {
+        jalaliDatepicker.startWatch({
+            format: 'YYYY/MM/DD',
+            autoClose: true,
+            minDate: jalaali.toJalaali(new Date())
+        });
+    }
+
+    // Auto-generate slug from title
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function() {
+            if (!slugInput.value) {
+                slugInput.value = this.value
+                    .toLowerCase()
+                    .replace(/[^\w\s\u200D\u0600-\u06FF]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .trim();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

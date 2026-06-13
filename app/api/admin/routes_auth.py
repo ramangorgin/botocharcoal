@@ -13,7 +13,8 @@ templates = Jinja2Templates(directory="app/templates/admin")
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    error = request.query_params.get("error", "")
+    return templates.TemplateResponse("login.html", {"request": request, "error": error})
 
 
 @router.post("/login")
@@ -25,7 +26,7 @@ async def login(
 ):
     user = (await db.execute(select(User).where(User.username == username))).scalar_one_or_none()
     if not user or not verify_password(password, user.password_hash):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "نام کاربری یا رمز اشتباه است"})
+        return templates.TemplateResponse("login.html", {"request": request, "error": "نام کاربری یا رمز عبور اشتباه است"})
     token = create_session_token(user.id)
     response = RedirectResponse("/admin/dashboard", status_code=302)
     response.set_cookie("admin_session", token, httponly=True, samesite="lax", max_age=86400)

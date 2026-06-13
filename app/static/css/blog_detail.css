@@ -419,6 +419,13 @@
   margin-bottom: 2.25rem;
 }
 
+.post-content figcaption {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--bc-text-muted);
+  margin-top: 1rem;
+}
+
 .post-content hr {
   border: none;
   border-top: 1px solid var(--bc-border);

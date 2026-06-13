@@ -118,9 +118,6 @@
 {{ rp.persian_date if rp.persian_date else '' }}
 </span>
 <a href="/blog/{{ rp.post.slug }}" class="related-card-title">{{ rp.post.title }}</a>
-{% if rp.post.summary %}
-<p class="related-card-excerpt">{{ rp.post.summary[:120] }}</p>
-{% endif %}
 </div>
 </div>
 {% endfor %}

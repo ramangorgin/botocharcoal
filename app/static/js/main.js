@@ -90,12 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Target does NOT exist on this page (e.g., nav links on blog_detail)
-        // Redirect to homepage + hash instead of doing nothing
-        const currentPath = window.location.pathname;
-        if (currentPath !== "/" && currentPath !== "/index.html") {
-          event.preventDefault();
-          window.location.href = href;
-        }
+        // Always redirect to homepage with the hash
+        event.preventDefault();
+        const hash = href.replace(/^\/?#/, '');
+        window.location.href = '/' + (hash ? '#' + hash : '');
       });
     });
 });

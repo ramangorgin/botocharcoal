@@ -1,32 +1,45 @@
 {% extends "base.html" %}
-{% block title %}ایجاد جاب جدید{% endblock %}
-{% block content %}
-<h1>ایجاد جاب جدید</h1>
-{% if error %}<div class="alert-error">{{ error }}</div>{% endif %}
 
-<form method="post" action="/admin/jobs/create" class="admin-form">
-  <div class="form-group">
-    <label>موضوع روزانه *</label>
-    <input type="text" name="topic" required
-           placeholder="مثال: مزایای زغال فشرده برای کباب‌پزی">
-  </div>
-  <div class="form-group">
-    <label>لحن محتوا</label>
-    <select name="tone">
-      <option value="رسمی و حرفه‌ای">رسمی و حرفه‌ای</option>
-      <option value="صمیمی و دوستانه">صمیمی و دوستانه</option>
-      <option value="آموزشی">آموزشی</option>
-      <option value="تبلیغاتی">تبلیغاتی</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>متن CTA</label>
-    <input type="text" name="cta_text" placeholder="مثال: همین الان سفارش دهید">
-  </div>
-  <div class="form-group">
-    <label>تعداد تصاویر اینستاگرام (۱ تا ۱۰)</label>
-    <input type="number" name="image_count" value="4" min="1" max="10">
-  </div>
-  <button type="submit" class="btn-primary">شروع پردازش</button>
-</form>
+{% block title %}فرآیند جدید | پنل مدیریت{% endblock %}
+
+{% block header_title %}فرآیند جدید{% endblock %}
+
+{% block content %}
+<div class="admin-post-form">
+    <form method="post" action="/admin/jobs/create" class="admin-form-card">
+        <div class="admin-form-grid">
+            <div class="admin-form-group">
+                <label for="topic" class="admin-form-label">موضوع <span class="admin-required">*</span></label>
+                <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="موضوع تولید محتوا" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label for="tone" class="admin-form-label">لحن</label>
+                <input type="text" id="tone" name="tone" class="admin-form-input" placeholder="مثال: رسمی، دوستانه">
+            </div>
+
+            <div class="admin-form-group">
+                <label for="cta_text" class="admin-form-label">دعوت به اقدام</label>
+                <input type="text" id="cta_text" name="cta_text" class="admin-form-input" placeholder="مثال: همین حالا سفارش دهید">
+            </div>
+
+            <div class="admin-form-group">
+                <label for="image_count" class="admin-form-label">تعداد تصاویر</label>
+                <input type="number" id="image_count" name="image_count" class="admin-form-input" value="4" min="1" max="10">
+            </div>
+        </div>
+
+        <div class="admin-form-actions">
+            <button type="submit" class="admin-btn admin-btn--primary admin-btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>شروع فرآیند</span>
+            </button>
+            <a href="/admin/jobs" class="admin-btn admin-btn--outline admin-btn--lg">
+                <span>لغو</span>
+            </a>
+        </div>
+    </form>
+</div>
 {% endblock %}

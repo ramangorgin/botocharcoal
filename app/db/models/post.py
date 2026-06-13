@@ -16,6 +16,13 @@ class Post(Base):
     instagram_caption: Mapped[str | None] = mapped_column(Text)
     hashtags: Mapped[str | None] = mapped_column(Text)
 
+    # SEO fields
+    meta_title: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    meta_description: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    og_title: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    og_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    og_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
     website_status: Mapped[str] = mapped_column(
         SAEnum(PostWebsiteStatus, name="postwebsitestatus"),
         default=PostWebsiteStatus.DRAFT,

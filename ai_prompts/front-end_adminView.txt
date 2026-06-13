@@ -3,3 +3,32 @@
         - manage posts on the Instagram: create, edit, index, show.
         - see the status of AI's token for creating website & Instagram's content automatically every day under the eyes of the admin and Instagram's API for publishing Instagram posts automatically into the page.
         - see the demo of the contents that arrived from AI and before publishing into the website and in the Instagram's page. (a complete persian error messages for when automatic publishing into Instagram would fail due to internet sitiuation or when admin)
+
+
+new task: create admin templates with CSS and JS.
+path: /app/templates/admin/ & /app/static/css/ & /app/static/js/
+need these pages:
+- login: extends public/base.html and there is a form that admin could login via it's own credtionals that I insert into database (no registration or forgot password needed). also, make sure there would be a secret url like /admin-login so admin could find this page (check the backend to make sure it works properly)
+- base (the layout of all admin pages that needs to have a sidebar that doesn't be scrolled and stick to the left side of the admin pages and on the sidebar, there would be nav links for what admin can do and this sidebar should be there on everypage of admin and every admin page should extend this layout. their main content which is the content of other pages could be scrolled but not the sidebar. and you should pay attention to fix the spaces and widths so no content of main would go under sidebar or having no overflowding outside the pages)
+- dasboard (the main page that shows when admin loggs in and there could see important info and statistics)
+- blog posts (full CRUD: create, edit, index and show are needed)
+thats all so far but I'll continue prompting you to create other pages later.
+
+styling:
+- complete match with public css (css/main.css) and following that.
+
+js libraries and needed tools:
+- there should be animations everywhere. not too much but just a slightly smooth fade animatinns.
+- there should be preloader (I already use on).
+- on anywhere admin needs to be confirming some action, it should happen via sweetalert2 (app/static/vendors/sweetalert2)
+- on any action happens such as submitting a form succesfully to the database or with errors, the error or success or info or warninng message should be completely clear and completely in persian by Toasts (you create it)
+- on create and edit pages (for now its just for blog posts) I need CKeditor5 (/app/static/vendor/ckeditor5/) for styling the text of the article (not every filed but just the long text fields)
+- on create and edit pages (for now its just for blog posts) I need Jalalidatepicker (app/static/vendor/jalalidatepicker/) for when there is a date or time or dateTime fields so the user could enter Jalali date via the widget and the date must be automatically convert into gregorian. implement that too. e.g: date of publish for a post on blog.
+- on create and edit pages (for now its just for blog posts) I need select2 (app/static/vendor/select2) for the fields of select where user must select some parameters all in one field such as key words on blog post.
+
+backend and frontend combined:
+make sure table "posts" have SEO fields and implement them on frontend too.
+
+do this task and do not stop untill it's done all.
+
+after that, I want to be able to login as admin via a url that you give me and by the creditioal that I have by running botocharcoal/scripts/create_admin.py. check and test so no errors would happen.
