@@ -506,11 +506,13 @@
 .admin-table__header {
   background-color: var(--color-charcoal);
 }
+.admin-th {
+  padding-top: 10px;
+}
 
 .admin-table__cell {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
   color: var(--color-text-primary);
   text-align: right;
   vertical-align: middle;
@@ -1166,6 +1168,7 @@
 
   .admin-btn {
     width: 100%;
+    margin-top: 5px;
   }
 }
 
@@ -1544,9 +1547,10 @@
 
 /* Button Small */
 .admin-btn--sm {
-  padding: 6px 10px;
+  padding: 7px 6px;
   font-size: 12px;
   border-radius: 6px;
+  max-width: 45px;
 }
 
 /* Form */

@@ -1,3 +1,4 @@
+import jdatetime
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.responses import JSONResponse
@@ -16,9 +17,35 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/admin")
 
 
+def format_jalali_date(dt):
+    """Convert datetime to Jalali date string (YYYY/MM/DD with Persian numbers)."""
+    if not dt:
+        return '-'
+    jdt = jdatetime.datetime.fromgregorian(datetime=dt)
+    jalali_str = jdt.strftime('%Y/%m/%d')
+    # Convert to Persian numbers
+    persian_digits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+    result = ''
+    for d in jalali_str:
+        if d.isdigit():
+            result += persian_digits[int(d)]
+        else:
+            result += d
+    return result
+
+
 @router.get("/posts", response_class=HTMLResponse)
 async def posts_list(request: Request, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_admin)):
     posts = (await db.execute(select(Post).order_by(Post.created_at.desc()))).scalars().all()
+    # Add Jalali date to each post
+    for post in posts:
+        if post.created_at:
+            jdt = jdatetime.datetime.fromgregorian(datetime=post.created_at)
+            jalali_str = jdt.strftime('%Y/%m/%d')
+            persian_digits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+            post.jalali_date = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
+        else:
+            post.jalali_date = '-'
     return templates.TemplateResponse("posts_list.html", {"request": request, "posts": posts})
 
 

@@ -24,30 +24,30 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th style="width:60px;">شماره</th>
-                        <th>عنوان</th>
-                        <th style="width:140px;">وضعیت</th>
-                        <th style="width:120px;">تاریخ</th>
-                        <th style="width:150px;">عملیات</th>
+                        <th class="admin-th" style="width:60px;">شماره</th>
+                        <th class="admin-th">عنوان</th>
+                        <th class="admin-th" style="width:140px;">وضعیت</th>
+                        <th class="admin-th" style="width:120px;">تاریخ</th>
+                        <th class="admin-th" style="width:150px;">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for post in posts %}
                     <tr class="admin-table__row">
-                        <td class="admin-table__cell admin-table__cell--number" data-en-num="{{ post.id }}">{{ post.id }}</td>
+                        <td class="admin-table__cell admin-table__cell--number">{{ post.id }}</td>
                         <td class="admin-table__cell">
                             <a href="/admin/posts/{{ post.id }}" class="admin-table__link">{{ post.title }}</a>
                         </td>
                         <td class="admin-table__cell">
-                            {% if post.website_status == 'PUBLISHED' %}
+                            {% if post.website_status.name == 'PUBLISHED' %}
                             <span class="admin-badge admin-badge--success">منتشر شده</span>
-                            {% elif post.website_status == 'DRAFT' %}
+                            {% elif post.website_status.name == 'DRAFT' %}
                             <span class="admin-badge admin-badge--info">پیش‌نویس</span>
                             {% else %}
-                            <span class="admin-badge admin-badge--warning">{{ post.website_status }}</span>
+                            <span class="admin-badge admin-badge--warning">{{ post.website_status.name }}</span>
                             {% endif %}
                         </td>
-                        <td class="admin-table__cell admin-table__cell--date" data-date="{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '' }}">{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '-' }}</td>
+                        <td class="admin-table__cell admin-table__cell--date">{{ post.jalali_date }}</td>
                         <td class="admin-table__cell">
                             <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">

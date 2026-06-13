@@ -240,11 +240,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Convert dates in dashboard table
-    document.querySelectorAll('.admin-table td:nth-child(3)').forEach(td => {
-        const text = td.textContent.trim();
-        if (text && text !== '-' && /[\d]/.test(text)) {
-            td.textContent = toPersianNum(text);
+    // Convert table index column numbers to Persian
+    document.querySelectorAll('.admin-table__cell--number').forEach(el => {
+        const text = el.textContent.trim();
+        if (/^\d+$/.test(text)) {
+            el.textContent = toPersianNum(text);
         }
     });
 });
