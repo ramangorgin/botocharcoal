@@ -57,8 +57,26 @@
 
         <!-- Instagram Caption -->
         <div class="admin-form-section">
-            <label for="instagram_caption" class="admin-form-label">کپشن اینستاگرام</label>
-            <textarea id="instagram_caption" name="instagram_caption" rows="8">{{ post.instagram_caption if post else '' }}</textarea>
+            <label for="instagram_caption" class="admin-form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                کپشن اینستاگرام
+            </label>
+            <div class="instagram-caption-wrapper">
+                <textarea id="instagram_caption" name="instagram_caption" class="instagram-caption-editor" placeholder="متن کپشن اینستاگرام را اینجا بنویسید...">{{ post.instagram_caption if post else '' }}</textarea>
+                <div class="instagram-caption-preview">
+                    <div class="instagram-caption-preview__header">
+                        <span class="instagram-caption-preview__label">پیش‌نمایش</span>
+                    </div>
+                    <div class="instagram-caption-preview__body" id="captionPreview">
+                        <p class="instagram-caption-preview__text">متن کپشن شما اینجا نمایش داده می‌شود...</p>
+                    </div>
+                </div>
+            </div>
+            <small class="admin-form-hint">متن کپشن اینستاگرام را بنویسید — پیش‌نمایش زنده در پایین</small>
         </div>
 
         <!-- Hashtags -->
@@ -92,17 +110,50 @@
                 </svg>
                 سئو (SEO)
             </h3>
+
+            <!-- SEO Guidance -->
+            <div class="seo-guidance">
+                <div class="seo-guidance__toggle" id="seoGuideToggle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="seo-guide-icon">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span class="seo-guide-text">راهنمای فیلدهای سئو</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="seo-guide-chevron">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div class="seo-guidance__content" id="seoGuideContent">
+                    <div class="seo-guide__item">
+                        <strong>عنوان Meta:</strong> عنوانی که در نتایج جستجوی گوگل نمایش داده می‌شود. حداکثر ۶۰ کاراکتر. نام برند و کلمه کلیدی اصلی را شامل شود.
+                    </div>
+                    <div class="seo-guide__item">
+                        <strong>توضیحات Meta:</strong> توضیح کوتاهی که زیر عنوان در گوگل دیده می‌شود. حداکثر ۱۶۰ کاراکتر. دعوت به اقدام جذاب بنویسید.
+                    </div>
+                    <div class="seo-guide__item">
+                        <strong>عنوان OG:</strong> عنوانی که وقتی لینک شما در شبکه‌های اجتماعی (فیسبوک، تلگرام و ...) به اشتراک گذاشته می‌شود نمایش داده می‌شود.
+                    </div>
+                    <div class="seo-guide__item">
+                        <strong>توضیحات OG:</strong> توضیحی که در پیش‌نمایش اشتراک‌گذاری شبکه‌های اجتماعی ظاهر می‌شود.
+                    </div>
+                    <div class="seo-guide__item">
+                        <strong>تصویر OG:</strong> تصویری که در پیش‌نمایش اشتراک‌گذاری نمایش داده می‌شود. نسبت تصویر ۱.۹۱:۱ (۱۲۰۰×۶۲۸ پیکسل) پیشنهاد می‌شود.
+                    </div>
+                </div>
+            </div>
+
             <div class="admin-form-grid">
                 <div class="admin-form-group">
                     <label for="meta_title" class="admin-form-label">عنوان Meta</label>
                     <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو" maxlength="256" value="{{ post.meta_title if post else '' }}">
-                    <small class="admin-form-hint">حداکثر ۶۰ کاراکتر</small>
+                    <small class="admin-form-hint">حداکثر ۶۰ کاراکتر — عنوانی که در نتایج گوگل نمایش داده می‌شود</small>
                 </div>
 
                 <div class="admin-form-group">
                     <label for="meta_description" class="admin-form-label">توضیحات Meta</label>
                     <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو" maxlength="512">{{ post.meta_description if post else '' }}</textarea>
-                    <small class="admin-form-hint">حداکثر ۱۶۰ کاراکتر</small>
+                    <small class="admin-form-hint">حداکثر ۱۶۰ کاراکتر — توضیحی جذاب برای نمایش در نتایج گوگل</small>
                 </div>
 
                 <div class="admin-form-group">
@@ -115,10 +166,38 @@
                     <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات شبکه اجتماعی">{{ post.og_description if post else '' }}</textarea>
                 </div>
 
-                <div class="admin-form-group">
-                    <label for="og_image" class="admin-form-label">تصویر OG</label>
-                    <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی" value="{{ post.og_image if post else '' }}">
-                    <small class="admin-form-hint">URL تصویر برای اشتراک در شبکه‌های اجتماعی</small>
+                <div class="admin-form-group admin-form-group--image">
+                    <label for="og_image" class="admin-form-label">تصویر OG (شبکه‌های اجتماعی)</label>
+
+                    <!-- File Upload Area -->
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <input type="file" id="og_image_file" class="image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+                        <div class="image-upload-area__content" id="uploadContent">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p class="image-upload-area__text">تصویر را اینجا بکشید یا کلیک کنید</p>
+                            <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
+                        </div>
+                        <div class="image-upload-area__preview" id="imagePreview" style="display:none">
+                            <img id="previewImg" src="" alt="پیش‌نمایش">
+                            <button type="button" class="image-upload-area__remove" id="removeImageBtn" title="حذف تصویر">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- URL Input -->
+                    <div class="image-url-input-wrapper">
+                        <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی را وارد کنید" value="{{ post.og_image if post else '' }}">
+                    </div>
+                    <small class="admin-form-error" id="imageError" style="display:none"></small>
+                    <small class="admin-form-hint">URL تصویر برای اشتراک در شبکه‌های اجتماعی (حداکثر ۵ مگابایت)</small>
                 </div>
             </div>
         </div>
@@ -179,9 +258,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const hashtagsSelect = document.getElementById('hashtags');
     if (hashtagsSelect) {
         $(hashtagsSelect).select2({
-            placeholder: 'هشتگ‌ها را انتخاب کنید',
+            placeholder: 'هشتگ‌ها را انتخاب یا وارد کنید',
             allowClear: true,
-            dir: 'rtl'
+            dir: 'rtl',
+            tags: true,
+            createTag: function(params) {
+                var term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                return {
+                    id: term.startsWith('#') ? term : '#' + term,
+                    text: term.startsWith('#') ? term : '#' + term
+                };
+            },
+            language: {
+                noResults: function() {
+                    return 'هشتگ مورد نظر را تایپ کنید و Enter بزنید';
+                }
+            }
         });
     }
 
@@ -189,9 +284,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const publishDate = document.getElementById('publish_date');
     if (publishDate) {
         jalaliDatepicker.startWatch({
+            selector: 'input.admin-form-date',
             format: 'YYYY/MM/DD',
             autoClose: true,
-            minDate: jalaali.toJalaali(new Date())
+            minDate: 'today',
+            showTodayBtn: true
         });
     }
 
@@ -203,12 +300,143 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!slugInput.value) {
                 slugInput.value = this.value
                     .toLowerCase()
-                    .replace(/[^\w\s\u200D\u0600-\u06FF]/g, '')
+                    .replace(/[^\w\s\u200D\u0600-\u06FF]/gu, '')
                     .replace(/\s+/g, '-')
                     .replace(/-+/g, '-')
                     .trim();
             }
         });
+    }
+
+    // --- Instagram Caption Live Preview ---
+    const captionEditor = document.getElementById('instagram_caption');
+    const captionPreviewBody = document.getElementById('captionPreview');
+    if (captionEditor && captionPreviewBody) {
+        function updateCaptionPreview() {
+            const text = captionEditor.value.trim();
+            if (text) {
+                captionPreviewBody.innerHTML = '<p class="instagram-caption-preview__text">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
+            } else {
+                captionPreviewBody.innerHTML = '<p class="instagram-caption-preview__text">متن کپشن شما اینجا نمایش داده می‌شود...</p>';
+            }
+        }
+        captionEditor.addEventListener('input', updateCaptionPreview);
+        // Initial preview
+        updateCaptionPreview();
+    }
+
+    // --- SEO Guidance Toggle ---
+    const seoToggle = document.getElementById('seoGuideToggle');
+    const seoContent = document.getElementById('seoGuideContent');
+    if (seoToggle && seoContent) {
+        seoToggle.addEventListener('click', function() {
+            const isExpanded = seoContent.style.display === 'block';
+            seoContent.style.display = isExpanded ? 'none' : 'block';
+            this.classList.toggle('seo-guidance__toggle--open', !isExpanded);
+        });
+    }
+
+    // --- Image Upload with Preview & Validation ---
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    const ogImageFileInput = document.getElementById('og_image_file');
+    const uploadContent = document.getElementById('uploadContent');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const ogImageInput = document.getElementById('og_image');
+    const imageError = document.getElementById('imageError');
+
+    if (imageUploadArea && ogImageFileInput) {
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+        function showImageError(msg) {
+            if (imageError) {
+                imageError.textContent = msg;
+                imageError.style.display = 'block';
+            }
+        }
+        function clearImageError() {
+            if (imageError) {
+                imageError.textContent = '';
+                imageError.style.display = 'none';
+            }
+        }
+        function showPreview(dataUrl) {
+            previewImg.src = dataUrl;
+            uploadContent.style.display = 'none';
+            imagePreview.style.display = 'block';
+            clearImageError();
+        }
+        function hidePreview() {
+            uploadContent.style.display = 'block';
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+            ogImageFileInput.value = '';
+            if (ogImageInput) {
+                ogImageInput.value = '';
+            }
+        }
+
+        // Click to browse
+        imageUploadArea.addEventListener('click', function(e) {
+            if (e.target.closest('.image-upload-area__remove')) return;
+            ogImageFileInput.click();
+        });
+
+        // File input change
+        ogImageFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            validateAndPreview(file);
+        });
+
+        // Drag and drop
+        ['dragenter', 'dragover'].forEach(function(eventName) {
+            imageUploadArea.addEventListener(eventName, function(e) {
+                e.preventDefault();
+                imageUploadArea.classList.add('image-upload-area--dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(function(eventName) {
+            imageUploadArea.addEventListener(eventName, function(e) {
+                e.preventDefault();
+                imageUploadArea.classList.remove('image-upload-area--dragover');
+            });
+        });
+        imageUploadArea.addEventListener('drop', function(e) {
+            const file = e.dataTransfer.files[0];
+            if (file) validateAndPreview(file);
+        });
+
+        function validateAndPreview(file) {
+            clearImageError();
+
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                showImageError('فرمت تصویر مجاز نیست. فقط JPEG, PNG, WEBP, GIF مجاز است.');
+                ogImageFileInput.value = '';
+                return;
+            }
+            if (file.size > MAX_SIZE) {
+                showImageError('حجم تصویر نباید بیشتر از ۵ مگابایت باشد.');
+                ogImageFileInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                showPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                hidePreview();
+            });
+        }
     }
 });
 </script>

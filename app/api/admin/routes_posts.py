@@ -34,6 +34,45 @@ def format_jalali_date(dt):
     return result
 
 
+def process_og_image(raw_value: str) -> str | None:
+    """
+    Process og_image value:
+    - If it's a base64 data URL (from client-side file upload), validate and optionally truncate.
+    - If it's a regular URL, return as-is.
+    - If empty, return None.
+    """
+    if not raw_value or not raw_value.strip():
+        return None
+
+    value = raw_value.strip()
+
+    # Check if it's a base64 data URL
+    if value.startswith('data:'):
+        # Validate base64 image data URL structure
+        import re
+        match = re.match(r'^data:image/(jpeg|png|webp|gif);base64,', value, re.IGNORECASE)
+        if not match:
+            # Not a valid image data URL, treat as URL
+            return value
+
+        # Check size: base64 is ~33% larger than binary
+        # Max original ~5MB → base64 ~6.7MB → ~9M chars
+        MAX_BASE64_LEN = 9_000_000
+        if len(value) > MAX_BASE64_LEN:
+            # Truncate the base64 payload (keep header, truncate data)
+            header_end = value.index(',') + 1
+            header = value[:header_end]
+            payload = value[header_end:]
+            # Reduce payload so total fits limit
+            max_payload = MAX_BASE64_LEN - header_end
+            truncated = header + payload[:max_payload]
+            return truncated
+        return value
+
+    # Regular URL or path — return as-is
+    return value
+
+
 @router.get("/posts", response_class=HTMLResponse)
 async def posts_list(request: Request, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_admin)):
     posts = (await db.execute(select(Post).order_by(Post.created_at.desc()))).scalars().all()
@@ -71,7 +110,7 @@ async def post_create(
     meta_description = form.get("meta_description", "").strip()
     og_title = form.get("og_title", "").strip()
     og_description = form.get("og_description", "")
-    og_image = form.get("og_image", "").strip()
+    og_image = process_og_image(form.get("og_image", ""))
     website_status = form.get("website_status", "DRAFT")
     publish_date = form.get("publish_date", "").strip()
     
@@ -131,7 +170,7 @@ async def post_edit(
     meta_description = form.get("meta_description", "").strip()
     og_title = form.get("og_title", "").strip()
     og_description = form.get("og_description", "")
-    og_image = form.get("og_image", "").strip()
+    og_image = process_og_image(form.get("og_image", ""))
     website_status = form.get("website_status", "DRAFT")
     
     publish_date = form.get("publish_date", "").strip()

@@ -1070,13 +1070,16 @@
   border-color: var(--color-border) !important;
   color: var(--color-text-primary) !important;
   border-radius: var(--border-radius-sm) !important;
+  font-size: 12px !important;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  font-size: 12px !important;
   color: var(--color-ash-gray) !important;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+  font-size: 12px !important;
   color: var(--color-ember) !important;
 }
 
@@ -1089,6 +1092,9 @@
 .select2-container--default .select2-search--inline .select2-search__field {
   background-color: var(--color-charcoal) !important;
   color: var(--color-text-primary) !important;
+}
+.select2-search__field {
+  font-size: 12px !important;
 }
 
 .select2-dropdown {
@@ -1815,4 +1821,287 @@
 /* Fine print helper for empty state links */
 .admin-empty-state a.admin-btn {
   margin-top: 0;
+}
+
+/* ==========================================================================
+   Instagram Caption Editor & Preview
+   ========================================================================== */
+
+.instagram-caption-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instagram-caption-editor {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px 16px;
+  font-family: var(--font-primary), sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ck-color-base-forground);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  direction: rtl;
+  background-color: var(--ck-color-base-text);
+}
+
+.instagram-caption-editor:focus {
+  outline: none;
+  border-color: var(--color-ember);
+  box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.12);
+}
+
+.instagram-caption-editor::placeholder {
+  color: var(--color-ash-gray);
+  opacity: 0.7;
+}
+
+.instagram-caption-preview {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.instagram-caption-preview__header {
+  padding: 10px 16px;
+  background: #262626;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.instagram-caption-preview__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.instagram-caption-preview__body {
+  padding: 16px;
+  min-height: 60px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.instagram-caption-preview__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #e0e0e0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: var(--font-primary), sans-serif;
+  direction: rtl;
+}
+
+/* ==========================================================================
+   SEO Guidance (Collapsible)
+   ========================================================================== */
+
+.seo-guidance {
+  margin-bottom: 20px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-charcoal-lighter);
+  overflow: hidden;
+}
+
+.seo-guidance__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.seo-guidance__toggle:hover {
+  background: rgba(230, 81, 0, 0.06);
+}
+
+.seo-guide-icon {
+  flex-shrink: 0;
+  color: var(--color-ember);
+}
+
+.seo-guide-text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.seo-guide-chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform 0.25s ease;
+}
+
+.seo-guidance__toggle--open .seo-guide-chevron {
+  transform: rotate(180deg);
+}
+
+.seo-guidance__content {
+  display: none;
+  padding: 0 16px 16px;
+}
+
+.seo-guide__item {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  padding: 8px 0;
+}
+
+.seo-guide__item:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.seo-guide__item strong {
+  color: var(--color-ember);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Image Upload Area
+   ========================================================================== */
+
+.admin-form-group--image {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-upload-area {
+  position: relative;
+  border: 2px dashed var(--color-border-light);
+  border-radius: var(--radius-sm);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.image-upload-area:hover {
+  border-color: var(--color-ember);
+  background: rgba(230, 81, 0, 0.03);
+}
+
+.image-upload-area--dragover {
+  border-color: var(--color-ember);
+  background: rgba(230, 81, 0, 0.06);
+}
+
+.image-upload-area__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-upload-area__icon {
+  color: var(--color-ash-gray);
+  transition: color 0.2s ease;
+}
+
+.image-upload-area:hover .image-upload-area__icon {
+  color: var(--color-ember);
+}
+
+.image-upload-area__text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.image-upload-area__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.image-upload-area__preview {
+  position: relative;
+  display: none;
+}
+
+.image-upload-area__preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  display: block;
+  margin: 0 auto;
+}
+
+.image-upload-area__remove {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  padding: 0;
+}
+
+.image-upload-area__remove:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.image-upload-area__remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ==========================================================================
+   Image URL Input Wrapper
+   ========================================================================== */
+
+.image-url-input-wrapper {
+  position: relative;
+}
+
+
+.image-url-input-wrapper .admin-form-input {
+  min-width: 100%;
+}
+
+/* ==========================================================================
+   Responsive adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .instagram-caption-preview__body {
+    max-height: 200px;
+  }
+
+  .image-upload-area {
+    padding: 24px 16px;
+  }
+
+  .seo-guidance__toggle {
+    padding: 10px 12px;
+  }
+
+  .seo-guidance__content {
+    padding: 0 12px 12px;
+  }
 }
