@@ -75,16 +75,6 @@
                        placeholder="dall-e-3" value="{{ ai_settings.image_model if ai_settings and ai_settings.image_model else '' }}">
                 <small class="admin-form-hint">مدل مورد استفاده برای تولید تصویر</small>
             </div>
-
-            <div class="admin-form-group">
-                <label for="image_size" class="admin-form-label">اندازه تصویر</label>
-                <select id="image_size" name="image_size" class="admin-form-input">
-                    <option value="1024x1024" {% if ai_settings and ai_settings.image_size == '1024x1024' %}selected{% endif %}>1024×1024</option>
-                    <option value="1024x1792" {% if ai_settings and ai_settings.image_size == '1024x1792' %}selected{% endif %}>1024×1792 (عمودی)</option>
-                    <option value="1792x1024" {% if ai_settings and ai_settings.image_size == '1792x1024' %}selected{% endif %}>1792×1024 (افقی)</option>
-                    <option value="1024x768" {% if ai_settings and ai_settings.image_size == '1024x768' %}selected{% endif %}>1024×768 (مستطیلی)</option>
-                </select>
-            </div>
         </div>
 
         <div class="admin-divider"></div>

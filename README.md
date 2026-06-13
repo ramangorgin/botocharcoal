@@ -110,9 +110,14 @@ AI settings can be configured in two ways: via `.env` (defaults) or through the 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | API key for text and image generation | (required) |
+| `OPENAI_API_KEY` | API key for text and image generation (fallback) | (recommended) |
 | `TEXT_MODEL` | Default text model name | `gpt-4o` |
 | `IMAGE_MODEL` | Default image model name | `dall-e-3` |
+
+### Instagram Credentials (Deprecated)
+Instagram auto-publishing has been removed. Credentials below are kept for reference only:
+| `IG_LONG_LIVED_ACCESS_TOKEN` | Instagram long-lived access token | `EAAB...` |
+| `IG_BUSINESS_ACCOUNT_ID` | Instagram business account ID | `178414...` |
 
 > **Note**: The admin panel at `/admin/ai-settings` stores AI configuration in the database and overrides `.env` values. You can also use any OpenAI-compatible API (e.g., Together AI, Groq, local vLLM) by setting provider to "custom" and providing the base URL.
 
@@ -130,13 +135,13 @@ The AI pipeline allows you to create multi-day content generation jobs that prod
    - **Duration** — how many days to generate content for
    - **Start Date** — when to start (default: today)
    - **Items Per Day** — how many content sets per day
-   - **Auto-Publish Blog** — automatically publish blog posts (true/false)
+   - **Auto-Publish Blog** — automatically publish blog posts to the website (true/false)
    - **Image Counts** — number of Instagram images and blog cover images
 
 2. **Generate Content**: Click "شروع تولید" to trigger the AI pipeline:
    - A Celery task processes each day's content
    - For each day: generates blog text, Instagram caption/hashtags, image prompts
-   - Downloads generated images from the AI API
+   - Downloads generated images from the AI API and saves to `media/`
    - If auto-publish is enabled, creates blog posts in the database
    - Saves all results to `ContentItem` records
 

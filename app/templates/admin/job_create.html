@@ -39,7 +39,7 @@
 
             <div class="admin-form-group">
                 <label for="start_date" class="admin-form-label">تاریخ شروع</label>
-                <input type="text" id="start_date" name="start_date" class="admin-form-input jalali-date" 
+                <input type="text" id="start_date" name="start_date" class="admin-form-input admin-form-date" 
                        value="{{ start_date|default('') }}" placeholder="۱۴۰۵/۰۳/۲۲">
                 <small class="admin-form-hint">فرمت: سال/ماه/روز</small>
             </div>
@@ -64,10 +64,10 @@
             </div>
 
             <div class="admin-form-group">
-                <label for="blog_image_count" class="admin-form-label">تعداد تصویر بلاگ</label>
+                <label for="blog_image_count" class="admin-form-label">تعداد تصویر وبلاگ</label>
                 <input type="number" id="blog_image_count" name="blog_image_count" class="admin-form-input" 
                        value="1" min="0" max="5">
-                <small class="admin-form-hint">تعداد تصویر برای هر مقاله</small>
+                <small class="admin-form-hint">تعداد تصویر برای هر پست</small>
             </div>
 
             <div class="admin-form-group">
@@ -86,9 +86,9 @@
             <label class="admin-form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                 <input type="checkbox" name="auto_publish_blog" id="auto_publish_blog" value="on" style="width: auto;">
                 <div>
-                    <span>انتشار خودکار مقاله بلاگ</span>
+                    <span>انتشار خودکار پست وبلاگ</span>
                     <small class="admin-form-hint" style="display: block; margin-top: 4px;">
-                        مقاله بلاگ به‌طور خودکار پس از تولید منتشر شود
+                        پست وبلاگ به‌طور خودکار پس از تولید منتشر شود
                     </small>
                 </div>
             </label>
@@ -115,7 +115,7 @@
                     <span class="admin-summary-item__value" id="summaryIGImages">۱۲</span>
                 </div>
                 <div class="admin-summary-item">
-                    <span class="admin-summary-item__label">تصاویر بلاگ</span>
+                    <span class="admin-summary-item__label">تصاویر وبلاگ</span>
                     <span class="admin-summary-item__value" id="summaryBlogImages">۳</span>
                 </div>
             </div>
@@ -136,8 +136,24 @@
     </form>
 </div>
 
+{% endblock %}
+
 {% block scripts %}
+<!-- JalaliDatepicker for start_date field -->
+<link rel="stylesheet" href="/static/vendors/jalalidatepicker/jalalidatepicker.min.css">
+<script src="/static/vendors/jalalidatepicker/jalalidatepicker.min.js"></script>
 <script>
+// Initialize JalaliDatepicker
+var startDateInput = document.getElementById('start_date');
+if (startDateInput) {
+    jalaliDatepicker.startWatch({
+        selector: 'input.admin-form-date',
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        showTodayBtn: true
+    });
+}
+
 // Auto-calculate summary
 function updateSummary() {
     const days = parseInt(document.getElementById('duration_days').value) || 1;
@@ -165,5 +181,4 @@ document.getElementById('instagram_image_count').addEventListener('input', updat
 document.getElementById('blog_image_count').addEventListener('input', updateSummary);
 updateSummary();
 </script>
-{% endblock %}
 {% endblock %}

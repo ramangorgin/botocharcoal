@@ -13,6 +13,109 @@ window.addEventListener('load', function() {
     }
 });
 
+// ==========================================================================
+// SweetAlert2 Global Defaults (Persian / RTL)
+// ==========================================================================
+const swal = Swal.mixin({
+    className: 'swal2-persian',
+    dir: 'rtl',
+    lang: 'fa',
+    fontFamily: "'IRANSansX', 'Shabnam', Tahoma, sans-serif",
+    customClass: {
+        popup: 'swal2-popup-persian',
+        title: 'swal2-title-persian',
+        confirmButton: 'swal2-confirm-persian',
+        cancelButton: 'swal2-cancel-persian',
+        htmlContainer: 'swal2-html-persian'
+    },
+    buttonsStyling: true,
+    rtl: true,
+    showClass: {
+        popup: 'swal2-show-persian',
+        backdrop: 'swal2-backdrop-show'
+    },
+    hideClass: {
+        popup: 'swal2-hide-persian',
+        backdrop: 'swal2-backdrop-hide'
+    }
+});
+
+// Shared confirmDeletePost helper for templates to use
+window.confirmDeletePost = async function(postId, postTitle) {
+    const title = postTitle ? `حذف نوشته: ${postTitle}` : 'حذف نوشته';
+    const result = await swal.fire({
+        title: 'حذف نوشته',
+        text: postTitle
+            ? `آیا مطمئن هستید که می‌خواهید «${postTitle}» را حذف کنید؟ این عمل قابل بازگشت نیست.`
+            : 'آیا مطمئن هستید که می‌خواهید این نوشته را حذف کنید؟ این عمل قابل بازگشت نیست.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'بله، حذف شود',
+        cancelButtonText: 'لغو',
+        customClass: {
+            confirmButton: 'swal2-confirm-danger'
+        }
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/admin/posts/delete/${postId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+
+            if (response.ok) {
+                swal.fire({
+                    title: 'حذف شد!',
+                    text: 'نوشته با موفقیت حذف شد.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                setTimeout(() => {
+                    if (window.location.pathname.includes('/admin/posts/') && !window.location.pathname.includes('/admin/posts/create') && !window.location.pathname.includes('/edit')) {
+                        window.location.href = '/admin/posts';
+                    } else {
+                        window.location.reload();
+                    }
+                }, 1000);
+            } else {
+                swal({
+                    title: 'خطا!',
+                    text: 'در حذف نوشته خطایی رخ داد.',
+                    icon: 'error'
+                });
+            }
+        } catch (error) {
+            swal.fire({
+                title: 'خطا!',
+                text: 'در ارتباط با سرور خطایی رخ داد.',
+                icon: 'error'
+            });
+        }
+    }
+    return result.isConfirmed;
+};
+
+// showToast helper for success/error/info messages
+window.showToast = function(message, icon = 'info') {
+    swal.fire({
+        title: icon === 'success' ? 'موفق' : icon === 'error' ? 'خطا' : 'اطلاع',
+        text: message,
+        icon: icon,
+        timer: 3000,
+        showConfirmButton: true,
+        confirmButtonText: 'متوجه شدم',
+        customClass: {
+            confirmButton: icon === 'success' ? 'swal2-confirm-success' : icon === 'error' ? 'swal2-confirm-danger' : ''
+        }
+    });
+};
+
 // Sidebar Toggle (Mobile)
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('adminSidebar');
@@ -103,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // SweetAlert2 Confirmation Helpers
 async function confirmDelete(title = 'حذف', message = 'آیا مطمئن هستید؟') {
-    const result = await Swal.fire({
+    const result = await swal.fire({
         title: title,
         text: message,
         icon: 'warning',
@@ -117,7 +220,7 @@ async function confirmDelete(title = 'حذف', message = 'آیا مطمئن هس
 }
 
 async function confirmAction(title = 'تایید', message = 'آیا مطمئن هستید؟') {
-    const result = await Swal.fire({
+    const result = await swal.fire({
         title: title,
         text: message,
         icon: 'question',

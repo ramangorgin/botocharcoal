@@ -53,8 +53,6 @@ async def generate_image(prompt: str, size: tuple = (1024, 1024)) -> str:
             api_base = ai_settings.api_base_url
         if ai_settings.image_model:
             model = ai_settings.image_model
-        if ai_settings.image_size:
-            img_size = ai_settings.image_size
     
     if not api_key:
         api_key = settings.OPENAI_API_KEY

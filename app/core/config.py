@@ -1,9 +1,14 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
+# Resolve .env path relative to project root
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_ENV_PATH = _PROJECT_ROOT / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(_ENV_PATH if _ENV_PATH.exists() else ".env"), env_file_encoding='utf-8', extra="ignore")
 
     APP_ENV: str = "development"
     SECRET_KEY: str = "dev-secret-key-change-in-production"

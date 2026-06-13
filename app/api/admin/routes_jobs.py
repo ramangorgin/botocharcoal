@@ -5,7 +5,7 @@ Full CRUD for Jobs, AI Settings, and content generation controls.
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -55,7 +55,6 @@ async def update_ai_settings(
     api_base_url = form.get("api_base_url", "").strip() or None
     text_model = form.get("text_model", "").strip() or None
     image_model = form.get("image_model", "").strip() or None
-    image_size = form.get("image_size", "1024x1024").strip() or None
     prompt_template = form.get("prompt_template", "").strip() or None
 
     result = await db.execute(select(AISettings).limit(1))
@@ -68,7 +67,6 @@ async def update_ai_settings(
         existing.api_base_url = api_base_url
         existing.text_model = text_model
         existing.image_model = image_model
-        existing.image_size = image_size
         existing.prompt_template = prompt_template
     else:
         existing = AISettings(
@@ -77,7 +75,6 @@ async def update_ai_settings(
             api_base_url=api_base_url,
             text_model=text_model,
             image_model=image_model,
-            image_size=image_size,
             prompt_template=prompt_template,
         )
         db.add(existing)
@@ -112,6 +109,15 @@ async def jobs_list(
             job.jalali_created = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
         else:
             job.jalali_created = '-'
+        
+        # Convert start_date to Jalali for display
+        if job.start_date:
+            import jdatetime
+            jdt = jdatetime.date.fromgregorian(date=job.start_date)
+            jalali_str = jdt.strftime('%Y/%m/%d')
+            job.jalali_start_date = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
+        else:
+            job.jalali_start_date = '-'
         
         items_result = await db.execute(
             select(func.count(ContentItem.id)).where(ContentItem.job_id == job.id)
@@ -169,12 +175,20 @@ async def create_job_route(
     except (ValueError, TypeError):
         items_per_day = 1
     
-    # Parse start_date
+    # Parse start_date (Jalali to Gregorian)
     start_date_str = form.get("start_date", "")
-    from datetime import date
     try:
         if start_date_str:
-            start_date = date.fromisoformat(start_date_str)
+            # JalaliDatepicker sends YYYY/MM/DD format
+            jalali_parts = start_date_str.split('/')
+            if len(jalali_parts) == 3:
+                jalali_year = int(jalali_parts[0].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
+                jalali_month = int(jalali_parts[1].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
+                jalali_day = int(jalali_parts[2].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
+                import jdatetime
+                start_date = jdatetime.date(jalali_year, jalali_month, jalali_day).togregorian()
+            else:
+                start_date = date.today()
         else:
             start_date = date.today()
     except (ValueError, TypeError):

@@ -5,6 +5,14 @@
 {% block header_title %}داشبورد{% endblock %}
 
 {% block content %}
+{% set persian_digits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'] %}
+{% macro to_persian(n) -%}
+{% if n is number -%}
+    {{- n|replace('0','۰')|replace('1','۱')|replace('2','۲')|replace('3','۳')|replace('4','۴')|replace('5','۵')|replace('6','۶')|replace('7','۷')|replace('8','۸')|replace('9','۹') -}}
+{%- else -%}
+    {{- n -}}
+{%- endif -%}
+{%- endmacro %}
 <div class="admin-dashboard">
     <!-- Stats Cards -->
     <div class="admin-stats-grid">
@@ -16,7 +24,7 @@
                 </svg>
             </div>
             <div class="admin-stat-card__content">
-                <span class="admin-stat-card__value">{{ total_posts }}</span>
+                <span class="admin-stat-card__value">{{ to_persian(total_posts) }}</span>
                 <span class="admin-stat-card__label">مجموع نوشته‌ها</span>
             </div>
         </div>
@@ -28,7 +36,7 @@
                 </svg>
             </div>
             <div class="admin-stat-card__content">
-                <span class="admin-stat-card__value">{{ total_leads }}</span>
+                <span class="admin-stat-card__value">{{ to_persian(total_leads) }}</span>
                 <span class="admin-stat-card__label">سرنخ‌ها</span>
             </div>
         </div>
@@ -42,7 +50,7 @@
                 </svg>
             </div>
             <div class="admin-stat-card__content">
-                <span class="admin-stat-card__value">{{ recent_jobs|length }}</span>
+                <span class="admin-stat-card__value">{{ to_persian(recent_jobs|length) }}</span>
                 <span class="admin-stat-card__label">فرآیندهای اخیر</span>
             </div>
         </div>
@@ -97,7 +105,7 @@
                     <tbody>
                         {% for job in recent_jobs %}
                         <tr>
-                            <td>{{ job.topic }}</td>
+                            <td>{{ job.subject }}</td>
                             <td>
                                 {% if job.status == 'completed' %}
                                 <span class="admin-badge admin-badge--success">تکمیل شده</span>
@@ -109,7 +117,9 @@
                                 <span class="admin-badge admin-badge--error">خطا</span>
                                 {% endif %}
                             </td>
-                            <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else '-' }}</td>
+                            <td>
+                                {{ job.jalali_created if job.jalali_created else '-' }}
+                            </td>
                             <td>
                                 <a href="/admin/jobs/{{ job.id }}" class="admin-btn admin-btn--sm admin-btn--outline">مشاهده</a>
                             </td>

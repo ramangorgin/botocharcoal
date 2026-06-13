@@ -14,7 +14,6 @@ class AISettings(Base):
 
     text_model: Mapped[str | None] = mapped_column(String(128))
     image_model: Mapped[str | None] = mapped_column(String(128))
-    image_size: Mapped[str | None] = mapped_column(String(32))  # e.g. "1024x1024", "1792x1024"
 
     prompt_template: Mapped[str | None] = mapped_column(Text)  # JSON for custom prompts
 

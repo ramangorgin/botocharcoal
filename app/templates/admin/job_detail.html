@@ -88,11 +88,11 @@
                     <span class="admin-detail-item__value">{{ job.instagram_image_count }}</span>
                 </div>
                 <div class="admin-detail-item">
-                    <span class="admin-detail-item__label">تصاویر بلاگ</span>
+                    <span class="admin-detail-item__label">تصاویر وبلاگ</span>
                     <span class="admin-detail-item__value">{{ job.blog_image_count }}</span>
                 </div>
                 <div class="admin-detail-item">
-                    <span class="admin-detail-item__label">انتشار خودکار بلاگ</span>
+                    <span class="admin-detail-item__label">انتشار خودکار وبلاگ</span>
                     <span class="admin-detail-item__value">
                         {% if job.auto_publish_blog %}
                         <span class="admin-badge admin-badge--success">فعال</span>
@@ -154,7 +154,7 @@
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
-                    مقاله بلاگ
+                    پست وبلاگ
                 </h4>
                 <div style="background: var(--color-charcoal-light); padding: 16px; border-radius: 8px; margin-bottom: 12px;">
                     <h5 style="margin: 0 0 8px; color: var(--color-ember);">{{ ci.blog_title }}</h5>
@@ -182,7 +182,7 @@
                                 <path d="M22 2L11 13"/>
                                 <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
                             </svg>
-                            انتشار مقاله
+                            انتشار پست وبلاگ
                         </button>
                     </form>
                     {% endif %}
@@ -261,7 +261,7 @@
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
-                    تصاویر بلاگ
+                    تصاویر وبلاگ
                 </h4>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     {% for img_url in ci.blog_image_urls.split('","') if ci.blog_image_urls %}

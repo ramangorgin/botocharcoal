@@ -55,7 +55,7 @@
                 </svg>
                 <span>ویرایش</span>
             </a>
-            <button type="button" class="admin-btn admin-btn--danger" onclick="confirmDeletePost()">
+            <button type="button" class="admin-btn admin-btn--danger" onclick="confirmDeletePost({{ post.id }}, '{{ post.title }}')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -123,56 +123,4 @@
     </div>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="/static/vendors/sweetalert2/sweetalert2.min.js"></script>
-<script>
-async function confirmDeletePost() {
-    const result = await Swal.fire({
-        title: 'حذف نوشته',
-        text: 'آیا مطمئن هستید که می‌خواهید این نوشته را حذف کنید؟ این عمل قابل بازگشت نیست.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'بله، حذف شود',
-        cancelButtonText: 'لغو'
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch('/admin/posts/delete/{{ post.id }}', {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                }
-            });
-
-            if (response.ok) {
-                Swal.fire({
-                    title: 'حذف شد!',
-                    text: 'نوشته با موفقیت حذف شد.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                setTimeout(() => { window.location.href = '/admin/posts'; }, 1000);
-            } else {
-                Swal.fire({
-                    title: 'خطا!',
-                    text: 'در حذف نوشته خطایی رخ داد.',
-                    icon: 'error'
-                });
-            }
-        } catch (error) {
-            Swal.fire({
-                title: 'خطا!',
-                text: 'در ارتباط با سرور خطایی رخ داد.',
-                icon: 'error'
-            });
-        }
-    }
-}
-</script>
 {% endblock %}

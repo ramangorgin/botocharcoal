@@ -8,7 +8,6 @@ class AISettingsCreateSchema(BaseModel):
     api_base_url: str | None = Field(None, max_length=512)
     text_model: str | None = Field(None, max_length=128)
     image_model: str | None = Field(None, max_length=128)
-    image_size: str | None = Field(default="1024x1024", max_length=32)
     prompt_template: str | None = Field(None, max_length=8192)
 
 
@@ -19,7 +18,7 @@ class AISettingsResponseSchema(BaseModel):
     api_base_url: str | None
     text_model: str | None
     image_model: str | None
-    image_size: str | None
+    image_size: str | None = None
     prompt_template: str | None
     created_at: str
     updated_at: str

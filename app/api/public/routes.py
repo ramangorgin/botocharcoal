@@ -210,3 +210,10 @@ async def error_500(request: Request):
 @router.get("/403", response_class=HTMLResponse)
 async def error_403(request: Request):
     return templates.TemplateResponse("error_403.html", {"request": request}, status_code=403)
+
+@router.get("/swal-test")
+def swal_test(request: Request):
+    return templates.TemplateResponse(
+        "swal_test.html",
+        {"request": request}
+    )
