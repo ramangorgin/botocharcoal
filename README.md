@@ -1,6 +1,6 @@
 # Botocharcoal — Persian Charcoal Business Marketing Platform
 
-Marketing website + admin dashboard + AI-assisted content generation + Instagram carousel publishing for a charcoal business.
+Marketing website + admin dashboard + AI-powered content generation pipeline + manual Instagram asset management for a charcoal business.
 
 ## Architecture Summary
 
@@ -20,6 +20,11 @@ Marketing website + admin dashboard + AI-assisted content generation + Instagram
                     │  Celery      │
                     │  Beat        │────▶ (scheduled tasks)
                     └──────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │  AI API      │────▶│ OpenAI /     │
+                    │  (Async)     │────▶│ Compatible   │
+                    └──────────────┘     └──────────────┘
 ```
 
 ## Stack
@@ -34,9 +39,9 @@ Marketing website + admin dashboard + AI-assisted content generation + Instagram
 | Broker       | Redis 7                                         |
 | Task Queue   | Celery 5.4                                      |
 | Templates    | Jinja2                                          |
-| AI Text      | OpenAI API (GPT-4o)                             |
-| AI Images    | OpenAI API (DALL·E 3)                           |
-| Instagram    | Instagram Graph API (official carousel publishing) |
+| AI Text      | OpenAI API (GPT-4o, configurable)               |
+| AI Images    | OpenAI API (DALL·E 3, configurable)             |
+| Instagram    | Manual asset download (no auto-publish)         |
 | Storage      | Local filesystem (`media/`) served via Nginx    |
 
 ---
@@ -44,11 +49,12 @@ Marketing website + admin dashboard + AI-assisted content generation + Instagram
 ## Features
 
 - **Public Persian RTL website** — home, blog index, blog detail, catalog, contact/lead form
-- **Admin dashboard** — login, jobs list/create/detail, posts list/detail, leads inbox, catalog management
-- **AI content generation** — topic → Persian caption, hashtags, blog title/body, 4–5 Instagram images, 1 blog cover
-- **Instagram publishing** — official Graph API carousel upload (no unofficial automation)
+- **Admin dashboard** — login, dashboard, jobs pipeline, posts, leads, catalog, AI settings
+- **AI Content Pipeline** — create multi-day jobs with subjects, schedule, and AI generation for both blog and Instagram
+- **Blog management** — create, edit, publish/unpublish posts with full HTML content
 - **Lead capture** — contact form stores leads in PostgreSQL, visible in admin
 - **Catalog management** — upload PDF catalogs, serve to public
+- **AI Settings** — configure provider, API key, models, and image size per-project (no code changes needed)
 
 ---
 
@@ -97,6 +103,109 @@ cp .env.example .env
 |----------|-------------|---------|
 | `ADMIN_SESSION_MAX_AGE` | Admin session lifetime in seconds | `86400` |
 | `CELERY_MAX_RETRIES` | Max retry count for failed jobs | `3` |
+
+### AI Configuration
+
+AI settings can be configured in two ways: via `.env` (defaults) or through the admin panel at `/admin/ai-settings` (takes precedence).
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENAI_API_KEY` | API key for text and image generation | (required) |
+| `TEXT_MODEL` | Default text model name | `gpt-4o` |
+| `IMAGE_MODEL` | Default image model name | `dall-e-3` |
+
+> **Note**: The admin panel at `/admin/ai-settings` stores AI configuration in the database and overrides `.env` values. You can also use any OpenAI-compatible API (e.g., Together AI, Groq, local vLLM) by setting provider to "custom" and providing the base URL.
+
+---
+
+## AI Content Pipeline
+
+The AI pipeline allows you to create multi-day content generation jobs that produce both blog articles and Instagram content.
+
+### How It Works
+
+1. **Create a Job**: Admin logs in to `/admin/jobs/create` and defines:
+   - **Subject** — the topic for generated content
+   - **Instructions** — optional additional guidance for AI
+   - **Duration** — how many days to generate content for
+   - **Start Date** — when to start (default: today)
+   - **Items Per Day** — how many content sets per day
+   - **Auto-Publish Blog** — automatically publish blog posts (true/false)
+   - **Image Counts** — number of Instagram images and blog cover images
+
+2. **Generate Content**: Click "شروع تولید" to trigger the AI pipeline:
+   - A Celery task processes each day's content
+   - For each day: generates blog text, Instagram caption/hashtags, image prompts
+   - Downloads generated images from the AI API
+   - If auto-publish is enabled, creates blog posts in the database
+   - Saves all results to `ContentItem` records
+
+3. **Review & Export**: At `/admin/jobs/{id}`, admin can:
+   - View generated content for each day
+   - Copy Instagram captions and hashtags to clipboard
+   - Copy blog content (title, body) to clipboard
+   - Download generated images
+   - Manually publish/unpublish blog posts
+   - Retry failed generations
+
+### AI Settings
+
+Navigate to `/admin/ai-settings` to configure:
+
+| Field | Description |
+|-------|-------------|
+| **Provider** | `openai`, `anthropic`, or custom (OpenAI-compatible) |
+| **API Key** | Your API key for the selected provider |
+| **API Base URL** | Only for custom providers (e.g., `https://api.together.xyz/v1`) |
+| **Text Model** | Model for blog text, captions, hashtags (e.g., `gpt-4o`) |
+| **Image Model** | Model for images (e.g., `dall-e-3`, `flux-schnell`) |
+| **Image Size** | Output size for generated images |
+| **Custom Prompt** | Optional JSON to override default Persian prompts |
+
+### Supported AI Providers
+
+The pipeline uses the OpenAI API format, so any provider with OpenAI-compatible endpoints works:
+
+- **OpenAI** — `https://api.openai.com/v1`
+- **Together AI** — `https://api.together.xyz/v1`
+- **Groq** — `https://api.groq.com/openai/v1`
+- **Local vLLM/Ollama** — `http://localhost:8000/v1`
+
+### Job Statuses
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Job created, not yet started |
+| `queued` | Job is in the Celery queue |
+| `processing` | AI generation is in progress |
+| `completed` | All content generated successfully |
+| `failed` | Generation failed (check error message) |
+
+### Data Flow
+
+```
+Admin creates job ──▶ POST /admin/jobs/create
+                         │
+                         ▼
+                    Celery task (run_content_pipeline)
+                         │
+                    ┌────┴────┐
+                    │         │
+              AI Text      AI Image
+              Service       Service
+                    │         │
+              Caption    Download images
+              Hashtags   Save to media/
+              Blog body
+                    │
+                    ▼
+               ContentItem records
+                    │
+              ┌─────┴─────┐
+              │           │
+        Auto-publish   Manual
+        blog posts     review & export
+```
 
 ---
 
@@ -438,15 +547,28 @@ alembic current
 | POST | `/admin/login` | Login action |
 | GET | `/admin/logout` | Logout |
 | GET | `/admin/dashboard` | Dashboard |
-| GET | `/admin/jobs` | Jobs list |
-| GET | `/admin/jobs/create` | Create job form |
-| POST | `/admin/jobs/create` | Create job |
+| GET | `/admin/jobs` | AI Jobs list |
+| GET | `/admin/jobs/create` | Create AI job form |
+| POST | `/admin/jobs/create` | Create AI job |
 | GET | `/admin/jobs/{id}` | Job detail |
+| POST | `/admin/jobs/{id}/generate` | Trigger AI generation |
 | POST | `/admin/jobs/{id}/retry` | Retry failed job |
+| GET | `/admin/jobs/{id}/download/{item_id}/instagram` | Download Instagram assets |
+| GET | `/admin/jobs/{id}/download/{item_id}/blog` | Download blog assets |
+| POST | `/admin/jobs/{id}/publish/{item_id}/blog` | Publish blog post |
+| GET | `/admin/jobs/{id}/copy/caption/{item_id}` | Copy Instagram caption |
+| GET | `/admin/jobs/{id}/copy/body/{item_id}` | Copy blog body |
+| GET | `/admin/ai-settings` | AI configuration |
+| POST | `/admin/ai-settings` | Save AI settings |
 | GET | `/admin/posts` | Posts list |
+| GET | `/admin/posts/create` | Create post form |
+| POST | `/admin/posts/create` | Create post |
 | GET | `/admin/posts/{id}` | Post detail |
+| GET | `/admin/posts/{id}/edit` | Edit post form |
+| POST | `/admin/posts/{id}/edit` | Update post |
 | POST | `/admin/posts/{id}/publish` | Publish to website |
 | POST | `/admin/posts/{id}/unpublish` | Unpublish |
+| DELETE | `/admin/posts/delete/{id}` | Delete post |
 | GET | `/admin/leads` | Leads list |
 | POST | `/admin/leads/{id}/contacted` | Mark as contacted |
 | GET | `/admin/catalog` | Catalog list |
@@ -459,12 +581,16 @@ alembic current
 
 | Problem | Solution |
 |---------|----------|
-| Instagram publish fails | Verify `BASE_URL` produces publicly reachable URLs. Check Nginx serves `/media/` correctly. Ensure Instagram access token is valid. |
+| AI generation fails | Check `/admin/ai-settings` for correct API key and model names. Verify provider URL is reachable. |
+| AI returns errors | Check Celery worker logs for detailed error messages. Ensure API key has sufficient credits. |
+| Celery tasks not running | Verify worker is running (`celery -A app.tasks.celery_app.celery_app worker -l INFO`), Redis is reachable, and task modules are listed in `include` in `celery_app.py`. |
+| Job stuck in "processing" | Check Celery worker for errors. Retry via `/admin/jobs/{id}`. If persistent, check AI API availability. |
+| Generated images missing | Verify AI API key has image generation permissions. Check `media/` directory permissions. |
+| Blog auto-publish fails | Check Celery logs for AI or DB errors. Auto-publish uses the same AI services — verify AI settings. |
 | Alembic autogenerate shows empty | Ensure all models are imported in `alembic/env.py` and `target_metadata` references `Base.metadata`. |
 | DB connection errors | Check `DATABASE_URL` format and PostgreSQL is running. |
 | Redis errors | Check `REDIS_URL` and Redis service status. |
 | Import errors | Ensure you're in the virtual environment and `pip install -r requirements.txt` completed. |
-| Celery tasks not running | Verify worker is running, Redis is reachable, and task modules are listed in `include` in `celery_app.py`. |
 | Media files not accessible | Ensure Nginx `alias` path matches `MEDIA_ROOT` and file permissions allow the web server to read them. |
 
 ---
@@ -475,6 +601,6 @@ alembic current
 2. **No CSRF protection** — Admin forms use cookie-based sessions without CSRF tokens. For production behind Nginx, consider adding CSRF middleware.
 3. **No rate limiting** — The contact form and login have no rate limiting. Add Nginx-level rate limiting for production.
 4. **No HTTPS** — HTTPS termination should be handled by Nginx (or a reverse proxy like Traefik).
-5. **Instagram token management** — Long-lived tokens must be refreshed manually every 60 days. No automatic refresh is implemented.
-6. **Single-writer media** — Media files are stored on the local filesystem. In a multi-instance deployment, use S3-compatible storage.
-7. **No API documentation** — Swagger/ReDoc are disabled in production mode (`docs_url=None`). Enable for debugging if needed.
+5. **Single-writer media** — Media files are stored on the local filesystem. In a multi-instance deployment, use S3-compatible storage.
+6. **No API documentation** — Swagger/ReDoc are disabled in production mode (`docs_url=None`). Enable for debugging if needed.
+7. **AI dependency** — Content generation requires a working AI API. The app runs fine without it, but jobs will fail if triggered.

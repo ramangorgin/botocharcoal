@@ -248,3 +248,103 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ==========================================================================
+// Job Pipeline UI JavaScript
+// ==========================================================================
+
+// Auto-dismiss banner toasts on job pages
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-dismiss success banner
+    const banners = document.querySelectorAll('.admin-toast[style*="position: fixed"]');
+    banners.forEach(banner => {
+        setTimeout(() => {
+            banner.style.opacity = '0';
+            banner.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => banner.remove(), 300);
+        }, 3000);
+    });
+});
+
+// Confirm before restarting a job
+document.addEventListener('click', function(e) {
+    const restartBtn = e.target.closest('[data-restart-confirm]');
+    if (restartBtn) {
+        e.preventDefault();
+        confirmAction('بازراه‌اندازی', 'آیا مطمئن هستید؟ محتوای موجود بازنویسی خواهد شد.')
+            .then(confirmed => {
+                if (confirmed) {
+                    restartBtn.closest('form').submit();
+                }
+            });
+    }
+});
+
+// Live count display for job create summary
+(function() {
+    const durInput = document.getElementById('duration_days');
+    const ipdInput = document.getElementById('items_per_day');
+    const igInput = document.getElementById('instagram_image_count');
+    const blogImgInput = document.getElementById('blog_image_count');
+    
+    if (durInput && ipdInput && igInput && blogImgInput) {
+        function updateSummary() {
+            const days = parseInt(durInput.value) || 1;
+            const itemsPerDay = parseInt(ipdInput.value) || 1;
+            const igImages = parseInt(igInput.value) || 4;
+            const blogImages = parseInt(blogImgInput.value) || 1;
+            
+            const totalItems = days * itemsPerDay;
+            const totalIG = totalItems * igImages;
+            const totalBlog = totalItems * blogImages;
+            
+            const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+            function toPersian(n) {
+                return String(n).replace(/[0-9]/g, d => persianDigits[parseInt(d)]);
+            }
+            
+            const summaryTotal = document.getElementById('summaryTotalItems');
+            const summaryIG = document.getElementById('summaryIGImages');
+            const summaryBlog = document.getElementById('summaryBlogImages');
+            
+            if (summaryTotal) summaryTotal.textContent = toPersian(totalItems);
+            if (summaryIG) summaryIG.textContent = toPersian(totalIG);
+            if (summaryBlog) summaryBlog.textContent = toPersian(totalBlog);
+        }
+        
+        durInput.addEventListener('input', updateSummary);
+        ipdInput.addEventListener('input', updateSummary);
+        igInput.addEventListener('input', updateSummary);
+        blogImgInput.addEventListener('input', updateSummary);
+    }
+})();
+
+// Jalali date picker initialization for start_date
+(function() {
+    const dateInputs = document.querySelectorAll('.jalali-date');
+    dateInputs.forEach(input => {
+        if (typeof jalaliDatepicker !== 'undefined' && !input.dataset.jdpInit) {
+            jalaliDatepicker.attach(input);
+            input.dataset.jdpInit = '1';
+        }
+    });
+})();
+
+// Copy to clipboard with visual feedback (also used in job_detail)
+window.copyToClipboard = function(text, buttonId) {
+    const fullText = text || '';
+    navigator.clipboard.writeText(fullText).then(() => {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            const original = btn.textContent.trim();
+            btn.textContent = '✓ کپی شد!';
+            btn.style.color = 'var(--color-success)';
+            setTimeout(() => {
+                btn.textContent = original;
+                btn.style.color = '';
+            }, 1500);
+        }
+    }).catch(() => {
+        showPersianToast('خطا در کپی کردن', 'error');
+    });
+};
