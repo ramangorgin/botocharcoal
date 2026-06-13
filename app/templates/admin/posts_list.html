@@ -24,7 +24,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th style="width:60px;">#</th>
+                        <th style="width:60px;">شماره</th>
                         <th>عنوان</th>
                         <th style="width:140px;">وضعیت</th>
                         <th style="width:120px;">تاریخ</th>
@@ -33,12 +33,12 @@
                 </thead>
                 <tbody>
                     {% for post in posts %}
-                    <tr>
-                        <td>{{ post.id }}</td>
-                        <td>
+                    <tr class="admin-table__row">
+                        <td class="admin-table__cell admin-table__cell--number" data-en-num="{{ post.id }}">{{ post.id }}</td>
+                        <td class="admin-table__cell">
                             <a href="/admin/posts/{{ post.id }}" class="admin-table__link">{{ post.title }}</a>
                         </td>
-                        <td>
+                        <td class="admin-table__cell">
                             {% if post.website_status == 'PUBLISHED' %}
                             <span class="admin-badge admin-badge--success">منتشر شده</span>
                             {% elif post.website_status == 'DRAFT' %}
@@ -47,8 +47,8 @@
                             <span class="admin-badge admin-badge--warning">{{ post.website_status }}</span>
                             {% endif %}
                         </td>
-                        <td>{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '-' }}</td>
-                        <td>
+                        <td class="admin-table__cell admin-table__cell--date" data-date="{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '' }}">{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '-' }}</td>
+                        <td class="admin-table__cell">
                             <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>

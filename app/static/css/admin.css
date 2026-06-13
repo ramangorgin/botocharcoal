@@ -494,6 +494,7 @@
   overflow-x: auto;
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--color-border);
+  background: transparent;
 }
 
 .admin-table {
@@ -509,23 +510,60 @@
 .admin-table__cell {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
   color: var(--color-text-primary);
+  text-align: right;
+  vertical-align: middle;
+  background: transparent;
+}
+
+.admin-table__cell:last-child {
+  border-right: none;
 }
 
 .admin-table__header .admin-table__cell {
   font-weight: 600;
   color: var(--color-text-secondary);
   font-size: 0.8125rem;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
+  background-color: var(--color-charcoal);
+}
+
+.admin-table__row {
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.admin-table__row:hover {
+  background-color: var(--color-charcoal-light);
 }
 
 .admin-table__row:hover .admin-table__cell {
-  background-color: var(--color-charcoal-light);
+  background-color: transparent;
 }
 
 .admin-table__row:last-child .admin-table__cell {
   border-bottom: none;
+}
+
+.admin-table__cell--number {
+  text-align: center;
+  width: 60px;
+  font-weight: 600;
+  color: var(--color-ash-gray);
+  font-size: 0.875rem;
+}
+
+.admin-table__cell--date {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  direction: ltr;
+  text-align: center;
+  width: 120px;
+}
+
+.admin-table__row .admin-table__cell {
+  transition: background-color 0.2s ease;
 }
 
 .admin-table__actions {
@@ -1379,6 +1417,8 @@
 
 .admin-health-item svg {
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   color: var(--color-ember);
 }
 

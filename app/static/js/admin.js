@@ -223,3 +223,28 @@ document.addEventListener('click', function(e) {
         setTimeout(() => toast.remove(), 300);
     }
 });
+
+// Persian number converter
+function toPersianNum(num) {
+    const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    return String(num).replace(/[0-9]/g, d => persianDigits[parseInt(d)]);
+}
+
+// Convert all numbers in dashboard stats to Persian
+document.addEventListener('DOMContentLoaded', function() {
+    // Convert stat card values
+    document.querySelectorAll('.admin-stat-card__value').forEach(el => {
+        const text = el.textContent.trim();
+        if (/^\d+$/.test(text)) {
+            el.textContent = toPersianNum(text);
+        }
+    });
+
+    // Convert dates in dashboard table
+    document.querySelectorAll('.admin-table td:nth-child(3)').forEach(td => {
+        const text = td.textContent.trim();
+        if (text && text !== '-' && /[\d]/.test(text)) {
+            td.textContent = toPersianNum(text);
+        }
+    });
+});
