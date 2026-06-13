@@ -1,14 +1,10 @@
-things to do next:
-- test  showing as admin
-- I need to sattle a gitlab or a more proper altearnative just for this project inside the production server so that I could push there and also have a full Deployment's yaml CI/CD pipeline so everything would be sync with local and productionable.
+things to do:
+- test:
+    - detail files for post and job as admin
+    - create and edit files for jobs and posts
 
+- develop:
+    - notifs (leads)
+    - catalogs of products
 
-prompts:
-new tasks:
-- sweetalert problem: in the entire project and admin templates, whenever I (for example) want to delete an article, sweetalert doesn't load and work correctly! instead, it seems a div is adding in the buttom of my page! fix it! it should show a pop up with full persian text and buttons and animations for confirmations.
-- file '/app/templates/admin/job_create.html' date: تاریخ شروع must be used by Jalalidatepicker ('/app/static/vendors/jalalidatepicker/jalalidatepicker.min.js', '/app/static/vendors/jalalidatepicker/jalalidatepicker.min.css') and receive Jalali date by widget from the user (if you forgot how you did that, look at '/app/templates/admin/post_create.html') and converts into Gregorian to be stored in the database and on job_detail.html or job_list.html should convert in Jalali and shown by Persian numbers.
-- unify the names: مقاله - نوشته - پست‌بلاگ and etc. all of these names about the articles are publishing in the weblog on the entire project should be: پست‌(ها) and that place should be: وبلاگ. also, the brand name in English is '‌Botocharcoal' and in persian is 'بوتوچارکول'.
-- you placed a field for "ابعاد تصاویر" in ai_settings.html. the point is, the AI must create the poster of article in the correct way for blog's articles (I don't know what it is, I think it's a Landscape ratio) and the instagram's images in that ratio that is best for Instagram (I don't know what that is). I can simply tell this as a prompt in that page but what I'm saying is that there is no need for this field.
-- run the migration and make sure that my database is up to date with our last changes. you can find the creditionals in .env file.
-- test both new files ('ai_settings.html' and 'job_create.html') to make sure if I submit them, I'm not going to ran into any backend and database issues and it's ready for production.
-- now that the AI creditionals are moved from .env file into the project and in ai_settings.html, write a newer .env.example and update README.md
+- Deployment: I need to sattle a gitlab or a more proper altearnative just for this project inside the production server so that I could push there and also have a full Deployment's yaml CI/CD pipeline so everything would be sync with local and productionable.

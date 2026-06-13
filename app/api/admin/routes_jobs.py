@@ -419,14 +419,14 @@ async def publish_blog_post(
         return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
     
     if not ci.blog_title or not ci.blog_body:
-        return JSONResponse(status_code=400, content={"detail": "عنوان یا بدنه مقاله موجود نیست"})
+        return JSONResponse(status_code=400, content={"detail": "عنوان یا بدنه پست موجود نیست"})
     
     # Check for existing post with same slug
     from app.db.models.post import Post
     existing = await db.execute(select(Post).where(Post.slug == ci.blog_slug))
     
     if existing.scalars().first():
-        return JSONResponse(status_code=409, content={"detail": "مقاله‌ای با این slug قبلاً وجود دارد"})
+        return JSONResponse(status_code=409, content={"detail": "پست‌ای با این slug قبلاً وجود دارد"})
     
     post = Post(
         topic=ci.blog_title,

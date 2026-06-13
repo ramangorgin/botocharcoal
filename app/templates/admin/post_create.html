@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}ایجاد نوشته جدید | پنل مدیریت{% endblock %}
+{% block title %}ایجاد پست جدید | پنل مدیریت{% endblock %}
 
-{% block header_title %}ایجاد نوشته جدید{% endblock %}
+{% block header_title %}ایجاد پست جدید{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/vendors/select2/select2.min.css">
@@ -15,7 +15,7 @@
         <div class="admin-form-grid">
             <!-- Title -->
             <div class="admin-form-group">
-                <label for="title" class="admin-form-label">عنوان نوشته <span class="admin-required">*</span></label>
+                <label for="title" class="admin-form-label">عنوان پست <span class="admin-required">*</span></label>
                 <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="512" value="{{ post.title if post else '' }}">
             </div>
 
@@ -51,7 +51,7 @@
 
         <!-- Body -->
         <div class="admin-form-section">
-            <label for="body_html" class="admin-form-label">محتوای نوشته</label>
+            <label for="body_html" class="admin-form-label">محتوای پست</label>
             <textarea id="body_html" name="body_html" rows="20">{{ post.body_html if post else '' }}</textarea>
         </div>
 
@@ -208,7 +208,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                <span>ذخیره نوشته</span>
+                <span>ذخیره پست</span>
             </button>
             <a href="/admin/posts" class="admin-btn admin-btn--outline admin-btn--lg">
                 <span>لغو</span>
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show success message if redirected after creation
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('msg') && urlParams.get('msg') === 'created') {
-        setTimeout(() => showPersianToast('نوشته با موفقیت ایجاد شد', 'success', 4000));
+        setTimeout(() => showPersianToast('پست با موفقیت ایجاد شد', 'success', 4000));
     }
 });
 </script>
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'undo', 'redo'
                 ],
                 language: 'fa',
-                placeholder: 'محتوای نوشته را وارد کنید...'
+                placeholder: 'محتوای پست را وارد کنید...'
             })
             .catch(function(error) {
                 console.error('CKEditor error:', error);

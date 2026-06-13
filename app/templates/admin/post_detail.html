@@ -2,7 +2,7 @@
 
 {% block title %}جزئیات: {{ post.title }} | پنل مدیریت{% endblock %}
 
-{% block header_title %}نوشته: {{ post.title }}{% endblock %}
+{% block header_title %}پست: {{ post.title }}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -111,7 +111,7 @@
 
     <!-- Body Content -->
     <div class="admin-form-card admin-form-card--body">
-        <h3>محتوای نوشته</h3>
+        <h3>محتوای پست</h3>
         <div class="admin-post-detail__content">{{ post.body_html | safe }}</div>
     </div>
 

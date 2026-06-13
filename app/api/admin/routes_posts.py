@@ -226,7 +226,7 @@ async def unpublish(post_id: int, db: AsyncSession = Depends(get_db), _: User = 
 async def delete_post(post_id: int, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_admin)):
     post = await db.get(Post, post_id)
     if not post:
-        return JSONResponse(status_code=404, content={"detail": "نوشته‌ای یافت نشد"})
+        return JSONResponse(status_code=404, content={"detail": "پست‌ای یافت نشد"})
     await db.delete(post)
     await db.commit()
-    return JSONResponse(status_code=200, content={"detail": "نوشته با موفقیت حذف شد"})
+    return JSONResponse(status_code=200, content={"detail": "پست با موفقیت حذف شد"})

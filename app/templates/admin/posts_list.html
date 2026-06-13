@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}نوشته‌ها | پنل مدیریت{% endblock %}
+{% block title %}پست‌ها | پنل مدیریت{% endblock %}
 
-{% block header_title %}نوشته‌ها{% endblock %}
+{% block header_title %}پست‌ها{% endblock %}
 
 {% block content %}
 <div class="admin-posts-list">
@@ -13,7 +13,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
-                <span>نوشته جدید</span>
+                <span>پست جدید</span>
             </a>
         </div>
     </div>
@@ -79,8 +79,8 @@
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
             </svg>
-            <p>هنوز نوشته‌ای وجود ندارد</p>
-            <a href="/admin/posts/create" class="admin-btn admin-btn--primary">ایجاد اولین نوشته</a>
+            <p>هنوز پست‌ای وجود ندارد</p>
+            <a href="/admin/posts/create" class="admin-btn admin-btn--primary">ایجاد اولین پست</a>
         </div>
         {% endif %}
     </div>

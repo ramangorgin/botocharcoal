@@ -42,12 +42,12 @@ const swal = Swal.mixin({
 
 // Shared confirmDeletePost helper for templates to use
 window.confirmDeletePost = async function(postId, postTitle) {
-    const title = postTitle ? `حذف نوشته: ${postTitle}` : 'حذف نوشته';
+    const title = postTitle ? `حذف پست: ${postTitle}` : 'حذف پست';
     const result = await swal.fire({
-        title: 'حذف نوشته',
+        title: 'حذف پست',
         text: postTitle
             ? `آیا مطمئن هستید که می‌خواهید «${postTitle}» را حذف کنید؟ این عمل قابل بازگشت نیست.`
-            : 'آیا مطمئن هستید که می‌خواهید این نوشته را حذف کنید؟ این عمل قابل بازگشت نیست.',
+            : 'آیا مطمئن هستید که می‌خواهید این پست را حذف کنید؟ این عمل قابل بازگشت نیست.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
@@ -71,7 +71,7 @@ window.confirmDeletePost = async function(postId, postTitle) {
             if (response.ok) {
                 swal.fire({
                     title: 'حذف شد!',
-                    text: 'نوشته با موفقیت حذف شد.',
+                    text: 'پست با موفقیت حذف شد.',
                     icon: 'success',
                     timer: 2000,
                     showConfirmButton: false
@@ -86,7 +86,7 @@ window.confirmDeletePost = async function(postId, postTitle) {
             } else {
                 swal({
                     title: 'خطا!',
-                    text: 'در حذف نوشته خطایی رخ داد.',
+                    text: 'در حذف پست خطایی رخ داد.',
                     icon: 'error'
                 });
             }
