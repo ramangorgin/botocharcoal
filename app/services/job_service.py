@@ -4,8 +4,6 @@ Botocharcoal Job Service
 Manages job lifecycle, content item creation, and status tracking.
 """
 
-import json
-from datetime import date, datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.models.job import Job
@@ -31,20 +29,24 @@ async def create_job(data: JobCreateSchema, db: AsyncSession) -> Job:
     db.add(job)
     await db.commit()
     await db.refresh(job)
-    
-    # Pre-create content items for each day
+
     await _create_content_items_for_job(job, db)
-    
-    logger.info("job_created", job_id=job.id, subject=data.subject, items=data.duration_days * data.items_per_day)
+
+    logger.info(
+        "job_created",
+        job_id=job.id,
+        subject=data.subject,
+        items=data.duration_days * data.items_per_day,
+    )
     return job
 
 
 async def _create_content_items_for_job(job: Job, db: AsyncSession) -> list[ContentItem]:
     """Create ContentItem rows for each day of the job."""
     content_items = []
-    
+
     for day_num in range(1, job.duration_days + 1):
-        for item_idx in range(1, job.items_per_day + 1):
+        for _ in range(1, job.items_per_day + 1):
             ci = ContentItem(
                 job_id=job.id,
                 day_number=day_num,
@@ -52,11 +54,11 @@ async def _create_content_items_for_job(job: Job, db: AsyncSession) -> list[Cont
             )
             db.add(ci)
             content_items.append(ci)
-    
+
     await db.commit()
     for ci in content_items:
         await db.refresh(ci)
-    
+
     logger.info("content_items_created", job_id=job.id, count=len(content_items))
     return content_items
 
@@ -66,39 +68,10 @@ async def get_job(job_id: int, db: AsyncSession) -> Job | None:
     return await db.get(Job, job_id)
 
 
-async def get_job_with_items(job_id: int, db: AsyncSession) -> dict | None:
-    """Get a job with its content items."""
-    result = await db.execute(
-        select(Job).where(Job.id == job_id)
-    )
-    job = result.scalars().first()
-    if not job:
-        return None
-    
-    items_result = await db.execute(
-        select(ContentItem)
-        .where(ContentItem.job_id == job_id)
-        .order_by(ContentItem.day_number, ContentItem.id)
-    )
-    items = items_result.scalars().all()
-    
-    return {"job": job, "items": items}
-
-
-async def list_jobs(db: AsyncSession, limit: int = 50) -> list[Job]:
+async def list_jobs(db: AsyncSession, limit: int = 100) -> list[Job]:
     """List jobs ordered by creation date (newest first)."""
-    result = await db.execute(
-        select(Job).order_by(Job.created_at.desc()).limit(limit)
-    )
+    result = await db.execute(select(Job).order_by(Job.created_at.desc()).limit(limit))
     return result.scalars().all()
-
-
-async def update_job_status(job: Job, status: JobStatus, db: AsyncSession, error: str | None = None) -> None:
-    """Update job status with optional error message."""
-    job.status = status.value if isinstance(status, JobStatus) else status
-    if error:
-        job.error_message = error
-    await db.commit()
 
 
 async def get_job_content_items(job_id: int, db: AsyncSession) -> list[ContentItem]:

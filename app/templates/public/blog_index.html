@@ -22,7 +22,7 @@
             <article class="blog-card">
                 {% if cover %}
                 <div class="blog-card-image">
-                    <img src="{{ cover.file_path }}" alt="{{ post.title }}" loading="lazy">
+                    <img src="{{ cover.public_url or cover.file_path }}" alt="{{ post.title }}" loading="lazy">
                 </div>
                 {% else %}
                 <div class="blog-card-image blog-card-placeholder">

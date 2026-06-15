@@ -1,44 +1,126 @@
-from sqlalchemy import String, Text, DateTime, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, timezone
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    JSON,
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.db.base import Base
-from app.core.constants import PostWebsiteStatus, PostInstagramStatus
 
 
 class Post(Base):
     __tablename__ = "posts"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    topic: Mapped[str] = mapped_column(String(512))
-    title: Mapped[str] = mapped_column(String(512))
-    slug: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
-    body_html: Mapped[str | None] = mapped_column(Text)
-    instagram_caption: Mapped[str | None] = mapped_column(Text)
-    hashtags: Mapped[str | None] = mapped_column(Text)
+    id = Column(Integer, primary_key=True, index=True)
 
-    # SEO fields
-    meta_title: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    meta_description: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    og_title: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    og_description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    og_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    # -----------------------
+    # Core content
+    # -----------------------
+    topic = Column(String(512), nullable=False)
+    title = Column(String(512), nullable=False)
+    slug = Column(String(512), nullable=False, unique=True, index=True)
 
-    website_status: Mapped[str] = mapped_column(
-        SAEnum(PostWebsiteStatus, name="postwebsitestatus"),
-        default=PostWebsiteStatus.DRAFT,
+    body_html = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True)
+    category = Column(String(255), nullable=True)
+    poster = Column(String(255), nullable=True)  # author name
+
+    cover_image_url = Column(Text, nullable=True)
+
+    # -----------------------
+    # Instagram
+    # -----------------------
+    instagram_caption = Column(Text, nullable=True)
+    hashtags = Column(Text, nullable=True)
+
+    instagram_status = Column(
+        String(32),
+        nullable=False,
+        default="not_published",
     )
-    instagram_status: Mapped[str] = mapped_column(
-        SAEnum(PostInstagramStatus, name="postinstagramstatus"),
-        default=PostInstagramStatus.NOT_PUBLISHED,
+
+    instagram_media_id = Column(String(128), nullable=True)
+    published_to_instagram_at = Column(DateTime(timezone=True), nullable=True)
+
+    # -----------------------
+    # Website
+    # -----------------------
+    website_status = Column(
+        String(32),
+        nullable=False,
+        default="draft",
     )
-    instagram_media_id: Mapped[str | None] = mapped_column(String(128))
-    published_to_website_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    published_to_instagram_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+
+    published_to_website_at = Column(DateTime(timezone=True), nullable=True)
+
+    # SEO
+    meta_title = Column(String(256), nullable=True)
+    meta_description = Column(String(512), nullable=True)
+    og_title = Column(String(512), nullable=True)
+    og_description = Column(Text, nullable=True)
+    og_image = Column(String(512), nullable=True)
+
+    # -----------------------
+    # Flow Control
+    # -----------------------
+    source_type = Column(String(20), nullable=False, default="manual")  # manual | ai
+
+    blog_enabled = Column(Boolean, nullable=False, default=True)
+    instagram_enabled = Column(Boolean, nullable=False, default=True)
+
+    scheduled_for = Column(DateTime(timezone=True), nullable=True)
+
+    ai_payload = Column(JSON, nullable=True)
+
+    # -----------------------
+    # Foreign Keys
+    # -----------------------
+    job_id = Column(
+        Integer,
+        ForeignKey("jobs.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
-    updated_at: Mapped[datetime] = mapped_column(
+
+    content_item_id = Column(
+        Integer,
+        ForeignKey("content_items.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # -----------------------
+    # Relationships
+    # -----------------------
+    job = relationship("Job", back_populates="posts")
+    content_item = relationship("ContentItem", back_populates="post")
+
+    media_assets = relationship(
+        "MediaAsset",
+        back_populates="post",
+        cascade="all, delete-orphan",
+        order_by="MediaAsset.sort_order",
+        passive_deletes=True,
+    )
+
+    # -----------------------
+    # Timestamps
+    # -----------------------
+    created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )

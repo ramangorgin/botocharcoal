@@ -58,7 +58,7 @@ async def home(request: Request, db: AsyncSession = Depends(get_db)):
                        published_to_website_at, published_to_instagram_at,
                        created_at, updated_at
                 FROM posts
-                WHERE website_status = 'PUBLISHED'
+                WHERE website_status = 'published'
                 ORDER BY published_to_website_at DESC
                 LIMIT 3""")
     )).mappings().all()
@@ -83,7 +83,7 @@ async def blog_index(request: Request, db: AsyncSession = Depends(get_db)):
                        published_to_website_at, published_to_instagram_at,
                        created_at, updated_at
                 FROM posts
-                WHERE website_status = 'PUBLISHED'
+                WHERE website_status = 'published'
                 ORDER BY published_to_website_at DESC
                 LIMIT 20""")
     )).mappings().all()
@@ -101,7 +101,7 @@ async def blog_index(request: Request, db: AsyncSession = Depends(get_db)):
 @router.get("/blog/{slug}", response_class=HTMLResponse)
 async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(get_db)):
     post_raw = (await db.execute(
-        text("SELECT * FROM posts WHERE slug = :slug AND website_status = 'PUBLISHED'"),
+        text("SELECT * FROM posts WHERE slug = :slug AND website_status = 'published'"),
         {"slug": slug}
     )).mappings().one_or_none()
     if not post_raw:
@@ -124,7 +124,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                            published_to_website_at, published_to_instagram_at,
                            created_at, updated_at
                     FROM posts
-                    WHERE id != :id AND website_status = 'PUBLISHED' AND topic = :topic
+                    WHERE id != :id AND website_status = 'published' AND topic = :topic
                     ORDER BY published_to_website_at DESC
                     LIMIT 3"""),
             {"id": post.id, "topic": post.topic}
@@ -145,7 +145,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
                            published_to_website_at, published_to_instagram_at,
                            created_at, updated_at
                     FROM posts
-                    WHERE id != :id AND website_status = 'PUBLISHED'
+                    WHERE id != :id AND website_status = 'published'
                     ORDER BY published_to_website_at DESC
                     LIMIT 3"""),
             {"id": post.id}

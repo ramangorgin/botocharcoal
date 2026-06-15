@@ -2661,3 +2661,54 @@
 .swal2-html-container {
   color: #c6c1c1;
 }
+
+
+
+.channel-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.channel-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.channel-card:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.channel-card input[type="checkbox"] {
+  display: none; /* مخفی کردن چک‌باکس سنتی */
+}
+
+.channel-card.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+}
+
+.channel-icon {
+  font-size: 24px;
+}
+
+.channel-name {
+  display: block;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.channel-desc {
+  font-size: 12px;
+  color: #64748b;
+}

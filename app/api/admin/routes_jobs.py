@@ -1,61 +1,96 @@
 """
 Botocharcoal Admin — Job Routes
 ================================
-Full CRUD for Jobs, AI Settings, and content generation controls.
+Job management, AI settings, and generation controls.
 """
 
 import json
-from datetime import datetime, timezone, date
-from fastapi import APIRouter, Request, Depends, Form, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from datetime import date, datetime
+
+import jdatetime
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from app.db.session import get_db
-from app.db.models.user import User
-from app.db.models.job import Job
-from app.db.models.content_item import ContentItem
-from app.db.models.ai_settings import AISettings
+
 from app.api.deps import get_current_admin
-from app.services.job_service import (
-    create_job, list_jobs, get_job, get_job_content_items,
-)
-from app.tasks.content_pipeline import run_content_pipeline
 from app.core.constants import JobStatus
+from app.db.models.ai_settings import AISettings
+from app.db.models.content_item import ContentItem
+from app.db.models.job import Job
+from app.db.models.media_asset import MediaAsset
+from app.db.models.post import Post
+from app.db.models.user import User
+from app.db.session import get_db
 from app.schemas.job import JobCreateSchema
+from app.services.job_service import create_job, get_job_content_items, list_jobs
+from app.tasks.content_pipeline import run_content_pipeline
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/admin")
 
+PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
 
-# ============================================================
-# AI Settings Routes
-# ============================================================
 
-@router.get("/ai-settings", response_class=HTMLResponse)
-async def ai_settings_page(request: Request, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_admin)):
+def _to_persian_digits(text: str) -> str:
+    return ''.join(PERSIAN_DIGITS[int(ch)] if ch.isdigit() else ch for ch in str(text))
+
+
+def _jalali_date(dt: datetime | None) -> str:
+    if not dt:
+        return '-'
+    return _to_persian_digits(jdatetime.datetime.fromgregorian(datetime=dt).strftime('%Y/%m/%d'))
+
+
+def _jalali_for_input(gdate: date | None) -> str:
+    if not gdate:
+        return ''
+    return jdatetime.date.fromgregorian(date=gdate).strftime('%Y/%m/%d')
+
+
+def _parse_start_date(raw: str | None) -> date:
+    value = (raw or '').strip()
+    if not value:
+        return date.today()
+
+    normalized = ''.join(str('۰۱۲۳۴۵۶۷۸۹'.index(ch)) if ch in '۰۱۲۳۴۵۶۷۸۹' else ch for ch in value)
+    try:
+        if '/' in normalized:
+            parts = normalized.split('/')
+            if len(parts) == 3:
+                jy, jm, jd = int(parts[0]), int(parts[1]), int(parts[2])
+                return jdatetime.date(jy, jm, jd).togregorian()
+        return date.fromisoformat(normalized)
+    except Exception:
+        return date.today()
+
+
+@router.get('/ai-settings', response_class=HTMLResponse)
+async def ai_settings_page(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
     result = await db.execute(select(AISettings).limit(1))
     settings_obj = result.scalars().first()
-    return templates.TemplateResponse("ai_settings.html", {
-        "request": request,
-        "ai_settings": settings_obj,
-    })
+    return templates.TemplateResponse('ai_settings.html', {'request': request, 'ai_settings': settings_obj})
 
 
-@router.post("/ai-settings")
+@router.post('/ai-settings')
 async def update_ai_settings(
     request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     form = await request.form()
-    
-    provider = form.get("provider", "openai")
-    api_key = form.get("api_key", "").strip() or None
-    api_base_url = form.get("api_base_url", "").strip() or None
-    text_model = form.get("text_model", "").strip() or None
-    image_model = form.get("image_model", "").strip() or None
-    prompt_template = form.get("prompt_template", "").strip() or None
+
+    provider = (form.get('provider') or 'openai').strip()
+    api_key = (form.get('api_key') or '').strip() or None
+    api_base_url = (form.get('api_base_url') or '').strip() or None
+    text_model = (form.get('text_model') or '').strip() or None
+    image_model = (form.get('image_model') or '').strip() or None
+    prompt_template = (form.get('prompt_template') or '').strip() or None
 
     result = await db.execute(select(AISettings).limit(1))
     existing = result.scalars().first()
@@ -80,158 +115,113 @@ async def update_ai_settings(
         db.add(existing)
 
     await db.commit()
-    return RedirectResponse("/admin/ai-settings?msg=saved", status_code=302)
+    return RedirectResponse('/admin/ai-settings?msg=saved', status_code=302)
 
 
-# ============================================================
-# Jobs List
-# ============================================================
+@router.get('/jobs', response_class=HTMLResponse)
+async def jobs_list_page(
+    request: Request,
+    limit: int = Query(default=100, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    jobs = await list_jobs(db, limit=limit)
 
-@router.get("/jobs", response_class=HTMLResponse)
-async def jobs_list(
+    for job in jobs:
+        job.jalali_created = _jalali_date(job.created_at)
+        job.jalali_start_date = _jalali_for_input(job.start_date)
+
+        total_items_result = await db.execute(
+            select(func.count(ContentItem.id)).where(ContentItem.job_id == job.id)
+        )
+        completed_items_result = await db.execute(
+            select(func.count(ContentItem.id)).where(
+                ContentItem.job_id == job.id,
+                ContentItem.status == JobStatus.COMPLETED,
+            )
+        )
+        job.total_items = total_items_result.scalar() or 0
+        job.completed_items = completed_items_result.scalar() or 0
+
+    return templates.TemplateResponse('jobs_list.html', {'request': request, 'jobs': jobs})
+
+
+@router.get('/jobs/create', response_class=HTMLResponse)
+async def job_create_page(
     request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
-    limit: int = Query(default=50),
 ):
-    result = await db.execute(
-        select(Job).order_by(Job.created_at.desc()).limit(limit)
-    )
-    jobs = result.scalars().all()
-    
-    # Enrich jobs with content item counts and Jalali dates
-    for job in jobs:
-        if job.created_at:
-            import jdatetime
-            jdt = jdatetime.datetime.fromgregorian(datetime=job.created_at)
-            jalali_str = jdt.strftime('%Y/%m/%d')
-            persian_digits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
-            job.jalali_created = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
-        else:
-            job.jalali_created = '-'
-        
-        # Convert start_date to Jalali for display
-        if job.start_date:
-            import jdatetime
-            jdt = jdatetime.date.fromgregorian(date=job.start_date)
-            jalali_str = jdt.strftime('%Y/%m/%d')
-            job.jalali_start_date = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
-        else:
-            job.jalali_start_date = '-'
-        
-        items_result = await db.execute(
-            select(func.count(ContentItem.id)).where(ContentItem.job_id == job.id)
-        )
-        job.total_items = items_result.scalar() or 0
-        
-        completed_result = await db.execute(
-            select(func.count(ContentItem.id)).where(
-                ContentItem.job_id == job.id,
-                ContentItem.status == JobStatus.COMPLETED.value
-            )
-        )
-        job.completed_items = completed_result.scalar() or 0
-    
-    return templates.TemplateResponse("jobs_list.html", {
-        "request": request,
-        "jobs": jobs,
-    })
-
-
-# ============================================================
-# Job Create
-# ============================================================
-
-@router.get("/jobs/create", response_class=HTMLResponse)
-async def job_create_page(request: Request, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_admin)):
-    # Pre-load AI settings for the form hint
     result = await db.execute(select(AISettings).limit(1))
     ai_settings = result.scalars().first()
-    return templates.TemplateResponse("job_create.html", {
-        "request": request,
-        "ai_settings": ai_settings,
-    })
+    today = jdatetime.date.fromgregorian(date=date.today()).strftime('%Y/%m/%d')
+    return templates.TemplateResponse(
+        'job_create.html',
+        {'request': request, 'ai_settings': ai_settings, 'start_date': today},
+    )
 
 
-@router.post("/jobs/create")
+@router.post('/jobs/create')
 async def create_job_route(
     request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     form = await request.form()
-    subject = form.get("subject", "").strip()
-    instructions = form.get("instructions", "").strip() or None
-    
-    # Parse duration_days
-    try:
-        duration_days = int(form.get("duration_days", 1))
-    except (ValueError, TypeError):
-        duration_days = 1
-    
-    # Parse items_per_day
-    try:
-        items_per_day = int(form.get("items_per_day", 1))
-    except (ValueError, TypeError):
-        items_per_day = 1
-    
-    # Parse start_date (Jalali to Gregorian)
-    start_date_str = form.get("start_date", "")
-    try:
-        if start_date_str:
-            # JalaliDatepicker sends YYYY/MM/DD format
-            jalali_parts = start_date_str.split('/')
-            if len(jalali_parts) == 3:
-                jalali_year = int(jalali_parts[0].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
-                jalali_month = int(jalali_parts[1].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
-                jalali_day = int(jalali_parts[2].replace('۰', '0').replace('۱', '1').replace('۲', '2').replace('۳', '3').replace('۴', '4').replace('۵', '5').replace('۶', '6').replace('۷', '7').replace('۸', '8').replace('۹', '9'))
-                import jdatetime
-                start_date = jdatetime.date(jalali_year, jalali_month, jalali_day).togregorian()
-            else:
-                start_date = date.today()
-        else:
-            start_date = date.today()
-    except (ValueError, TypeError):
-        start_date = date.today()
-    
-    # Parse booleans
-    auto_publish_blog = form.get("auto_publish_blog") == "on"
-    blog_image_count = int(form.get("blog_image_count", 1))
-    instagram_image_count = int(form.get("instagram_image_count", 4))
-    job_type = form.get("job_type", "general")
-    
-    # Validate
+
+    subject = (form.get('subject') or '').strip()
+    instructions = (form.get('instructions') or '').strip() or None
+
     if not subject:
-        return RedirectResponse("/admin/jobs/create?error=subject_required", status_code=302)
-    
+        return RedirectResponse('/admin/jobs/create?error=subject_required', status_code=302)
+
+    try:
+        duration_days = int(form.get('duration_days') or 1)
+    except Exception:
+        duration_days = 1
+
+    try:
+        items_per_day = int(form.get('items_per_day') or 1)
+    except Exception:
+        items_per_day = 1
+
+    try:
+        blog_image_count = int(form.get('blog_image_count') or 1)
+    except Exception:
+        blog_image_count = 1
+
+    try:
+        instagram_image_count = int(form.get('instagram_image_count') or 4)
+    except Exception:
+        instagram_image_count = 4
+
+    start_date = _parse_start_date(form.get('start_date'))
+    auto_publish_blog = form.get('auto_publish_blog') == 'on'
+    job_type = (form.get('job_type') or 'general').strip() or 'general'
+
     schema = JobCreateSchema(
         subject=subject,
         instructions=instructions,
-        duration_days=duration_days,
+        duration_days=max(1, min(duration_days, 30)),
         start_date=start_date,
-        items_per_day=items_per_day,
+        items_per_day=max(1, min(items_per_day, 10)),
         auto_publish_blog=auto_publish_blog,
-        blog_image_count=blog_image_count,
-        instagram_image_count=instagram_image_count,
+        blog_image_count=max(0, min(blog_image_count, 5)),
+        instagram_image_count=max(1, min(instagram_image_count, 10)),
         job_type=job_type,
     )
-    
+
     job = await create_job(schema, db)
     job.status = JobStatus.QUEUED
     await db.commit()
     await db.refresh(job)
-    
-    # Queue the pipeline task
+
     run_content_pipeline.delay(job.id)
-    
-    return RedirectResponse(f"/admin/jobs/{job.id}?msg=queued", status_code=302)
+
+    return RedirectResponse(f'/admin/jobs/{job.id}?msg=queued', status_code=302)
 
 
-# ============================================================
-# Job Detail
-# ============================================================
-
-@router.get("/jobs/{job_id}", response_class=HTMLResponse)
+@router.get('/jobs/{job_id}', response_class=HTMLResponse)
 async def job_detail(
     job_id: int,
     request: Request,
@@ -240,264 +230,279 @@ async def job_detail(
 ):
     job = await db.get(Job, job_id)
     if not job:
-        return HTMLResponse("Job not found", status_code=404)
-    
-    # Get content items
-    result = await db.execute(
-        select(ContentItem)
-        .where(ContentItem.job_id == job_id)
-        .order_by(ContentItem.day_number, ContentItem.id)
-    )
-    content_items = result.scalars().all()
-    
-    # Count statuses
+        return HTMLResponse('Job not found', status_code=404)
+
+    content_items = await get_job_content_items(job_id, db)
+
     completed_count = 0
-    processing_count = 0
     failed_count = 0
     for ci in content_items:
-        if ci.status == JobStatus.COMPLETED.value:
+        if ci.status == JobStatus.COMPLETED:
             completed_count += 1
-        elif ci.status == JobStatus.PROCESSING.value:
-            processing_count += 1
-        elif ci.status == JobStatus.FAILED.value:
+        elif ci.status == JobStatus.FAILED:
             failed_count += 1
-    
-    # Jalali date for job created
-    if job.created_at:
-        import jdatetime
-        jdt = jdatetime.datetime.fromgregorian(datetime=job.created_at)
-        jalali_str = jdt.strftime('%Y/%m/%d')
-        persian_digits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
-        job.jalali_created = ''.join(persian_digits[int(d)] if d.isdigit() else d for d in jalali_str)
-    else:
-        job.jalali_created = '-'
-    
-    return templates.TemplateResponse("job_detail.html", {
-        "request": request,
-        "job": job,
-        "content_items": content_items,
-        "completed_count": completed_count,
-        "processing_count": processing_count,
-        "failed_count": failed_count,
-    })
+
+    job.jalali_created = _jalali_date(job.created_at)
+
+    return templates.TemplateResponse(
+        'job_detail.html',
+        {
+            'request': request,
+            'job': job,
+            'content_items': content_items,
+            'completed_count': completed_count,
+            'failed_count': failed_count,
+        },
+    )
 
 
-# ============================================================
-# Job Actions (Generate, Retry)
-# ============================================================
-
-@router.post("/jobs/{job_id}/generate")
+@router.post('/jobs/{job_id}/generate')
 async def trigger_generate(
     job_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     job = await db.get(Job, job_id)
     if not job:
-        return RedirectResponse(f"/admin/jobs/{job_id}", status_code=302)
-    
-    # Reset all content items to PENDING and job to QUEUED
-    await db.execute(
-        select(ContentItem).where(ContentItem.job_id == job_id)
-    )
-    
-    result = await db.execute(
-        select(ContentItem).where(ContentItem.job_id == job_id)
-    )
-    items = result.scalars().all()
+        return RedirectResponse('/admin/jobs', status_code=302)
+
+    items = await get_job_content_items(job_id, db)
     for ci in items:
         ci.status = JobStatus.PENDING
-        ci.blog_title = None
-        ci.blog_slug = None
-        ci.blog_body = None
         ci.instagram_caption = None
         ci.instagram_hashtags = None
         ci.instagram_image_urls = None
+        ci.blog_title = None
+        ci.blog_slug = None
+        ci.blog_body = None
         ci.blog_image_urls = None
         ci.ai_response = None
-    
+
     job.status = JobStatus.QUEUED
     job.error_message = None
-    job.retry_count += 1
+    job.retry_count = (job.retry_count or 0) + 1
     await db.commit()
-    
+
     run_content_pipeline.delay(job.id)
-    return RedirectResponse(f"/admin/jobs/{job_id}?msg=restarted", status_code=302)
+    return RedirectResponse(f'/admin/jobs/{job_id}?msg=restarted', status_code=302)
 
 
-@router.post("/jobs/{job_id}/retry")
+@router.post('/jobs/{job_id}/retry')
 async def retry_job(
     job_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     job = await db.get(Job, job_id)
     if not job:
-        return RedirectResponse(f"/admin/jobs/{job_id}", status_code=302)
-    
+        return RedirectResponse('/admin/jobs', status_code=302)
+
     job.status = JobStatus.QUEUED
     job.error_message = None
-    job.retry_count += 1
+    job.retry_count = (job.retry_count or 0) + 1
     await db.commit()
-    
+
     run_content_pipeline.delay(job.id)
-    return RedirectResponse(f"/admin/jobs/{job_id}?msg=retried", status_code=302)
+    return RedirectResponse(f'/admin/jobs/{job_id}?msg=retried', status_code=302)
 
 
-# ============================================================
-# Content Item Download / Copy helpers (AJAX)
-# ============================================================
-
-@router.get("/jobs/{job_id}/download/{item_id}/instagram")
+@router.get('/jobs/{job_id}/download/{item_id}/instagram')
 async def download_instagram_assets(
     job_id: int,
     item_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     ci = await db.get(ContentItem, item_id)
     if not ci or ci.job_id != job_id:
-        return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
-    
-    # Parse image URLs from JSON
-    image_urls = []
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
+    image_urls: list[str] = []
     if ci.instagram_image_urls:
         try:
             image_urls = json.loads(ci.instagram_image_urls)
-        except json.JSONDecodeError:
-            pass
-    
-    return JSONResponse({
-        "caption": ci.instagram_caption or "",
-        "hashtags": ci.instagram_hashtags or "",
-        "image_urls": image_urls,
-        "blog_title": ci.blog_title or "",
-    })
+        except Exception:
+            image_urls = []
+
+    return JSONResponse(
+        {
+            'caption': ci.instagram_caption or '',
+            'hashtags': ci.instagram_hashtags or '',
+            'image_urls': image_urls,
+            'blog_title': ci.blog_title or '',
+        }
+    )
 
 
-@router.get("/jobs/{job_id}/download/{item_id}/blog")
+@router.get('/jobs/{job_id}/download/{item_id}/blog')
 async def download_blog_assets(
     job_id: int,
     item_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     ci = await db.get(ContentItem, item_id)
     if not ci or ci.job_id != job_id:
-        return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
-    
-    image_urls = []
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
+    image_urls: list[str] = []
     if ci.blog_image_urls:
         try:
             image_urls = json.loads(ci.blog_image_urls)
-        except json.JSONDecodeError:
-            pass
-    
-    return JSONResponse({
-        "title": ci.blog_title or "",
-        "slug": ci.blog_slug or "",
-        "body": ci.blog_body or "",
-        "image_urls": image_urls,
-    })
+        except Exception:
+            image_urls = []
+
+    return JSONResponse(
+        {
+            'title': ci.blog_title or '',
+            'slug': ci.blog_slug or '',
+            'body': ci.blog_body or '',
+            'image_urls': image_urls,
+        }
+    )
 
 
-@router.post("/jobs/{job_id}/publish/{item_id}/blog")
+@router.post('/jobs/{job_id}/publish/{item_id}/blog')
 async def publish_blog_post(
     job_id: int,
     item_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
-    """Manually publish a blog post from a content item."""
     ci = await db.get(ContentItem, item_id)
     if not ci or ci.job_id != job_id:
-        return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
-    
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
     if not ci.blog_title or not ci.blog_body:
-        return JSONResponse(status_code=400, content={"detail": "عنوان یا بدنه پست موجود نیست"})
-    
-    # Check for existing post with same slug
-    from app.db.models.post import Post
-    existing = await db.execute(select(Post).where(Post.slug == ci.blog_slug))
-    
+        return JSONResponse(status_code=400, content={'detail': 'عنوان یا بدنه پست موجود نیست'})
+
+    slug = ci.blog_slug or f'job-{job_id}-item-{item_id}'
+    existing = await db.execute(select(Post).where(Post.slug == slug))
     if existing.scalars().first():
-        return JSONResponse(status_code=409, content={"detail": "پست‌ای با این slug قبلاً وجود دارد"})
-    
+        return JSONResponse(status_code=409, content={'detail': 'پست با این slug قبلاً وجود دارد'})
+
     post = Post(
         topic=ci.blog_title,
         title=ci.blog_title,
-        slug=ci.blog_slug or "",
+        slug=slug,
         body_html=ci.blog_body,
-        instagram_caption=ci.instagram_caption or "",
-        hashtags=ci.instagram_hashtags or "",
-        website_status="published",
+        summary=(ci.blog_body or '')[:280],
+        instagram_caption=ci.instagram_caption,
+        hashtags=ci.instagram_hashtags,
+        website_status='published',
+        published_to_website_at=datetime.now(),
+        instagram_status='not_published',
+        source_type='ai',
+        blog_enabled=True,
+        instagram_enabled=bool(ci.instagram_caption or ci.instagram_hashtags),
+        job_id=job_id,
+        content_item_id=ci.id,
     )
     db.add(post)
-    await db.commit()
-    await db.refresh(post)
-    
-    # Save image assets if available
+    await db.flush()
+
     if ci.blog_image_urls:
         try:
             image_urls = json.loads(ci.blog_image_urls)
-            for i, url in enumerate(image_urls):
-                db.add(MediaAsset(
+        except Exception:
+            image_urls = []
+        for i, url in enumerate(image_urls):
+            db.add(
+                MediaAsset(
                     post_id=post.id,
                     job_id=job_id,
-                    role=MediaRole.BLOG_COVER,
-                    prompt=f"Blog cover for {ci.blog_title}",
-                    local_path="",
+                    role='blog_cover',
                     public_url=url,
                     sort_order=i,
-                ))
-            await db.commit()
-        except (json.JSONDecodeError, Exception) as e:
-            pass
-    
-    return RedirectResponse(f"/admin/jobs/{job_id}?msg=blog_published", status_code=302)
+                )
+            )
+        if image_urls:
+            post.cover_image_url = image_urls[0]
+
+    if ci.instagram_image_urls:
+        try:
+            image_urls = json.loads(ci.instagram_image_urls)
+        except Exception:
+            image_urls = []
+        for i, url in enumerate(image_urls):
+            db.add(
+                MediaAsset(
+                    post_id=post.id,
+                    job_id=job_id,
+                    role='instagram',
+                    public_url=url,
+                    sort_order=i,
+                )
+            )
+
+    await db.commit()
+    await db.refresh(post)
+
+    return RedirectResponse(f'/admin/posts/{post.id}?msg=created_from_job', status_code=302)
 
 
-# ============================================================
-# Copy helpers (AJAX endpoints for copying content)
-# ============================================================
-
-@router.get("/jobs/{job_id}/copy/caption/{item_id}")
+@router.get('/jobs/{job_id}/copy/caption/{item_id}')
 async def copy_instagram_caption(
     job_id: int,
     item_id: int,
-    request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
     ci = await db.get(ContentItem, item_id)
     if not ci or ci.job_id != job_id:
-        return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
-    
-    return JSONResponse({
-        "type": "instagram_caption",
-        "text": f"{ci.instagram_caption or ''}\n.\n.\n.\n{ci.instagram_hashtags or ''}",
-    })
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
+    text = (ci.instagram_caption or '').strip()
+    hashtags = (ci.instagram_hashtags or '').strip()
+    joined = f"{text}\n\n{hashtags}".strip()
+    return JSONResponse({'type': 'instagram_caption', 'text': joined})
 
 
-@router.get("/jobs/{job_id}/copy/body/{item_id}")
+@router.get('/jobs/{job_id}/copy/body/{item_id}')
 async def copy_blog_body(
+    job_id: int,
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    ci = await db.get(ContentItem, item_id)
+    if not ci or ci.job_id != job_id:
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
+    return JSONResponse({'type': 'blog_body', 'title': ci.blog_title or '', 'body': ci.blog_body or ''})
+
+
+@router.get('/jobs/{job_id}/content/{item_id}/publish')
+async def publish_content_item_to_post(
     job_id: int,
     item_id: int,
     request: Request,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
+    """Open post_create pre-filled from a ContentItem's AI results."""
     ci = await db.get(ContentItem, item_id)
     if not ci or ci.job_id != job_id:
-        return JSONResponse(status_code=404, content={"detail": "محتوا یافت نشد"})
-    
-    return JSONResponse({
-        "type": "blog_body",
-        "title": ci.blog_title or "",
-        "body": ci.blog_body or "",
-    })
+        return JSONResponse(status_code=404, content={'detail': 'محتوا یافت نشد'})
+
+    # Build ig_image_urls_text for the textarea
+    ig_text = ''
+    if ci.instagram_image_urls:
+        try:
+            ig_urls = json.loads(ci.instagram_image_urls)
+            ig_text = '\n'.join(u for u in ig_urls if u)
+        except Exception:
+            ig_text = ci.instagram_image_urls or ''
+
+    return templates.TemplateResponse(
+        'post_create.html',
+        {
+            'request': request,
+            'post': None,
+            'ci': ci,
+            'source': 'job',
+            'job_id': ci.job_id,
+            'content_item_id': ci.id,
+            'ig_image_urls_text': ig_text,
+        },
+    )

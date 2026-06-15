@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}ایجاد پست جدید | پنل مدیریت{% endblock %}
+{% block title %}{{ title|default('ایجاد پست جدید') }} | پنل مدیریت{% endblock %}
 
-{% block header_title %}ایجاد پست جدید{% endblock %}
+{% block header_title %}{{ title|default('ایجاد پست جدید') }}{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/vendors/select2/select2.min.css">
@@ -11,208 +11,313 @@
 
 {% block content %}
 <div class="admin-post-form">
-    <form method="post" id="postForm" class="admin-form-card">
-        <div class="admin-form-grid">
-            <!-- Title -->
+    <form method="post" id="postForm" class="admin-form-card" enctype="multipart/form-data">
+        {% if source == 'job' %}
+        <input type="hidden" name="source" value="job">
+        <input type="hidden" name="job_id" value="{{ job_id|default('') }}">
+        <input type="hidden" name="content_item_id" value="{{ content_item_id|default('') }}">
+        {% endif %}
+
+            <!-- Channel Selection Cards -->
             <div class="admin-form-group">
-                <label for="title" class="admin-form-label">عنوان پست <span class="admin-required">*</span></label>
-                <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="512" value="{{ post.title if post else '' }}">
-            </div>
+                <label class="admin-form-label">کجا منتشر بشه؟</label>
+                <div class="channel-selector-grid">
+                    <label class="channel-card {% if blog_enabled %}active{% endif %}" for="blogEnabled">
+                        <input type="checkbox" name="blog_enabled" id="blogEnabled" value="on"
+                            {% if blog_enabled or not post %}checked{% endif %}
+                            onchange="updateChannelUI('blog', this.checked)">
+                        <div class="channel-icon">🌐</div>
+                        <div class="channel-info">
+                            <span class="channel-name">وبلاگ سایت</span>
+                            <span class="channel-desc">انتشار به عنوان پست بلاگ</span>
+                        </div>
+                    </label>
 
-            <!-- Slug -->
-            <div class="admin-form-group">
-                <label for="slug" class="admin-form-label">اسلاگ</label>
-                <input type="text" id="slug" name="slug" class="admin-form-input" placeholder="slug-auto-generated" value="{{ post.slug if post else '' }}">
-                <small class="admin-form-hint">اگر خالی بگذارید، از عنوان تولید می‌شود</small>
-            </div>
-
-            <!-- Topic -->
-            <div class="admin-form-group">
-                <label for="topic" class="admin-form-label">موضوع</label>
-                <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" value="{{ post.topic if post else '' }}">
-            </div>
-
-            <!-- Website Status -->
-            <div class="admin-form-group">
-                <label for="website_status" class="admin-form-label">وضعیت سایت</label>
-                <select id="website_status" name="website_status" class="admin-form-input admin-form-select">
-                    <option value="DRAFT" {% if post and post.website_status == 'DRAFT' %}selected{% endif %}>پیش‌نویس</option>
-                    <option value="PUBLISHED" {% if post and post.website_status == 'PUBLISHED' %}selected{% endif %}>منتشر شده</option>
-                </select>
-            </div>
-
-            <!-- Publish Date -->
-            <div class="admin-form-group">
-                <label for="publish_date" class="admin-form-label">تاریخ انتشار</label>
-                <input type="text" id="publish_date" name="publish_date" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
-                <small class="admin-form-hint">فرمت: YYYY/MM/DD یا انتخاب از تقویم</small>
-            </div>
-        </div>
-
-        <!-- Body -->
-        <div class="admin-form-section">
-            <label for="body_html" class="admin-form-label">محتوای پست</label>
-            <textarea id="body_html" name="body_html" rows="20">{{ post.body_html if post else '' }}</textarea>
-        </div>
-
-        <!-- Instagram Caption -->
-        <div class="admin-form-section">
-            <label for="instagram_caption" class="admin-form-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                </svg>
-                کپشن اینستاگرام
-            </label>
-            <div class="instagram-caption-wrapper">
-                <textarea id="instagram_caption" name="instagram_caption" class="instagram-caption-editor" placeholder="متن کپشن اینستاگرام را اینجا بنویسید...">{{ post.instagram_caption if post else '' }}</textarea>
-                <div class="instagram-caption-preview">
-                    <div class="instagram-caption-preview__header">
-                        <span class="instagram-caption-preview__label">پیش‌نمایش</span>
-                    </div>
-                    <div class="instagram-caption-preview__body" id="captionPreview">
-                        <p class="instagram-caption-preview__text">متن کپشن شما اینجا نمایش داده می‌شود...</p>
-                    </div>
+                    <label class="channel-card {% if instagram_enabled %}active{% endif %}" for="instagramEnabled">
+                        <input type="checkbox" name="instagram_enabled" id="instagramEnabled" value="on"
+                            {% if instagram_enabled %}checked{% endif %}
+                            onchange="updateChannelUI('instagram', this.checked)">
+                        <div class="channel-icon">📸</div>
+                        <div class="channel-info">
+                            <span class="channel-name">اینستاگرام</span>
+                            <span class="channel-desc">آماده‌سازی کپشن و تصاویر</span>
+                        </div>
+                    </label>
                 </div>
             </div>
-            <small class="admin-form-hint">متن کپشن اینستاگرام را بنویسید — پیش‌نمایش زنده در پایین</small>
+
         </div>
 
-        <!-- Hashtags -->
-        <div class="admin-form-section">
-            <label for="hashtags" class="admin-form-label">هشتگ‌ها</label>
-            <select id="hashtags" name="hashtags" class="admin-form-input admin-form-select2" multiple>
-                {% if post and post.hashtags %}
-                {% for tag in post.hashtags.split() %}
-                <option value="{{ tag }}" selected>{{ tag }}</option>
-                {% endfor %}
-                {% endif %}
-                <option value="#زغال">زغال</option>
-                <option value="#زغال_خانگی">زغال خانگی</option>
-                <option value="#زغال_رستورانی">زغال رستورانی</option>
-                <option value="#زغال_صنعتی">زغال صنعتی</option>
-                <option value="#باربیکیو">باربیکیو</option>
-                <option value="#کباب">کباب</option>
-                <option value="#باربکیو">باربکیو</option>
-                <option value="#بوتوچارکول">بوتوچارکول</option>
-            </select>
-            <small class="admin-form-hint">هشتگ‌ها را انتخاب کنید (با نگه داشتن Ctrl چندتایی انتخاب کنید)</small>
-        </div>
+        <div class="admin-divider"></div>
 
-        <!-- SEO Section -->
-        <div class="admin-form-section admin-form-section--seo">
+        <!-- ============================================ -->
+        <!-- BLOG POST SECTION                            -->
+        <!-- ============================================ -->
+        <div id="blogSection">
             <h3 class="admin-form-section__title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="16" x2="12" y2="12"/>
-                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
                 </svg>
-                سئو (SEO)
+                اطلاعات پست وبلاگ
             </h3>
 
-            <!-- SEO Guidance -->
-            <div class="seo-guidance">
-                <div class="seo-guidance__toggle" id="seoGuideToggle">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="seo-guide-icon">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                    <span class="seo-guide-text">راهنمای فیلدهای سئو</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="seo-guide-chevron">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
+            <div class="admin-form-grid admin-form-grid--2col">
+                <!-- Title -->
+                <div class="admin-form-group">
+                    <label for="title" class="admin-form-label">عنوان پست <span class="admin-required">*</span></label>
+                    <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="512" value="{{ post.title if post else (ci.blog_title if ci and ci.blog_title else '') }}">
                 </div>
-                <div class="seo-guidance__content" id="seoGuideContent">
-                    <div class="seo-guide__item">
-                        <strong>عنوان Meta:</strong> عنوانی که در نتایج جستجوی گوگل نمایش داده می‌شود. حداکثر ۶۰ کاراکتر. نام برند و کلمه کلیدی اصلی را شامل شود.
-                    </div>
-                    <div class="seo-guide__item">
-                        <strong>توضیحات Meta:</strong> توضیح کوتاهی که زیر عنوان در گوگل دیده می‌شود. حداکثر ۱۶۰ کاراکتر. دعوت به اقدام جذاب بنویسید.
-                    </div>
-                    <div class="seo-guide__item">
-                        <strong>عنوان OG:</strong> عنوانی که وقتی لینک شما در شبکه‌های اجتماعی (فیسبوک، تلگرام و ...) به اشتراک گذاشته می‌شود نمایش داده می‌شود.
-                    </div>
-                    <div class="seo-guide__item">
-                        <strong>توضیحات OG:</strong> توضیحی که در پیش‌نمایش اشتراک‌گذاری شبکه‌های اجتماعی ظاهر می‌شود.
-                    </div>
-                    <div class="seo-guide__item">
-                        <strong>تصویر OG:</strong> تصویری که در پیش‌نمایش اشتراک‌گذاری نمایش داده می‌شود. نسبت تصویر ۱.۹۱:۱ (۱۲۰۰×۶۲۸ پیکسل) پیشنهاد می‌شود.
-                    </div>
+
+                <!-- Slug -->
+                <div class="admin-form-group">
+                    <label for="slug" class="admin-form-label">اسلاگ</label>
+                    <input type="text" id="slug" name="slug" class="admin-form-input" placeholder="slug-auto-generated" value="{{ post.slug if post else (ci.blog_slug if ci and ci.blog_slug else '') }}">
+                    <small class="admin-form-hint">اگر خالی بگذارید، از عنوان تولید می‌شود</small>
                 </div>
             </div>
+
+            <div class="admin-form-grid admin-form-grid--3col">
+                <!-- Subject / Topic -->
+                <div class="admin-form-group">
+                    <label for="topic" class="admin-form-label">موضوع</label>
+                    <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" value="{{ post.topic if post else (ci.blog_title if ci and ci.blog_title else '') }}">
+                </div>
+
+                <!-- Publish Date -->
+                <div class="admin-form-group">
+                    <label for="publish_date" class="admin-form-label">تاریخ انتشار</label>
+                    <input type="text" id="publish_date" name="publish_date" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
+                    <small class="admin-form-hint">فرمت: YYYY/MM/DD</small>
+                </div>
+
+                <!-- Publish Status -->
+                <div class="admin-form-group">
+                    <label for="website_status" class="admin-form-label">وضعیت انتشار</label>
+                    <select id="website_status" name="website_status" class="admin-form-input">
+                        <option value="draft" {% if post and post.website_status == 'draft' %}selected{% elif not post %}selected{% endif %}>پیش‌نویس</option>
+                        <option value="published" {% if post and post.website_status == 'published' %}selected{% endif %}>منتشر شده</option>
+                        <option value="scheduled" {% if post and post.website_status == 'scheduled' %}selected{% endif %}>زمان‌بندی شده</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Body (CKEditor) -->
+            <div class="admin-form-section">
+                <label for="body_html" class="admin-form-label">محتوای پست <span class="admin-required">*</span></label>
+                <textarea id="body_html" name="body_html" rows="20" placeholder="محتوای پست را وارد کنید...">{{ post.body_html if post else (ci.blog_body if ci and ci.blog_body else '') }}</textarea>
+            </div>
+
+            <!-- Blog Images -->
+            <div class="admin-form-section">
+                <label class="admin-form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px; color:var(--color-ember);">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    تصاویر وبلاگ (تصویر شاخص)
+                </label>
+
+                <!-- Image Upload -->
+                <div class="image-upload-area" id="blogImageUploadArea">
+                    <input type="file" id="blog_image_file" class="blog-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
+                    <div class="image-upload-area__content" id="blogUploadContent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="image-upload-area__text">تصاویر را اینجا بکشید یا کلیک کنید</p>
+                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت — چند انتخابی</p>
+                    </div>
+                    <div class="image-upload-area__preview" id="blogImagePreview" style="display:none">
+                        <img id="blogPreviewImg" src="" alt="پیش‌نمایش">
+                        <button type="button" class="image-upload-area__remove" id="removeBlogImageBtn" title="حذف تصویر">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <small class="admin-form-error" id="blogImageError" style="display:none"></small>
+
+                <!-- OR URL Input -->
+                <div class="image-url-input-wrapper" style="margin-top:12px;">
+                    <label for="blog_image_url" class="admin-form-label" style="font-size:13px;">یا URL تصویر را وارد کنید</label>
+                    <input type="text" id="blog_image_url" name="blog_image_url" class="admin-form-input" placeholder="https://example.com/image.jpg" value="">
+                    <small class="admin-form-hint">URL تصویر شاخص وبلاگ</small>
+                </div>
+
+                <!-- Uploaded/Fetched Images Preview -->
+                <div id="blogImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+            </div>
+
+            <div class="admin-divider"></div>
+
+            <!-- SEO Meta Tags -->
+            <h3 class="admin-form-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                سئو (Meta Tags)
+            </h3>
 
             <div class="admin-form-grid">
                 <div class="admin-form-group">
                     <label for="meta_title" class="admin-form-label">عنوان Meta</label>
-                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو" maxlength="256" value="{{ post.meta_title if post else '' }}">
-                    <small class="admin-form-hint">حداکثر ۶۰ کاراکتر — عنوانی که در نتایج گوگل نمایش داده می‌شود</small>
+                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو (حداکثر ۶۰ کاراکتر)" maxlength="256" value="{{ post.meta_title if post else '' }}">
                 </div>
 
                 <div class="admin-form-group">
                     <label for="meta_description" class="admin-form-label">توضیحات Meta</label>
-                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو" maxlength="512">{{ post.meta_description if post else '' }}</textarea>
-                    <small class="admin-form-hint">حداکثر ۱۶۰ کاراکتر — توضیحی جذاب برای نمایش در نتایج گوگل</small>
+                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو (حداکثر ۱۶۰ کاراکتر)" maxlength="512">{{ post.meta_description if post else '' }}</textarea>
                 </div>
 
                 <div class="admin-form-group">
-                    <label for="og_title" class="admin-form-label">عنوان OG</label>
-                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان شبکه اجتماعی" maxlength="512" value="{{ post.og_title if post else '' }}">
+                    <label for="og_title" class="admin-form-label">عنوان OG (شبکه‌های اجتماعی)</label>
+                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان هنگام اشتراک‌گذاری" maxlength="512" value="{{ post.og_title if post else '' }}">
                 </div>
 
                 <div class="admin-form-group">
                     <label for="og_description" class="admin-form-label">توضیحات OG</label>
-                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات شبکه اجتماعی">{{ post.og_description if post else '' }}</textarea>
+                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات هنگام اشتراک‌گذاری">{{ post.og_description if post else '' }}</textarea>
                 </div>
+            </div>
 
-                <div class="admin-form-group admin-form-group--image">
-                    <label for="og_image" class="admin-form-label">تصویر OG (شبکه‌های اجتماعی)</label>
+            <!-- OG Image -->
+            <div class="admin-form-section">
+                <label class="admin-form-label">تصویر OG (پیش‌نمایش شبکه‌های اجتماعی)</label>
 
-                    <!-- File Upload Area -->
-                    <div class="image-upload-area" id="imageUploadArea">
-                        <input type="file" id="og_image_file" class="image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
-                        <div class="image-upload-area__content" id="uploadContent">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="17 8 12 3 7 8"/>
-                                <line x1="12" y1="3" x2="12" y2="15"/>
+                <!-- OG Image Upload -->
+                <div class="image-upload-area" id="ogImageUploadArea">
+                    <input type="file" id="og_image_file" class="og-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+                    <div class="image-upload-area__content" id="ogUploadContent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="image-upload-area__text">تصویر OG را آپلود کنید</p>
+                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
+                    </div>
+                    <div class="image-upload-area__preview" id="ogImagePreview" style="display:none">
+                        <img id="ogPreviewImg" src="" alt="پیش‌نمایش OG">
+                        <button type="button" class="image-upload-area__remove" id="removeOgImageBtn" title="حذف تصویر">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
-                            <p class="image-upload-area__text">تصویر را اینجا بکشید یا کلیک کنید</p>
-                            <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
-                        </div>
-                        <div class="image-upload-area__preview" id="imagePreview" style="display:none">
-                            <img id="previewImg" src="" alt="پیش‌نمایش">
-                            <button type="button" class="image-upload-area__remove" id="removeImageBtn" title="حذف تصویر">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                            </button>
-                        </div>
+                        </button>
                     </div>
+                </div>
+                <small class="admin-form-error" id="ogImageError" style="display:none"></small>
 
-                    <!-- URL Input -->
-                    <div class="image-url-input-wrapper">
-                        <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی را وارد کنید" value="{{ post.og_image if post else '' }}">
-                    </div>
-                    <small class="admin-form-error" id="imageError" style="display:none"></small>
-                    <small class="admin-form-hint">URL تصویر برای اشتراک در شبکه‌های اجتماعی (حداکثر ۵ مگابایت)</small>
+                <!-- OG Image URL -->
+                <div class="image-url-input-wrapper" style="margin-top:12px;">
+                    <label for="og_image" class="admin-form-label" style="font-size:13px;">یا URL تصویر OG را وارد کنید</label>
+                    <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی" value="{{ post.og_image if post else '' }}">
                 </div>
             </div>
         </div>
 
+        <div class="admin-divider"></div>
+
+        <!-- ============================================ -->
+        <!-- INSTAGRAM POST SECTION                       -->
+        <!-- ============================================ -->
+        <div id="instagramSection" style="display:none;">
+            <h3 class="admin-form-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                پست اینستاگرام
+            </h3>
+
+            <!-- Instagram Caption -->
+            <div class="admin-form-group">
+                <label for="instagram_caption" class="admin-form-label">کپشن اینستاگرام</label>
+                <textarea id="instagram_caption" name="instagram_caption" class="admin-form-input admin-form-input--textarea" rows="6" placeholder="متن کپشن اینستاگرام...">{{ post.instagram_caption if post else (ci.instagram_caption if ci and ci.instagram_caption else '') }}</textarea>
+            </div>
+
+            <!-- Hashtags -->
+            <div class="admin-form-group">
+                <label for="hashtags" class="admin-form-label">هشتگ‌ها</label>
+                <select id="hashtags" name="hashtags" class="admin-form-input" multiple style="min-height: 50px;">
+                    {% if post and post.hashtags %}
+                        {% for tag in post.hashtags.split() %}
+                        <option value="{{ tag }}" selected>{{ tag }}</option>
+                        {% endfor %}
+                    {% elif ci and ci.instagram_hashtags %}
+                        {% for tag in ci.instagram_hashtags.split() %}
+                        <option value="{{ tag }}" selected>{{ tag }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+                <small class="admin-form-hint">هشتگ‌ها را تایپ کرده و Enter بزنید</small>
+            </div>
+
+            <!-- Instagram Images -->
+            <div class="admin-form-section">
+                <label class="admin-form-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px; color:var(--color-ember);">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    تصاویر اینستاگرام
+                </label>
+
+                <p class="admin-form-hint" style="margin-bottom:12px;">تصاویر را آپلود کنید یا URL آن‌ها را وارد کنید</p>
+
+                <!-- Upload Area -->
+                <div class="image-upload-area" id="igImageUploadArea">
+                    <input type="file" id="ig_image_file" class="ig-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
+                    <div class="image-upload-area__content" id="igUploadContent">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="image-upload-area__text">تصاویر اینستاگرام را آپلود کنید</p>
+                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت — چند انتخابی</p>
+                    </div>
+                </div>
+                <small class="admin-form-error" id="igImageError" style="display:none"></small>
+
+                <!-- URL Input -->
+                <div class="image-url-input-wrapper" style="margin-top:12px;">
+                    <label for="ig_image_urls" class="admin-form-label" style="font-size:13px;">یا URL تصاویر را وارد کنید (هر URL در یک خط)</label>
+                    <textarea id="ig_image_urls" name="ig_image_urls" class="admin-form-input admin-form-input--textarea" rows="4" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg">{{ ig_image_urls_text }}</textarea>
+                    <small class="admin-form-hint">هر URL در یک خط جداگانه وارد کنید</small>
+                </div>
+
+                <!-- Instagram Images Preview -->
+                <div id="igImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+            </div>
+        </div>
+
         <!-- Form Actions -->
-        <div class="admin-form-actions">
+        <div class="admin-form-actions" style="margin-top: 24px;">
             <button type="submit" class="admin-btn admin-btn--primary admin-btn--lg">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 <span>ذخیره پست</span>
             </button>
+            {% if source == 'job' %}
+            <a href="/admin/jobs/{{ job_id|default('') }}/detail" class="admin-btn admin-btn--outline admin-btn--lg">
+                <span>بازگشت</span>
+            </a>
+            {% else %}
             <a href="/admin/posts" class="admin-btn admin-btn--outline admin-btn--lg">
                 <span>لغو</span>
             </a>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -226,16 +331,46 @@
 <script src="/static/js/admin.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Show success message if redirected after creation
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('msg') && urlParams.get('msg') === 'created') {
         setTimeout(() => showPersianToast('پست با موفقیت ایجاد شد', 'success', 4000));
     }
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize CKEditor
+
+    // --- Section Toggles ---
+    window.updateChannelUI = function(type, isChecked) {
+        const section = type === 'blog' ? document.getElementById('blogSection') : document.getElementById('instagramSection');
+        const card = document.querySelector(`label[for="${type}Enabled"]`);
+
+        if (isChecked) {
+            card.classList.add('active');
+            $(section).slideDown(300); // استفاده از slideDown برای UX بهتر
+        } else {
+            card.classList.remove('active');
+            $(section).slideUp(300);
+        }
+    };
+
+    window.toggleInstagramSection = function(checked) {
+        document.getElementById('instagramSection').style.display = checked ? 'block' : 'none';
+    };
+
+    // --- Auto-generate slug from title ---
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function() {
+            if (!slugInput.value) {
+                slugInput.value = this.value
+                    .toLowerCase()
+                    .replace(/[^\w\s\u200D\u0600-\u06FF]/gu, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .trim();
+            }
+        });
+    }
+
+    // --- CKEditor for body_html ---
     const bodyEditor = document.getElementById('body_html');
     if (bodyEditor) {
         ClassicEditor
@@ -254,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Initialize Select2
+    // --- Select2 for hashtags ---
     const hashtagsSelect = document.getElementById('hashtags');
     if (hashtagsSelect) {
         $(hashtagsSelect).select2({
@@ -264,23 +399,17 @@ document.addEventListener('DOMContentLoaded', function() {
             tags: true,
             createTag: function(params) {
                 var term = $.trim(params.term);
-                if (term === '') {
-                    return null;
-                }
+                if (term === '') return null;
                 return {
                     id: term.startsWith('#') ? term : '#' + term,
                     text: term.startsWith('#') ? term : '#' + term
                 };
             },
-            language: {
-                noResults: function() {
-                    return 'هشتگ مورد نظر را تایپ کنید و Enter بزنید';
-                }
-            }
+            language: { noResults: function() { return 'هشتگ مورد نظر را تایپ کنید و Enter بزنید'; } }
         });
     }
 
-    // Initialize Jalali Datepicker
+    // --- Jalali Datepicker ---
     const publishDate = document.getElementById('publish_date');
     if (publishDate) {
         jalaliDatepicker.startWatch({
@@ -292,152 +421,179 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Auto-generate slug from title
-    const titleInput = document.getElementById('title');
-    const slugInput = document.getElementById('slug');
-    if (titleInput && slugInput) {
-        titleInput.addEventListener('input', function() {
-            if (!slugInput.value) {
-                slugInput.value = this.value
-                    .toLowerCase()
-                    .replace(/[^\w\s\u200D\u0600-\u06FF]/gu, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-')
-                    .trim();
-            }
-        });
-    }
+    // --- Section defaults ---
+    // Show blog by default, instagram if checkbox was checked
+    toggleBlogSection(true);
+    var igEnabled = document.getElementById('instagramEnabled');
+    if (igEnabled && igEnabled.checked) toggleInstagramSection(true);
 
-    // --- Instagram Caption Live Preview ---
-    const captionEditor = document.getElementById('instagram_caption');
-    const captionPreviewBody = document.getElementById('captionPreview');
-    if (captionEditor && captionPreviewBody) {
-        function updateCaptionPreview() {
-            const text = captionEditor.value.trim();
-            if (text) {
-                captionPreviewBody.innerHTML = '<p class="instagram-caption-preview__text">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>';
-            } else {
-                captionPreviewBody.innerHTML = '<p class="instagram-caption-preview__text">متن کپشن شما اینجا نمایش داده می‌شود...</p>';
-            }
-        }
-        captionEditor.addEventListener('input', updateCaptionPreview);
-        // Initial preview
-        updateCaptionPreview();
-    }
+    // --- Blog image upload (single preview) ---
+    setupSingleImageUpload('blogImageUploadArea', 'blog_image_file', 'blogUploadContent', 'blogImagePreview', 'blogPreviewImg', 'removeBlogImageBtn', 'blogImageError', 'blog_image_url');
 
-    // --- SEO Guidance Toggle ---
-    const seoToggle = document.getElementById('seoGuideToggle');
-    const seoContent = document.getElementById('seoGuideContent');
-    if (seoToggle && seoContent) {
-        seoToggle.addEventListener('click', function() {
-            const isExpanded = seoContent.style.display === 'block';
-            seoContent.style.display = isExpanded ? 'none' : 'block';
-            this.classList.toggle('seo-guidance__toggle--open', !isExpanded);
-        });
-    }
+    // --- OG image upload (single preview) ---
+    setupSingleImageUpload('ogImageUploadArea', 'og_image_file', 'ogUploadContent', 'ogImagePreview', 'ogPreviewImg', 'removeOgImageBtn', 'ogImageError', 'og_image');
 
-    // --- Image Upload with Preview & Validation ---
-    const imageUploadArea = document.getElementById('imageUploadArea');
-    const ogImageFileInput = document.getElementById('og_image_file');
-    const uploadContent = document.getElementById('uploadContent');
-    const imagePreview = document.getElementById('imagePreview');
-    const previewImg = document.getElementById('previewImg');
-    const removeImageBtn = document.getElementById('removeImageBtn');
-    const ogImageInput = document.getElementById('og_image');
-    const imageError = document.getElementById('imageError');
+    // --- Instagram image upload + URL list ---
+    setupMultiImageUpload('igImageUploadArea', 'ig_image_file', 'igUploadContent', 'igImageError', 'igImagesPreviewList');
 
-    if (imageUploadArea && ogImageFileInput) {
-        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-
-        function showImageError(msg) {
-            if (imageError) {
-                imageError.textContent = msg;
-                imageError.style.display = 'block';
-            }
-        }
-        function clearImageError() {
-            if (imageError) {
-                imageError.textContent = '';
-                imageError.style.display = 'none';
-            }
-        }
-        function showPreview(dataUrl) {
-            previewImg.src = dataUrl;
-            uploadContent.style.display = 'none';
-            imagePreview.style.display = 'block';
-            clearImageError();
-        }
-        function hidePreview() {
-            uploadContent.style.display = 'block';
-            imagePreview.style.display = 'none';
-            previewImg.src = '';
-            ogImageFileInput.value = '';
-            if (ogImageInput) {
-                ogImageInput.value = '';
-            }
-        }
-
-        // Click to browse
-        imageUploadArea.addEventListener('click', function(e) {
-            if (e.target.closest('.image-upload-area__remove')) return;
-            ogImageFileInput.click();
-        });
-
-        // File input change
-        ogImageFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            validateAndPreview(file);
-        });
-
-        // Drag and drop
-        ['dragenter', 'dragover'].forEach(function(eventName) {
-            imageUploadArea.addEventListener(eventName, function(e) {
-                e.preventDefault();
-                imageUploadArea.classList.add('image-upload-area--dragover');
+    // --- If we have AI-generated image URLs from a job, show them ---
+    {% if ci and ci.blog_image_urls %}
+    try {
+        var blogImgUrls = JSON.parse('{{ ci.blog_image_urls | tojson }}');
+        if (Array.isArray(blogImgUrls) && blogImgUrls.length > 0) {
+            var blogPreviewList = document.getElementById('blogImagesPreviewList');
+            blogImgUrls.forEach(function(url) {
+                if (!url) return;
+                var img = document.createElement('img');
+                img.src = url;
+                img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);cursor:pointer;';
+                img.title = url;
+                img.onclick = function() { window.open(url, '_blank'); };
+                blogPreviewList.appendChild(img);
             });
-        });
-        ['dragleave', 'drop'].forEach(function(eventName) {
-            imageUploadArea.addEventListener(eventName, function(e) {
-                e.preventDefault();
-                imageUploadArea.classList.remove('image-upload-area--dragover');
-            });
-        });
-        imageUploadArea.addEventListener('drop', function(e) {
-            const file = e.dataTransfer.files[0];
-            if (file) validateAndPreview(file);
-        });
-
-        function validateAndPreview(file) {
-            clearImageError();
-
-            if (!ALLOWED_TYPES.includes(file.type)) {
-                showImageError('فرمت تصویر مجاز نیست. فقط JPEG, PNG, WEBP, GIF مجاز است.');
-                ogImageFileInput.value = '';
-                return;
-            }
-            if (file.size > MAX_SIZE) {
-                showImageError('حجم تصویر نباید بیشتر از ۵ مگابایت باشد.');
-                ogImageFileInput.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                showPreview(e.target.result);
-            };
-            reader.readAsDataURL(file);
+            // Also populate URL field
+            document.getElementById('blog_image_url').value = blogImgUrls[0];
         }
+    } catch(e) {}
+    {% endif %}
 
-        // Remove image
-        if (removeImageBtn) {
-            removeImageBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                hidePreview();
+    {% if ci and ci.instagram_image_urls %}
+    try {
+        var igImgUrls = JSON.parse('{{ ci.instagram_image_urls | tojson }}');
+        if (Array.isArray(igImgUrls) && igImgUrls.length > 0) {
+            var igPreviewList = document.getElementById('igImagesPreviewList');
+            igImgUrls.forEach(function(url) {
+                if (!url) return;
+                var img = document.createElement('img');
+                img.src = url;
+                img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);cursor:pointer;';
+                img.title = url;
+                img.onclick = function() { window.open(url, '_blank'); };
+                igPreviewList.appendChild(img);
             });
+            // Also populate URL textarea
+            var igUrlsTextarea = document.getElementById('ig_image_urls');
+            if (igUrlsTextarea) {
+                igUrlsTextarea.value = igImgUrls.join('\n');
+            }
         }
-    }
+    } catch(e) {}
+    {% endif %}
 });
+
+// --- Single Image Upload Helper ---
+function setupSingleImageUpload(areaId, fileId, contentId, previewId, imgId, removeBtnId, errorId, urlInputId) {
+    var area = document.getElementById(areaId);
+    var fileInput = document.getElementById(fileId);
+    var content = document.getElementById(contentId);
+    var preview = document.getElementById(previewId);
+    var img = document.getElementById(imgId);
+    var removeBtn = document.getElementById(removeBtnId);
+    var errorEl = document.getElementById(errorId);
+    var urlInput = document.getElementById(urlInputId);
+
+    if (!area || !fileInput) return;
+
+    var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    var MAX_SIZE = 5 * 1024 * 1024;
+
+    function showErr(msg) {
+        if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+    }
+    function clearErr() {
+        if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; }
+    }
+
+    function showPreview(dataUrl) {
+        img.src = dataUrl;
+        if (content) content.style.display = 'none';
+        if (preview) preview.style.display = 'block';
+        clearErr();
+    }
+    function hidePreview() {
+        if (content) content.style.display = 'block';
+        if (preview) preview.style.display = 'none';
+        img.src = '';
+        fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+    }
+
+    area.addEventListener('click', function(e) {
+        if (e.target.closest('.image-upload-area__remove')) return;
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function() {
+        var f = this.files[0];
+        if (!f) return;
+        validateAndPreview(f);
+    });
+
+    ['dragenter', 'dragover'].forEach(function(ev) {
+        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.add('image-upload-area--dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function(ev) {
+        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.remove('image-upload-area--dragover'); });
+    });
+    area.addEventListener('drop', function(e) {
+        var f = e.dataTransfer.files[0];
+        if (f) validateAndPreview(f);
+    });
+
+    function validateAndPreview(f) {
+        clearErr();
+        if (!ALLOWED_TYPES.includes(f.type)) { showErr('فرمت تصویر مجاز نیست. فقط JPEG, PNG, WEBP, GIF'); fileInput.value = ''; return; }
+        if (f.size > MAX_SIZE) { showErr('حجم نباید بیشتر از ۵ مگابایت باشد.'); fileInput.value = ''; return; }
+        var reader = new FileReader();
+        reader.onload = function(e) { showPreview(e.target.result); };
+        reader.readAsDataURL(f);
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function(e) { e.stopPropagation(); hidePreview(); });
+    }
+}
+
+// --- Multi Image Upload Helper (Instagram) ---
+function setupMultiImageUpload(areaId, fileId, contentId, errorId, previewListId) {
+    var area = document.getElementById(areaId);
+    var fileInput = document.getElementById(fileId);
+    var previewList = document.getElementById(previewListId);
+
+    if (!area || !fileInput || !previewList) return;
+
+    var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    var MAX_SIZE = 5 * 1024 * 1024;
+
+    area.addEventListener('click', function() { fileInput.click(); });
+
+    fileInput.addEventListener('change', function() {
+        Array.from(this.files).forEach(addImage);
+        this.value = ''; // reset so same files can be re-selected
+    });
+
+    ['dragenter', 'dragover'].forEach(function(ev) {
+        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.add('image-upload-area--dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function(ev) {
+        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.remove('image-upload-area--dragover'); });
+    });
+    area.addEventListener('drop', function(e) {
+        Array.from(e.dataTransfer.files).forEach(addImage);
+    });
+
+    function addImage(file) {
+        if (!ALLOWED_TYPES.includes(file.type)) return;
+        if (file.size > MAX_SIZE) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            var img = document.createElement('img');
+            img.src = ev.target.result;
+            img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);';
+            previewList.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    }
+}
 </script>
 {% endblock %}

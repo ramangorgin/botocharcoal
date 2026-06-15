@@ -1,43 +1,60 @@
-from sqlalchemy import String, Integer, Text, DateTime, Enum as SAEnum, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, timezone
+from sqlalchemy import (
+    String,
+    Column,
+    Integer,
+    Text,
+    DateTime,
+    ForeignKey,
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.db.base import Base
-from app.core.constants import JobStatus
 
 
 class ContentItem(Base):
     __tablename__ = "content_items"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"))
+    id = Column(Integer, primary_key=True)
 
-    day_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped[JobStatus] = mapped_column(
-        SAEnum(
-            JobStatus,
-            name="contentitemstatus",
-            values_callable=lambda enum: [e.value for e in enum],
-        ),
-        default=JobStatus.PENDING,
+    job_id = Column(
+        Integer,
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
-    instagram_caption: Mapped[str | None] = mapped_column(Text)
-    instagram_hashtags: Mapped[str | None] = mapped_column(Text)
-    instagram_image_urls: Mapped[str | None] = mapped_column(Text)  # JSON array string
+    day_number = Column(Integer, nullable=False)
 
-    blog_title: Mapped[str | None] = mapped_column(String(512))
-    blog_slug: Mapped[str | None] = mapped_column(String(512))
-    blog_body: Mapped[str | None] = mapped_column(Text)
-    blog_image_urls: Mapped[str | None] = mapped_column(Text)  # JSON array string
+    status = Column(String(32), nullable=False, default="pending")
 
-    ai_response: Mapped[str | None] = mapped_column(Text)  # Raw JSON response from AI
+    instagram_caption = Column(Text, nullable=True)
+    instagram_hashtags = Column(Text, nullable=True)
+    instagram_image_urls = Column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    blog_title = Column(Text, nullable=True)
+    blog_slug = Column(Text, nullable=True)
+    blog_body = Column(Text, nullable=True)
+    blog_image_urls = Column(Text, nullable=True)
 
-    updated_at: Mapped[datetime] = mapped_column(
+    ai_response = Column(Text, nullable=True)
+
+    created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # relationships
+    job = relationship("Job")
+    post = relationship(
+        "Post",
+        back_populates="content_item",
+        uselist=False,
     )

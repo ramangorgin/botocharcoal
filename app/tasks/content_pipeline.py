@@ -1,32 +1,24 @@
 """
 Botocharcoal — AI Content Pipeline Celery Task
-================================================
-Generates Persian blog posts, Instagram captions, and images
-for a given Job. Saves results to ContentItem records.
+==============================================
+Generates one full post row per content item and stores it in posts table.
 """
 
 import asyncio
 import json
 from datetime import datetime, timezone
-from celery import shared_task
-from app.tasks.celery_app import celery_app
-from app.core.config import settings
-from app.core.constants import JobStatus, MediaRole
-from app.core.logging import logger
+from celery import Celery
+from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
 from app.db.models.job import Job
 from app.db.models.content_item import ContentItem
 from app.db.models.post import Post
 from app.db.models.media_asset import MediaAsset
-from app.services.ai_text import (
-    generate_blog_text,
-    generate_instagram_caption,
-    generate_instagram_hashtags,
-    generate_image_prompt,
-)
-from app.services.ai_image import generate_image, generate_and_save_images
-from app.core.constants import INSTAGRAM_IMAGE_SIZE, BLOG_COVER_SIZE
-from slugify import slugify
+from app.services.ai_text import generate_post_row, generate_image_prompt
+from app.services.ai_image import generate_and_save_images
+from app.tasks.celery_app import celery_app
+from app.core.constants import JobStatus
+from app.core.logging import logger
 
 
 def _run(coro):
@@ -37,7 +29,7 @@ def _run(coro):
 def run_content_pipeline(self, job_id: int) -> dict:
     async def _pipeline():
         async with AsyncSessionLocal() as db:
-            job: Job = await db.get(Job, job_id)
+            job: Job | None = await db.get(Job, job_id)
             if not job:
                 raise ValueError(f"Job {job_id} not found")
 
@@ -46,166 +38,137 @@ def run_content_pipeline(self, job_id: int) -> dict:
             await db.commit()
 
             try:
-                # Load content items for this job
-                from sqlalchemy import select
                 result = await db.execute(
-                    select(ContentItem).where(
-                        ContentItem.job_id == job_id
-                    ).order_by(ContentItem.day_number, ContentItem.id)
+                    select(ContentItem)
+                    .where(ContentItem.job_id == job_id)
+                    .order_by(ContentItem.day_number, ContentItem.id)
                 )
                 content_items = result.scalars().all()
                 if not content_items:
-                    raise ValueError(f"Content items not found for job {job_id}")
+                    raise ValueError(f"No content items for job {job_id}")
 
-                # Process each day
-                for idx, ci in enumerate(content_items):
-                    day_num = ci.day_number
-                    logger.info("pipeline_day_start", job_id=job_id, day=day_num)
-
+                for ci in content_items:
                     ci.status = JobStatus.PROCESSING
                     await db.commit()
 
-                    # 1. Generate blog title/body
-                    logger.info("pipeline_generate_blog", job_id=job_id, day=day_num)
-                    blog_data = await generate_blog_text(
-                        subject=job.subject,
-                        instructions=job.instructions or "",
-                    )
-                    blog_title = blog_data.get("title", job.subject)
-                    blog_slug = blog_data.get("slug", slugify(blog_title))
-                    blog_body = blog_data.get("body_html", "")
-
-                    # 2. Generate Instagram content
-                    logger.info("pipeline_generate_instagram", job_id=job_id, day=day_num)
-                    caption = await generate_instagram_caption(
-                        subject=job.subject,
-                        instructions=job.instructions or "",
-                    )
-                    hashtags = await generate_instagram_hashtags(
+                    row = await generate_post_row(
                         subject=job.subject,
                         instructions=job.instructions or "",
                     )
 
-                    # 3. Generate image prompts
-                    logger.info("pipeline_generate_image_prompts", job_id=job_id, day=day_num)
-                    ig_prompts = []
-                    for i in range(job.instagram_image_count):
-                        prompt = await generate_image_prompt(
-                            subject=job.subject,
-                            instructions=job.instructions or "",
+                    if not row.get("topic"):
+                        row["topic"] = job.subject
+
+                    if not row.get("slug"):
+                        row["slug"] = f"job-{job.id}-item-{ci.id}"
+
+                    existing = await db.execute(select(Post).where(Post.slug == row["slug"]))
+                    if existing.scalars().first():
+                        row["slug"] = f"{row['slug']}-{ci.id}"
+
+                    post = Post(
+                        topic=row.get("topic") or job.subject,
+                        title=row.get("title") or job.subject,
+                        slug=row["slug"],
+                        body_html=row.get("body_html"),
+                        summary=row.get("summary"),
+                        category=row.get("category"),
+                        cover_image_url=row.get("cover_image_url"),
+                        instagram_caption=row.get("instagram_caption"),
+                        hashtags=row.get("hashtags"),
+                        website_status="draft",
+                        instagram_status="not_published",
+                        meta_title=row.get("meta_title"),
+                        meta_description=row.get("meta_description"),
+                        og_title=row.get("og_title"),
+                        og_description=row.get("og_description"),
+                        og_image=row.get("og_image"),
+                        source_type="ai",
+                        blog_enabled=bool(row.get("blog_enabled", True)),
+                        instagram_enabled=bool(row.get("instagram_enabled", True)),
+                        ai_payload=row,
+                        job_id=job.id,
+                        content_item_id=ci.id,
+                    )
+                    db.add(post)
+                    await db.flush()
+
+                    ig_assets: list[dict] = []
+                    blog_assets: list[dict] = []
+
+                    prompt = await generate_image_prompt(
+                        subject=job.subject,
+                        instructions=job.instructions or "",
+                    )
+
+                    if post.instagram_enabled and job.instagram_image_count > 0:
+                        ig_assets = await generate_and_save_images(
+                            prompts=[prompt] * job.instagram_image_count,
+                            job_id=job.id,
+                            role="instagram",
                         )
-                        ig_prompts.append(prompt)
+                        for asset in ig_assets:
+                            db.add(
+                                MediaAsset(
+                                    post_id=post.id,
+                                    job_id=job.id,
+                                    role="instagram",
+                                    prompt=asset.get("prompt"),
+                                    local_path=asset.get("local_path"),
+                                    public_url=asset.get("public_url"),
+                                    sort_order=asset.get("sort_order", 0),
+                                )
+                            )
 
-                    blog_prompts = []
-                    for i in range(job.blog_image_count):
-                        prompt = await generate_image_prompt(
-                            subject=job.subject,
-                            instructions=job.instructions or "",
+                    if post.blog_enabled and job.blog_image_count > 0:
+                        blog_assets = await generate_and_save_images(
+                            prompts=[prompt] * job.blog_image_count,
+                            job_id=job.id,
+                            role="blog_cover",
                         )
-                        blog_prompts.append(prompt)
+                        for idx, asset in enumerate(blog_assets):
+                            db.add(
+                                MediaAsset(
+                                    post_id=post.id,
+                                    job_id=job.id,
+                                    role="blog_cover",
+                                    prompt=asset.get("prompt"),
+                                    local_path=asset.get("local_path"),
+                                    public_url=asset.get("public_url"),
+                                    sort_order=idx,
+                                )
+                            )
+                        if blog_assets and not post.cover_image_url:
+                            post.cover_image_url = blog_assets[0].get("public_url")
 
-                    # 4. Generate Instagram images
-                    logger.info("pipeline_generate_ig_images", job_id=job_id, day=day_num, count=len(ig_prompts))
-                    ig_assets = await generate_and_save_images(
-                        prompts=ig_prompts,
-                        job_id=job_id,
-                        role="instagram",
-                    )
-
-                    # 5. Generate blog images
-                    logger.info("pipeline_generate_blog_images", job_id=job_id, day=day_num, count=len(blog_prompts))
-                    blog_assets = await generate_and_save_images(
-                        prompts=blog_prompts,
-                        job_id=job_id,
-                        role="blog_cover",
-                    )
-
-                    # Save results to ContentItem
-                    ig_image_urls = json.dumps([a["public_url"] for a in ig_assets])
-                    blog_image_urls = json.dumps([a["public_url"] for a in blog_assets])
-                    ai_response = json.dumps({
-                        "blog": blog_data,
-                        "caption_length": len(caption),
-                        "hashtag_count": len(hashtags.split()),
-                        "ig_image_count": len(ig_assets),
-                        "blog_image_count": len(blog_assets),
-                    })
-
-                    ci.blog_title = blog_title
-                    ci.blog_slug = blog_slug
-                    ci.blog_body = blog_body
-                    ci.instagram_caption = caption
-                    ci.instagram_hashtags = hashtags
-                    ci.instagram_image_urls = ig_image_urls
-                    ci.blog_image_urls = blog_image_urls
-                    ci.ai_response = ai_response
+                    ci.blog_title = post.title if post.blog_enabled else None
+                    ci.blog_slug = post.slug if post.blog_enabled else None
+                    ci.blog_body = post.body_html if post.blog_enabled else None
+                    ci.blog_image_urls = json.dumps([a.get("public_url") for a in blog_assets]) if blog_assets else None
+                    ci.instagram_caption = post.instagram_caption if post.instagram_enabled else None
+                    ci.instagram_hashtags = post.hashtags if post.instagram_enabled else None
+                    ci.instagram_image_urls = json.dumps([a.get("public_url") for a in ig_assets]) if ig_assets else None
+                    ci.ai_response = json.dumps(row, ensure_ascii=False)
                     ci.status = JobStatus.COMPLETED
+
+                    if job.auto_publish_blog and post.blog_enabled:
+                        post.website_status = "published"
+                        post.published_to_website_at = datetime.now(timezone.utc)
 
                     await db.commit()
 
-                    # 6. Auto-publish blog if enabled
-                    if job.auto_publish_blog:
-                        logger.info("pipeline_auto_publish_blog", job_id=job_id, day=day_num)
-                        try:
-                            existing = await db.execute(
-                                select(Post).where(Post.slug == blog_slug)
-                            )
-                            if not existing.scalars().first():
-                                post = Post(
-                                    topic=job.subject,
-                                    title=blog_title,
-                                    slug=blog_slug,
-                                    body_html=blog_body,
-                                    instagram_caption=caption,
-                                    hashtags=hashtags,
-                                    website_status="published",
-                                )
-                                db.add(post)
-                                await db.flush()
-
-                                post_id = post.id
-                                for a in ig_assets:
-                                    db.add(MediaAsset(
-                                        post_id=post_id,
-                                        job_id=job_id,
-                                        role=MediaRole.INSTAGRAM,
-                                        prompt=a["prompt"],
-                                        local_path=a["local_path"],
-                                        public_url=a["public_url"],
-                                        sort_order=a["sort_order"],
-                                    ))
-                                for a in blog_assets:
-                                    db.add(MediaAsset(
-                                        post_id=post_id,
-                                        job_id=job_id,
-                                        role=MediaRole.BLOG_COVER,
-                                        prompt=a["prompt"],
-                                        local_path=a["local_path"],
-                                        public_url=a["public_url"],
-                                        sort_order=0,
-                                    ))
-                                await db.commit()
-                                logger.info("blog_post_created", post_id=post_id, blog_slug=blog_slug)
-                            else:
-                                logger.info("blog_already_exists", blog_slug=blog_slug)
-                        except Exception as post_exc:
-                            logger.warning("auto_publish_failed", job_id=job_id, day=day_num, error=str(post_exc))
-
-                # Mark job complete
-                job.blog_title = f"{job.subject} (AI Generated)"
                 job.status = JobStatus.COMPLETED
                 job.finished_at = datetime.now(timezone.utc)
                 await db.commit()
 
-                logger.info("pipeline_completed", job_id=job_id, items_generated=len(content_items))
                 return {"job_id": job_id, "items_generated": len(content_items)}
 
             except Exception as exc:
+                logger.exception("content_pipeline_failed", job_id=job_id, error=str(exc))
                 job.status = JobStatus.FAILED
                 job.error_message = str(exc)
-                job.retry_count += 1
+                job.retry_count = (job.retry_count or 0) + 1
                 await db.commit()
-                logger.error("pipeline_failed", job_id=job_id, error=str(exc))
                 raise self.retry(exc=exc)
 
     return _run(_pipeline())

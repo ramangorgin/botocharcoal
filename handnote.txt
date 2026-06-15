@@ -1,10 +1,22 @@
 things to do:
+- fix:
+    - syncronize posts and jobs
 - test:
     - detail files for post and job as admin
     - create and edit files for jobs and posts
+    - AI-token and ai_settings.htlml works
+    - everything works!
 
 - develop:
     - notifs (leads)
     - catalogs of products
 
-- Deployment: I need to sattle a gitlab or a more proper altearnative just for this project inside the production server so that I could push there and also have a full Deployment's yaml CI/CD pipeline so everything would be sync with local and productionable.
+- Deployment:
+    - removing unsed directories and files
+    - writing docker file and docker-compose and README.md and requirements again.
+    - preparing a script for creating, seeding, connecting the Database and migrating the tables.
+    - a CI/CD pipeline to push the changes into the production server.
+
+
+- the post publishes
+

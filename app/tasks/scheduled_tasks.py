@@ -1,5 +1,12 @@
+import asyncio
 from celery.schedules import crontab
+from sqlalchemy import select
+
+from app.core.constants import JobStatus
+from app.db.models.job import Job
+from app.db.session import AsyncSessionLocal
 from app.tasks.celery_app import celery_app
+from app.tasks.content_pipeline import run_content_pipeline
 
 
 celery_app.conf.beat_schedule = {
@@ -13,12 +20,6 @@ celery_app.conf.beat_schedule = {
 
 @celery_app.task(name="tasks.retry_failed_jobs")
 def retry_failed_jobs() -> None:
-    import asyncio
-    from app.db.session import AsyncSessionLocal
-    from app.db.models.job import Job
-    from app.core.constants import JobStatus
-    from sqlalchemy import select
-
     async def _retry():
         async with AsyncSessionLocal() as db:
             result = await db.execute(
@@ -29,7 +30,6 @@ def retry_failed_jobs() -> None:
             jobs = result.scalars().all()
             for job in jobs:
                 job.status = JobStatus.QUEUED
-                from app.tasks.content_pipeline import run_content_pipeline
                 run_content_pipeline.delay(job.id)
             await db.commit()
 

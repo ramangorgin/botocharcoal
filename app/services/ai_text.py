@@ -1,12 +1,11 @@
 """
 Botocharcoal AI Text Generation Service
-----------------------------------------
-Generates Persian blog posts, Instagram captions, and hashtags
-using OpenAI-compatible APIs (OpenAI, Anthropic, or custom providers).
+---------------------------------------
+Generates Persian blog and Instagram content using OpenAI-compatible APIs.
 """
 
 import json
-from typing import Optional
+from typing import Any
 from slugify import slugify
 from app.core.config import settings
 from app.core.logging import logger
@@ -16,211 +15,151 @@ from sqlalchemy import select
 
 
 DEFAULT_PROMPTS = {
-    "blog_text": {
+    "post_row": {
         "system": (
-            "تو یک نویسنده و متخصص سئو فارسی برای برند 'بتوچارکول' هستی. "
-            "تخصص تو تولید محتوای ارزشمند درباره ذغال، باربیکیو، پیک نیک، "
-            "کباب و سبک زندگی outdoors است. "
-            "محتوایی که می‌نویسی باید: "
-            "۱. کاملاً طبیعی و انسانی باشد (نه هوش مصنوعی) "
-            "۲. دارای ساختار SEO-friendly باشد (تگ‌های H2/H3 مناسب، پاراگراف کوتاه) "
-            "۳. شامل مقدمه جذاب، بدنه مفید، و نتیجه‌گیری باشد "
-            "۴. کلمات کلیدی مرتبط با ذغال و باربیکیو را به‌طور طبیعی بگنجاند "
-            "۵. از ادعاهای پزشکی یا قیمت‌گذاری خودداری کند"
+            "تو یک نویسنده و استراتژیست تولید محتوا برای برند بتوچارکول هستی. "
+            "خروجی باید دقیقاً ساختار یک ردیف جدول posts باشد و شامل اطلاعات وبلاگ و اینستاگرام باشد."
         ),
         "template": (
-            "یک پست وب فارسی درباره موضوع زیر تولید کن:\n\n"
+            "بر اساس موضوع زیر، خروجی را فقط و فقط به صورت JSON بده.\n\n"
             "موضوع: {subject}\n"
             "{instructions}\n\n"
-            "خروجی باید دقیقاً به فرمت JSON زیر باشد:\n"
-            '{{\n'
-            '  "title": "عنوان فارسی جذاب و SEO-friendly (حداکثر ۷۰ کاراکتر)",\n'
-            '  "slug": "slug-latin-en-ke-ja-ta-esh-ba-esh-e-farsi-translated.shod",\n'
-            '  "body_html": "<h2>مقدمه</h2>\\n<p>متن مقدمه...</p>\\n\\n"\n'
-            '    "<h2>بخش اول</h2>\\n<p>...</p>\\n\\n"\n'
-            '    "<h2>بخش دوم</h2>\\n<p>...</p>\\n\\n"\n'
-            '    "<h2>سؤالات متداول</h2>\\n<p>...</p>\\n\\n"\n'
-            '    "<h2>نتیجه‌گیری</h2>\\n<p>...</p>"\n'
-            '}}\n\n'
-            "توجه:\n"
-            "- body_html باید HTML معتبر باشد (markdown نه)\n"
-            "- حداقل ۳ بخش با H2 داشته باشد\n"
-            "- شامل بخش FAQ باشد"
-        ),
-    },
-    "instagram_caption": {
-        "system": (
-            "تو یک متخصص شبکه‌های اجتماعی برای برند 'بتوچارکول' هستی. "
-            "تخصص تو نوشتن کپشن اینستاگرام فارسی جذاب است. "
-            "کپشن باید: "
-            "۱. با یک هوک قوی شروع شود (سؤال، واقعیت جالب، یا ادعای جذاب) "
-            "۲. مزایای محصول/موضوع را برجسته کند "
-            "۳. لحن گرم، صمیمی، و حرفه‌ای داشته باشد "
-            "۴. شامل CTA واضح باشد "
-            "۵. بین ۸۰ تا ۲۰۰ کلمه باشد"
-        ),
-        "template": (
-            "یک کپشن اینستاگرام فارسی درباره موضوع زیر تولید کن:\n\n"
-            "موضوع: {subject}\n"
-            "{instructions}\n\n"
-            "خروجی فقط متن کپشن باشد (بدون JSON)."
-        ),
-    },
-    "instagram_hashtags": {
-        "system": (
-            "تو یک متخصص هشتگ اینستاگرام فارسی هستی. "
-            "هشتگ‌های مرتبط و پربازدید برای موضوعاتی درباره ذغال، باربیکیو، "
-            "کباب، پیک نیک و سبک زندگی outdoors تولید کن."
-        ),
-        "template": (
-            "بین ۱۵ تا ۲۵ هشتگ فارسی و انگلیسی مرتبط با موضوع زیر تولید کن:\n\n"
-            "موضوع: {subject}\n"
-            "{instructions}\n\n"
-            "خروجی فقط هشتگ‌ها باشد، هر هشتگ در یک خط (بدون JSON)."
+            "JSON باید دقیقا این فیلدها را داشته باشد:\n"
+            "{\n"
+            '  "topic": "...",\n'
+            '  "title": "...",\n'
+            '  "slug": "...",\n'
+            '  "body_html": "...",\n'
+            '  "summary": "...",\n'
+            '  "category": "...",\n'
+            '  "cover_image_url": null,\n'
+            '  "publish_date": null,\n'
+            '  "instagram_caption": "...",\n'
+            '  "hashtags": "#a #b #c",\n'
+            '  "meta_title": "...",\n'
+            '  "meta_description": "...",\n'
+            '  "og_title": "...",\n'
+            '  "og_description": "...",\n'
+            '  "og_image": null,\n'
+            '  "blog_enabled": true,\n'
+            '  "instagram_enabled": true\n'
+            "}\n\n"
+            "قواعد:\n"
+            "- body_html باید HTML معتبر باشد.\n"
+            "- slug باید لاتین و مناسب URL باشد.\n"
+            "- publish_date را null بگذار.\n"
+            "- cover_image_url و og_image را null بگذار مگر اینکه URL معتبر لازم باشد.\n"
+            "- هیچ متن اضافه‌ای خارج از JSON برنگردان."
         ),
     },
     "image_prompt": {
         "system": (
-            "You are a prompt engineer for DALL-E image generation. "
-            "Create vivid, detailed English image prompts for a premium charcoal brand "
-            "(Botocharcoal) that sells high-quality charcoal for barbecue and outdoor cooking."
+            "You are a prompt engineer for product and lifestyle image generation "
+            "for a premium charcoal brand."
         ),
         "template": (
-            "Create a detailed image generation prompt in English. "
-            "The image is for a premium Iranian charcoal brand called 'Botocharcoal'. "
+            "Create an English prompt for image generation.\n"
             "Subject: {subject}\n"
-            "{instructions}\n\n"
-            "Style: Premium product photography, dark moody industrial aesthetic, "
-            "warm ember lighting, high contrast, professional food photography style. "
-            "Output ONLY the prompt text, no explanations."
+            "{instructions}\n"
+            "Style: premium charcoal, barbecue, warm embers, realistic photography.\n"
+            "Output only prompt text."
         ),
     },
 }
 
 
 def _get_system_prompt(key: str) -> str:
-    """Return the system prompt for a given key."""
     return DEFAULT_PROMPTS[key]["system"]
 
 
 def _get_user_prompt(key: str, subject: str, instructions: str = "") -> str:
-    """Return the user prompt for a given key with subject/instructions filled in."""
     template = DEFAULT_PROMPTS[key]["template"]
     instr = f"دستورالعمل اضافی:\n{instructions}" if instructions else ""
     return template.format(subject=subject, instructions=instr)
 
 
-async def generate_blog_text(subject: str, instructions: str = "") -> dict:
+async def generate_post_row(subject: str, instructions: str = "") -> dict[str, Any]:
     """
-    Generate a complete Persian blog post.
-    
-    Returns:
-        dict with keys: title, slug, body_html
+    Generate a full post-row payload compatible with posts table.
     """
-    logger.info("ai_text_generate_blog", subject=subject)
-    
+    logger.info("ai_text_generate_post_row", subject=subject)
     messages = [
-        {"role": "system", "content": _get_system_prompt("blog_text")},
-        {"role": "user", "content": _get_user_prompt("blog_text", subject, instructions)},
+        {"role": "system", "content": _get_system_prompt("post_row")},
+        {"role": "user", "content": _get_user_prompt("post_row", subject, instructions)},
     ]
-    
     response = await _call_text_api(messages, response_format=True)
     raw = response.choices[0].message.content
-    
+
     try:
         data = json.loads(raw)
-        title = data.get("title", subject)
-        slug = data.get("slug", slugify(title))
-        body_html = data.get("body_html", "")
-    except (json.JSONDecodeError, KeyError) as e:
-        logger.warning("ai_text_parse_fallback", error=str(e))
-        title = subject
-        slug = slugify(subject)
-        body_html = f"<h2>{subject}</h2>\n<p>{raw[:500]}...</p>"
-    
-    result = {"title": title, "slug": slug, "body_html": body_html}
-    logger.info("ai_text_blog_generated", title=title, slug=slug)
-    return result
+    except json.JSONDecodeError:
+        title = subject.strip()[:120] or "پست جدید"
+        data = {
+            "topic": subject,
+            "title": title,
+            "slug": slugify(title) or slugify(subject) or "post",
+            "body_html": f"<h2>{title}</h2><p>{raw[:1000]}</p>",
+            "summary": raw[:280] if raw else "",
+            "category": None,
+            "cover_image_url": None,
+            "publish_date": None,
+            "instagram_caption": raw[:600] if raw else "",
+            "hashtags": "",
+            "meta_title": title[:60],
+            "meta_description": (raw[:155] if raw else title),
+            "og_title": title,
+            "og_description": raw[:200] if raw else title,
+            "og_image": None,
+            "blog_enabled": True,
+            "instagram_enabled": True,
+        }
 
-
-async def generate_instagram_caption(subject: str, instructions: str = "") -> str:
-    """Generate a Persian Instagram caption."""
-    logger.info("ai_text_generate_caption", subject=subject)
-    
-    messages = [
-        {"role": "system", "content": _get_system_prompt("instagram_caption")},
-        {"role": "user", "content": _get_user_prompt("instagram_caption", subject, instructions)},
-    ]
-    
-    response = await _call_text_api(messages)
-    caption = response.choices[0].message.content.strip()
-    
-    logger.info("ai_text_caption_generated", length=len(caption))
-    return caption
-
-
-async def generate_instagram_hashtags(subject: str, instructions: str = "") -> str:
-    """Generate Persian/English hashtags for Instagram."""
-    logger.info("ai_text_generate_hashtags", subject=subject)
-    
-    messages = [
-        {"role": "system", "content": _get_system_prompt("instagram_hashtags")},
-        {"role": "user", "content": _get_user_prompt("instagram_hashtags", subject, instructions)},
-    ]
-    
-    response = await _call_text_api(messages)
-    hashtags_raw = response.choices[0].message.content.strip()
-    
-    # Clean up: ensure all start with #
-    hashtags = []
-    for line in hashtags_raw.split("\n"):
-        line = line.strip().strip("*-•").strip()
-        if line and not line.startswith("#"):
-            line = "#" + line
-        if line:
-            hashtags.append(line)
-    
-    result = " ".join(hashtags)
-    logger.info("ai_text_hashtags_generated", count=len(hashtags))
-    return result
+    title = (data.get("title") or subject or "پست جدید").strip()
+    data["topic"] = (data.get("topic") or subject or title).strip()
+    data["title"] = title
+    data["slug"] = slugify(data.get("slug") or title or subject or "post")
+    data["body_html"] = data.get("body_html") or ""
+    data["summary"] = data.get("summary") or None
+    data["category"] = data.get("category") or None
+    data["cover_image_url"] = data.get("cover_image_url") or None
+    data["publish_date"] = data.get("publish_date") or None
+    data["instagram_caption"] = data.get("instagram_caption") or None
+    data["hashtags"] = data.get("hashtags") or None
+    data["meta_title"] = data.get("meta_title") or None
+    data["meta_description"] = data.get("meta_description") or None
+    data["og_title"] = data.get("og_title") or None
+    data["og_description"] = data.get("og_description") or None
+    data["og_image"] = data.get("og_image") or None
+    data["blog_enabled"] = bool(data.get("blog_enabled", True))
+    data["instagram_enabled"] = bool(data.get("instagram_enabled", True))
+    return data
 
 
 async def generate_image_prompt(subject: str, instructions: str = "") -> str:
-    """Generate an English image prompt for DALL-E."""
     logger.info("ai_text_generate_image_prompt", subject=subject)
-    
     messages = [
         {"role": "system", "content": _get_system_prompt("image_prompt")},
         {"role": "user", "content": _get_user_prompt("image_prompt", subject, instructions)},
     ]
-    
     response = await _call_text_api(messages)
-    prompt = response.choices[0].message.content.strip()
-    
-    logger.info("ai_text_image_prompt_generated")
-    return prompt
+    return response.choices[0].message.content.strip()
 
 
-async def _call_text_api(messages: list, response_format: bool = False) -> "ChatCompletion":
-    """
-    Call the text generation API based on AISettings or fallback to config.
-    """
+async def _call_text_api(messages: list[dict[str, str]], response_format: bool = False):
     try:
         from openai import AsyncOpenAI
-    except ImportError:
-        logger.error("openai_not_installed")
-        raise RuntimeError("openai package not installed")
-    
-    # Try to load AISettings first
+    except ImportError as exc:
+        raise RuntimeError("openai package not installed") from exc
+
     ai_settings = None
     async with AsyncSessionLocal() as db:
         result = await db.execute(select(AISettings).limit(1))
         ai_settings = result.scalar_one_or_none()
-    
-    api_key = None
-    api_base = None
+
     model = settings.TEXT_MODEL
-    
+    api_key = settings.OPENAI_API_KEY or None
+    api_base = None
+
     if ai_settings:
         if ai_settings.api_key:
             api_key = ai_settings.api_key
@@ -228,35 +167,20 @@ async def _call_text_api(messages: list, response_format: bool = False) -> "Chat
             api_base = ai_settings.api_base_url
         if ai_settings.text_model:
             model = ai_settings.text_model
-    else:
-        # Fallback: create default AISettings
-        ai_settings = AISettings(
-            provider=settings.OPENAI_API_KEY and "openai" or "custom",
-            api_key=settings.OPENAI_API_KEY,
-            text_model=settings.TEXT_MODEL,
-        )
-        db.add(ai_settings)
-        await db.commit()
-        api_key = ai_settings.api_key
-        model = ai_settings.text_model or settings.TEXT_MODEL
-    
+
     if not api_key:
-        raise ValueError("No API key configured. Set OPENAI_API_KEY in .env or configure in AI Settings.")
-    
-    client_kwargs = {"api_key": api_key}
+        raise ValueError("No API key configured. Configure AI settings first.")
+
+    client_kwargs: dict[str, str] = {"api_key": api_key}
     if api_base:
         client_kwargs["base_url"] = api_base
-    
+
     client = AsyncOpenAI(**client_kwargs)
-    
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "model": model,
         "messages": messages,
-        "temperature": 0.7,
+        "temperature": 0.5,
     }
-    
     if response_format:
         kwargs["response_format"] = {"type": "json_object"}
-    
-    response = await client.chat.completions.create(**kwargs)
-    return response
+    return await client.chat.completions.create(**kwargs)

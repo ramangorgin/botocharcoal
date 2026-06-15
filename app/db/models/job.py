@@ -1,51 +1,58 @@
-from sqlalchemy import String, Integer, Text, DateTime, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, date, timezone
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Boolean
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from app.db.base import Base
-from app.core.constants import JobStatus
 
 
 class Job(Base):
     __tablename__ = "jobs"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    subject: Mapped[str] = mapped_column(String(512), nullable=False)
-    instructions: Mapped[str | None] = mapped_column(Text)
+    id = Column(Integer, primary_key=True)
 
-    duration_days: Mapped[int] = mapped_column(Integer, default=1)
-    start_date: Mapped[date] = mapped_column(default=lambda: date.today())
-    items_per_day: Mapped[int] = mapped_column(Integer, default=1)
+    subject = Column(String(512), nullable=False)
+    instructions = Column(Text, nullable=True)
 
-    auto_publish_blog: Mapped[bool] = mapped_column(default=False)
-    blog_image_count: Mapped[int] = mapped_column(Integer, default=1)
-    instagram_image_count: Mapped[int] = mapped_column(Integer, default=4)
-    job_type: Mapped[str] = mapped_column(String(64), default="general")
+    duration_days = Column(Integer, nullable=False, default=1)
+    start_date = Column(Date, nullable=True)
+    items_per_day = Column(Integer, nullable=False, default=1)
 
-    status: Mapped[JobStatus] = mapped_column(
-        SAEnum(
-            JobStatus,
-            name="jobstatus",
-            values_callable=lambda enum: [e.value for e in enum],
-        ),
-        default=JobStatus.PENDING,
-    )
+    auto_publish_blog = Column(Boolean, nullable=False, default=False)
+    blog_image_count = Column(Integer, nullable=False, default=1)
+    instagram_image_count = Column(Integer, nullable=False, default=4)
+    job_type = Column(String(64), nullable=False, default="general")
 
-    retry_count: Mapped[int] = mapped_column(Integer, default=0)
-    error_message: Mapped[str | None] = mapped_column(Text)
+    status = Column(String(32), nullable=False, default="pending")
 
-    blog_title: Mapped[str | None] = mapped_column(String(512))
-    blog_slug: Mapped[str | None] = mapped_column(String(512))
-    blog_body: Mapped[str | None] = mapped_column(Text)
+    retry_count = Column(Integer, nullable=False, default=0)
+    error_message = Column(Text, nullable=True)
 
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-
-    updated_at: Mapped[datetime] = mapped_column(
+    created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    posts = relationship(
+        "Post",
+        back_populates="job",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    media_assets = relationship(
+        "MediaAsset",
+        back_populates="job",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
