@@ -228,46 +228,74 @@
             </p>
         </div>
 
-        {% if recent_posts %}
-        <div class="grid grid--3">
-            {% for post in recent_posts %}
-            <article class="article-card reveal{% if loop.index == 2 %} reveal-delay-1{% elif loop.index == 3 %} reveal-delay-2{% endif %}">
-                <a href="/blog/{{ post.slug }}" class="article-card__media" aria-label="{{ post.title }}">
-                    {% if post.cover %}
-                        <img src="{{ post.cover.file_path }}" alt="{{ post.title }}" loading="lazy" style="width:100%;height:200px;object-fit:cover;border-radius:var(--radius-lg);">
-                    {% else %}
-                        <div class="article-card__placeholder">
-                            <div class="article-card__placeholder-inner">
-                                <svg viewBox="0 0 24 24" aria-hidden="true" style="opacity:0.4;">
-                                    <path d="M4 5h16v14H4zM8 10a2 2 0 100-4 2 2 0 000 4zm10 7l-4.5-6-3.5 4-2-2.5L6 17z" fill="currentColor"/>
+        {% if recent_posts and recent_posts|length > 0 %}
+            <div class="grid grid--3">
+                {% for post in recent_posts[:3] %}
+                <article class="article-card reveal{% if loop.index == 2 %} reveal-delay-1{% elif loop.index == 3 %} reveal-delay-2{% endif %}">
+
+                    {# بخش رسانه (تصویر + پلیس‌هولدر) #}
+                    <a href="/blog/{{ post.slug }}" class="article-card__media"
+                        style="position:relative; display:flex; width:100%; height:220px; background:rgba(255,255,255,0.03); overflow:hidden; border-radius:var(--radius-lg); align-items:center; justify-content:center;">
+
+                            {# ۱. پلیس‌هولدر (با عرض و ارتفاع ۱۰۰٪) #}
+                            <div class="placeholder-bg"
+                                style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; z-index:1; width:100%; height:100%;">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.2; color:white;">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z" />
+                                    <polyline points="8.5 13.5 11 16.5 14.5 12 19 18 5 18 8.5 13.5" fill="currentColor" opacity="0.2" />
                                 </svg>
+                                <span style="font-size:var(--fs-xs); opacity:0.3; color:white;">بدون تصویر</span>
                             </div>
-                        </div>
-                    {% endif %}
-                </a>
-                <div class="article-card__body">
-                    {% if post.topic %}
-                    <span class="text-link" style="font-size:var(--fs-xs);color:var(--clr-ember);display:block;margin-bottom:var(--sp-sm);">{{ post.topic }}</span>
-                    {% endif %}
-                    <h3><a href="/blog/{{ post.slug }}" style="color:inherit;text-decoration:none;">{{ post.title }}</a></h3>
-                    <p class="article-text">
-                        {{ post.body_html | striptags | truncate(160) }}
-                    </p>
-                    <a href="/blog/{{ post.slug }}" class="text-link">مطالعه بیشتر</a>
-                </div>
-            </article>
-            {% endfor %}
-        </div>
-        <div style="text-align:center;margin-top:var(--sp-2xl);">
-            <a href="/blog" class="btn btn-outline" style="margin-top: 5rem;">مشاهده همه پست‌ها</a>
-        </div>
+
+                            {# ۲. تصویر اصلی #}
+                            {% set img_url = post.cover_image_url or (post.media_assets[0].file_path if post.media_assets else '') %}
+                            <img
+                                src="{{ img_url }}"
+                                alt="{{ post.title }}"
+                                loading="lazy"
+                                style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:2; transition: opacity 0.3s ease; opacity: 0;"
+                                onerror="this.style.opacity='0'; this.style.zIndex='0';"
+                                onload="this.style.opacity='1';"
+                            >
+                        </a>
+
+
+
+                    <div class="article-card__body">
+                        {% if post.topic %}
+                            <span class="text-link" style="font-size:var(--fs-xs);color:var(--clr-ember);display:block;margin-bottom:var(--sp-sm);">
+                                {{ post.topic }}
+                            </span>
+                        {% endif %}
+
+                        <h3>
+                            <a href="/blog/{{ post.slug }}" style="color:inherit;text-decoration:none;">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+
+                        <p class="article-text">
+                            {{ post.body_html | striptags | truncate(110) }}
+                        </p>
+
+                        <a href="/blog/{{ post.slug }}" class="text-link">مطالعه بیشتر</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            <div style="text-align:center; margin-top: 4rem;">
+                <a href="/blog" class="btn btn-outline">مشاهده همه پست‌ها</a>
+            </div>
         {% else %}
-        <div style="text-align:center;padding:var(--sp-3xl) 0;">
-            <p style="font-size:var(--fs-lg);color:var(--clr-text-muted);">هیچ پستی هنوز منتشر نشده.</p>
-        </div>
+            <div style="text-align:center;padding:var(--sp-3xl) 0;">
+                <p style="font-size:var(--fs-lg);color:var(--clr-text-muted);">هیچ پستی هنوز منتشر نشده.</p>
+            </div>
         {% endif %}
     </div>
 </section>
+
+
 
 <section class="section section--cta reveal" id="contact">
     <div class="container">
