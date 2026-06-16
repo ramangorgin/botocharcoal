@@ -1,31 +1,44 @@
-import secrets
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
 from passlib.context import CryptContext
-from itsdangerous import URLSafeTimedSerializer
-from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-_serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
+SECRET_KEY = "CHANGE_THIS_SECRET"
+ALGORITHM = "HS256"
+SESSION_EXPIRE_HOURS = 24
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+def verify_password(password: str, password_hash: str) -> bool:
+    return pwd_context.verify(password, password_hash)
 
 
 def create_session_token(user_id: int) -> str:
-    return _serializer.dumps({"uid": user_id}, salt="admin-session")
+
+    expire = datetime.utcnow() + timedelta(hours=SESSION_EXPIRE_HOURS)
+
+    payload = {
+        "sub": str(user_id),
+        "exp": expire
+    }
+
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    return token
 
 
-def verify_session_token(token: str, max_age: int = None) -> dict | None:
+def decode_session_token(token: str):
+
     try:
-        max_age = max_age or settings.ADMIN_SESSION_MAX_AGE
-        return _serializer.loads(token, salt="admin-session", max_age=max_age)
-    except Exception:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return int(payload["sub"])
+
+    except JWTError:
         return None
-
-
-def generate_csrf_token() -> str:
-    return secrets.token_hex(32)

@@ -1,76 +1,60 @@
+from pydantic import BaseModel
 from datetime import datetime
-from typing import Any
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 
 
-class PostBaseSchema(BaseModel):
-    topic: str | None = Field(default=None, max_length=512)
-    title: str | None = Field(default=None, max_length=512)
-    slug: str | None = Field(default=None, max_length=512)
+class PostBase(BaseModel):
+    topic: str
+    title: str
+    slug: str
 
-    body_html: str | None = None
-    summary: str | None = None
-    category: str | None = None
-    cover_image_url: str | None = None
-    instagram_caption: str | None = None
-    hashtags: str | None = None
+    body_html: Optional[str] = None
+    summary: Optional[str] = None
+    category: Optional[str] = None
 
-    website_status: str = Field(default="draft")
-    instagram_status: str = Field(default="not_published")
+    instagram_caption: Optional[str] = None
+    hashtags: Optional[str] = None
 
-    published_to_website_at: datetime | None = None
-    published_to_instagram_at: datetime | None = None
-
-    meta_title: str | None = None
-    meta_description: str | None = None
-    og_title: str | None = None
-    og_description: str | None = None
-    og_image: str | None = None
-
-    blog_enabled: bool = True
-    instagram_enabled: bool = True
-
-    source_type: str = "ai"
-
-    ai_payload: dict[str, Any] | None = None
-
-    job_id: int | None = None
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
 
 
-class PostCreateSchema(PostBaseSchema):
-    pass
+class PostCreate(BaseModel):
+    topic: str
+    text_instruction: str
+    image_instruction: str
+
+    blog_image_count: int = 1
+    instagram_image_count: int = 3
+
+    auto_publish_blog: bool = False
 
 
-class PostUpdateSchema(BaseModel):
-    topic: str | None = None
-    title: str | None = None
-    slug: str | None = None
+class PostUpdate(BaseModel):
 
-    body_html: str | None = None
-    summary: str | None = None
-    category: str | None = None
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    body_html: Optional[str] = None
+    summary: Optional[str] = None
 
-    instagram_caption: str | None = None
-    hashtags: str | None = None
+    instagram_caption: Optional[str] = None
+    hashtags: Optional[str] = None
 
-    website_status: str | None = None
-    instagram_status: str | None = None
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
 
-    meta_title: str | None = None
-    meta_description: str | None = None
-    og_title: str | None = None
-    og_description: str | None = None
-    og_image: str | None = None
-
-    blog_enabled: bool | None = None
-    instagram_enabled: bool | None = None
-
-    ai_payload: dict | None = None
+    website_status: Optional[str] = None
 
 
-class PostResponseSchema(PostBaseSchema):
-    model_config = ConfigDict(from_attributes=True)
+class PostOut(PostBase):
 
     id: int
+
+    instagram_status: str
+    website_status: str
+
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True

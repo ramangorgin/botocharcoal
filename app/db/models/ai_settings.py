@@ -1,27 +1,20 @@
-from sqlalchemy import String, Text, DateTime, Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Text, DateTime, func
 from app.db.base import Base
 
 
 class AISettings(Base):
     __tablename__ = "ai_settings"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    provider: Mapped[str] = mapped_column(String(32), default="openai")
-    api_key: Mapped[str | None] = mapped_column(String(512))
-    api_base_url: Mapped[str | None] = mapped_column(String(512))
+    id = Column(Integer, primary_key=True)
 
-    text_model: Mapped[str | None] = mapped_column(String(128))
-    image_model: Mapped[str | None] = mapped_column(String(128))
+    provider = Column(String(50), nullable=False)
+    base_url = Column(Text, nullable=False)
+    api_key = Column(Text, nullable=False)
 
-    prompt_template: Mapped[str | None] = mapped_column(Text)  # JSON for custom prompts
+    text_model = Column(String(100), nullable=False)
+    image_model = Column(String(100), nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
+    system_prompt = Column(Text)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -6,15 +6,10 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool, text
 from alembic import context
 
-# Import all models so autogenerate can detect them
 from app.db.base import Base
-from app.db.models.user import User
-from app.db.models.job import Job
-from app.db.models.post import Post
-from app.db.models.media_asset import MediaAsset
-from app.db.models.lead import Lead
-from app.db.models.catalog import Catalog
-from app.db.models.setting import Setting
+from app.db.models import *
+
+
 
 # Alembic Config object
 config = context.config
@@ -30,6 +25,7 @@ if db_url:
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
 
 target_metadata = Base.metadata
 

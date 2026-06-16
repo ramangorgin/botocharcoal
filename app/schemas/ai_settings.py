@@ -1,26 +1,39 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
 
 
-class AISettingsCreateSchema(BaseModel):
-    provider: str = Field(default="openai", pattern="^(openai|anthropic|custom)$")
-    api_key: str | None = Field(None, max_length=512)
-    api_base_url: str | None = Field(None, max_length=512)
-    text_model: str | None = Field(None, max_length=128)
-    image_model: str | None = Field(None, max_length=128)
-    prompt_template: str | None = Field(None, max_length=8192)
+class AISettingsBase(BaseModel):
 
-
-class AISettingsResponseSchema(BaseModel):
-    id: int
     provider: str
-    api_key: str | None
-    api_base_url: str | None
-    text_model: str | None
-    image_model: str | None
-    image_size: str | None = None
-    prompt_template: str | None
-    created_at: str
-    updated_at: str
+    base_url: str
 
-    model_config = {"from_attributes": True}
+    text_model: str
+    image_model: str
+
+    system_prompt: Optional[str] = None
+
+
+class AISettingsCreate(AISettingsBase):
+
+    api_key: str
+
+
+class AISettingsUpdate(BaseModel):
+
+    provider: Optional[str] = None
+    base_url: Optional[str] = None
+
+    api_key: Optional[str] = None
+
+    text_model: Optional[str] = None
+    image_model: Optional[str] = None
+
+    system_prompt: Optional[str] = None
+
+
+class AISettingsOut(AISettingsBase):
+
+    id: int
+
+    class Config:
+        from_attributes = True

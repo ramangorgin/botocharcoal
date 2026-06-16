@@ -61,7 +61,7 @@ window.confirmDeletePost = async function(postId, postTitle) {
 
     if (result.isConfirmed) {
         try {
-            const response = await fetch(`/admin/posts/delete/${postId}`, {
+            const response = await fetch(`/api/v1/posts/${postId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
