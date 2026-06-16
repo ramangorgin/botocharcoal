@@ -1,97 +1,238 @@
-"""
-Seed script: Insert 5 realistic Persian blog posts into the database.
-Run with: venv/bin/python scripts/seed_blog_posts.py
-"""
 import asyncio
+import os
+import re
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
 
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
+from dotenv import load_dotenv
 from sqlalchemy import text
-from app.core.config import settings
-from app.db.session import engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-ARTICLES = [
+# project root
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# load .env explicitly
+load_dotenv(PROJECT_ROOT / ".env")
+
+from app.core.config import settings
+from app.db.models.post import Post
+
+
+def slugify(value: str) -> str:
+    """
+    تبدیل متن فارسی/انگلیسی به slug ساده و URL-safe.
+    """
+    value = value.strip().lower()
+    value = re.sub(r"[^\w\s-]", "", value, flags=re.UNICODE)
+    value = re.sub(r"[-\s]+", "-", value, flags=re.UNICODE)
+    return value.strip("-")
+
+
+POSTS = [
     {
-        "topic": "راهنمای انتخاب زغال",
-        "title": "راهنمای جامع انتخاب زغال باکیفیت برای مصرف خانگی و رستورانی",
-        "slug": "guide-to-choosing-quality-coal",
-        "body_html": "<h2>مقدمه</h2><p>انتخاب زغال مناسب یکی از تصمیمات مهم برای هر مصرف‌کننده‌ای است، از خانوار‌هایی که برای باربیکیو آخر هفته به دنبال زغال باکیفیت هستند تا رستوران‌دارانی که روزانه به حجم زیادی زغال نیاز دارند. کیفیت زغال تأثیر مستقیمی بر طعم غذا، راحتی روشن شدن، و مدت زمان سوختن دارد.</p><h2>انواع زغال موجود در بازار</h2><p>در بازار ایران چند نوع زغال اصلی یافت می‌شود که هر کدام ویژگی‌های خاص خود را دارند:</p><h3>زغال چوب طبیعی</h3><p>این نوع زغال از سوختن کنترل‌شده چوب‌های سخت مانند بلوط، گردو و افرا تهیه می‌شود. زغال چوب طبیعی دود کمتر، بوی بهتر و طعم اصیل‌تری دارد و برای پخت‌های حساس بهترین گزینه است.</p><h3>زغال بامبو</h3><p>بامبو سریع‌تر از چوب‌های سخت سنتی می‌سوزد و گرمای یکنواختی تولید می‌کند. این ویژگی آن را برای کباب‌پز‌های حرفه‌ای محبوب کرده است. زغال بامبو معمولاً خاکستر کمتری تولید می‌کند.</p><h3>زغال فشرده (بریکت)</h3><p>زغال‌های فشرده یا بریکت از باقی‌مانده‌های چوب فشرده ساخته می‌شوند و زمان سوختن طولانی‌تری دارند. این نوع زغال برای پخت‌های طولانی‌مدت مناسب‌تر است.</p><h2>معیارهای ارزیابی کیفیت زغال</h2><p>هنگام خرید زغال به چند نکته کلیدی توجه کنید:</p><ul><li><strong>رنگ و ظاهر:</strong> زغال باکیفیت باید سیاه یکنواخت و سنگین باشد. زغال‌های خاکستری یا سبک نشان‌دهنده سوختن ناقص هستند.</li><li><strong>سختی:</strong> زغال خوب نباید به راحتی خرد شود. اگر هنگام حمل و نقل خاکستر زیادی تولید می‌کند، کیفیت پایینی دارد.</li><li><strong>بوی هنگام سوختن:</strong> زغال بی‌کیفیت معمولاً بوی تند و نامطبوعی تولید می‌کند که به غذا منتقل می‌شود.</li><li><strong>دقت سوختن:</strong> زغال خوب باید یکنواخت بسوزد و حرارت ثابتی ارائه دهد.</li></ul><h2>نکات نگهداری و ذخیره‌سازی</h2><p>برای حفظ کیفیت زغال، آن را در مکانی خشک و دور از رطوبت نگهداری کنید. رطوبت می‌تواند باعث کاهش کیفیت سوختن و تولید دود بیشتر شود. بسته‌بندی محکم و دربسته بهترین راه برای جلوگیری از جذب رطوبت است.</p><h2>نتیجه‌گیری</h2><p>انتخاب زغال مناسب نیازمند دقت و توجه به جزئیات است. با شناخت انواع زغال و معیارهای کیفیت، می‌توانید بهترین انتخاب را برای نیاز خود داشته باشید. از خرید زغال‌های ارزان قیمت اما بی‌کیفیت پرهیز کنید، زیرا نه تنها نتیجه پخت را تحت تأثیر قرار می‌دهند، بلکه ممکن است سلامتی شما را نیز به خطر بیندازند.</p>",
-        "hashtags": "#زغال #باربیکیو #رستوران #کباب #طراحی",
+        "topic": "لینوکس",
+        "title": "راهنمای کامل مدیریت فایل‌ها در لینوکس برای مبتدی‌ها",
+        "body_html": """
+            <h2>مدیریت فایل‌ها در لینوکس</h2>
+            <p>در لینوکس، تقریباً همه چیز فایل است؛ از خود فایل‌های متنی تا دستگاه‌ها و حتی برخی تنظیمات سیستم.</p>
+            <h3>دستورهای پایه</h3>
+            <ul>
+                <li><code>ls</code> برای مشاهده محتویات دایرکتوری</li>
+                <li><code>cp</code> برای کپی کردن فایل</li>
+                <li><code>mv</code> برای جابه‌جایی یا تغییر نام</li>
+                <li><code>rm</code> برای حذف</li>
+                <li><code>mkdir</code> برای ساخت پوشه</li>
+            </ul>
+        """,
+        "summary": "مروری عملی بر دستورهای اصلی مدیریت فایل در لینوکس برای کاربران مبتدی.",
+        "category": "Linux",
+        "poster": "رامان",
+        "cover_image_url": "https://example.com/images/linux-files.jpg",
+        "instagram_caption": "مدیریت فایل‌ها در لینوکس از پایه تا کاربردی 🚀\n\nاگر تازه وارد لینوکس شدی، این پست برای توئه.",
+        "hashtags": "#linux #debian #terminal #cli #sysadmin",
+        "website_status": "published",
+        "meta_title": "راهنمای مدیریت فایل‌ها در لینوکس",
+        "meta_description": "دستورهای پایه و کاربردی مدیریت فایل‌ها در لینوکس برای مبتدی‌ها.",
+        "og_title": "مدیریت فایل‌ها در لینوکس",
+        "og_description": "با دستورهای اصلی لینوکس برای مدیریت فایل‌ها آشنا شو.",
+        "og_image": "https://example.com/images/linux-files-og.jpg",
+        "source_type": "seed",
+        "blog_enabled": True,
+        "instagram_enabled": True,
+        "ai_prompt": None,
+        "ai_payload": None,
     },
     {
-        "topic": "تکنولوژی تولید زغال",
-        "title": "تکنولوژی‌های نوین در تولید زغال: از مزرعه چوب تا محصول نهایی",
-        "slug": "modern-coal-production-technology",
-        "body_html": "<h2>مقدمه</h2><p>صنعت تولید زغال در سال‌های اخیر تحولات چشمگیری داشته است. تکنولوژی‌های نوین نه تنها کیفیت محصول نهایی را بهبود بخشیده‌اند، بلکه تأثیرات زیست‌محیطی فرآیند تولید را نیز کاهش داده‌اند. در این پست به بررسی فناوری‌های پیشرو در صنعت زغال می‌پردازیم.</p><h2>فرآیند کاربانیسمود (Carbonization)</h2><p>کاربانیسمود یا زغال‌سازی فرآیند اصلی تبدیل چوب به زغال است. در روش سنتی، این فرآیند در تپه‌های خاکی انجام می‌شد که کنترل دما و کیفیت بسیار دشوار بود. اما تکنولوژی‌های جدید کوره‌های زغال‌سازی امکان کنترل دقیق دما، زمان و شرایط اکسیژن را فراهم کرده‌اند.</p><p>کوره‌های مدرن زغال‌سازی می‌توانند دما را در محدوده ۴۰۰ تا ۶۰۰ درجه سانتی‌گراد با دقت بالا نگه دارند. این کنترل دقیق باعث می‌شود محصول نهایی یکنواخت‌تر و باکیفیت‌تر باشد.</p><h2>فناوری بایوچار (Biochar)</h2><p>بایوچار نوع پیشرفته‌تری از زغال است که نه تنها برای مصرف انسانی مناسب است، بلکه اثرات مثبتی بر خاک و محیط زیست نیز دارد. فرآیند تولید بایوچار مشابه زغال سنتی است اما با کنترل‌های سخت‌گیرانه‌تر و دمای بالاتر.</p><h3>مزایای زیست‌محیطی بایوچار</h3><ul><li>جذب و ذخیره‌سازی کربن در خاک برای صدها سال</li><li>بهبود ظرفیت نگهداری آب در خاک</li><li>افزایش حاصلخیزی خاک بدون استفاده از کود شیمیایی</li><li>کاهش انتشار متان از زمین‌های کشاورزی</li></ul><h2>تجهیزات مدرن پردازش و بسته‌بندی</h2><p>خطوط تولید مدرن زغال از سیستم‌های آسیاب‌سازی مکانیکی، پرس‌های هیدرولیکی و دستگاه‌های بسته‌بندی اتوماتیک استفاده می‌کنند. این تجهیزات باعث افزایش سرعت تولید، کاهش ضایعات و استانداردسازی اندازه و وزن محصول نهایی می‌شوند.</p><h2>کنترل کیفیت در خط تولید</h2><p>در کارخانه‌های مدرن، هر محموله زغال قبل از بسته‌بندی آزمایش‌های مختلفی را پشت سر می‌گذارد: آزمایش درصد خاکستر، آزمایش زمان سوختن، آزمایش میزان رطوبت و آزمایش طیف سنجی برای تعیین محتوای کربن.</p><h2>نتیجه‌گیری</h2><p>تکنولوژی‌های نوین تولید زغال، این صنعت سنتی را به یک صنعت پیشرفته و علمی تبدیل کرده‌اند. از کوره‌های هوشمند گرفته تا سیستم‌های بسته‌بندی اتوماتیک، هر بخش از فرآیند تولید بهبود یافته است. این پیشرفت‌ها به نفع تولیدکنندگان و مصرف‌کنندگان است و در نهایت به محصول نهایی باکیفیت‌تر و قابل‌اطمینان‌تر منجر می‌شود.</p>",
-        "hashtags": "#تکنولوژی #بایوچار #تولید #صنعت #نوآوری",
+        "topic": "شبکه",
+        "title": "پینگ، Traceroute و DNS؛ سه ابزار حیاتی در عیب‌یابی شبکه",
+        "body_html": """
+            <h2>عیب‌یابی شبکه</h2>
+            <p>وقتی یک سرویس در دسترس نیست، اولین سؤال این است: مشکل از DNS است، مسیر شبکه است، یا خود سرویس؟</p>
+            <p>با <code>ping</code>، <code>traceroute</code> و <code>dig</code> می‌توانی خیلی سریع لایه‌ی مشکل را پیدا کنی.</p>
+        """,
+        "summary": "آشنایی با سه ابزار کلیدی برای تشخیص سریع مشکلات شبکه.",
+        "category": "Networking",
+        "poster": "رامان",
+        "cover_image_url": "https://example.com/images/network-troubleshooting.jpg",
+        "instagram_caption": "سه ابزار طلایی برای عیب‌یابی شبکه: ping، traceroute و DNS 🔧",
+        "hashtags": "#networking #dns #ping #traceroute #linux",
+        "website_status": "published",
+        "meta_title": "عیب‌یابی شبکه با ping و traceroute",
+        "meta_description": "یاد بگیر چطور مشکلات شبکه را با ابزارهای پایه عیب‌یابی کنی.",
+        "og_title": "عیب‌یابی شبکه با ابزارهای پایه",
+        "og_description": "ping، traceroute و DNS را برای تشخیص سریع مشکل یاد بگیر.",
+        "og_image": "https://example.com/images/network-troubleshooting-og.jpg",
+        "source_type": "seed",
+        "blog_enabled": True,
+        "instagram_enabled": True,
+        "ai_prompt": None,
+        "ai_payload": None,
     },
     {
-        "topic": "محیط زیست و صنعت زغال",
-        "title": "صنعت زغال و محیط زیست: چالش‌ها، فرصت‌ها و راه‌حل‌های پایدار",
-        "slug": "coal-industry-environment-sustainability",
-        "body_html": "<h2>مقدمه</h2><p>صنعت زغال همواره در مرکز بحث‌های زیست‌محیطی قرار داشته است. از یک طرف، تولید ناپایدار چوب می‌تواند به تخریب جنگل‌ها منجر شود. از سوی دیگر، زغال به عنوان یک سوخت طبیعی و قابل بازیافت، پتانسیل‌های بسیاری برای توسعه پایدار دارد. مهم این است که بدانیم چگونه این صنعت را مدیریت کنیم.</p><h2>تأثیرات زیست‌محیطی تولید زغال</h2><p>مانند هر صنعت دیگری، تولید زغال اثرات زیست‌محیطی خود را دارد. اما بسیاری از این اثرات با مدیریت صحیح و استفاده از تکنولوژی‌های مناسب قابل کاهش هستند.</p><h3>تخریب جنگل‌ها و روش‌های مقابله</h3><p>بزرگ‌ترین نگرانی زیست‌محیطی مرتبط با زغال، ارتباط آن با تخریب جنگل‌ها است. اما در واقع، بیشتر زغال موجود در بازار از ضایعات چوب، بقایای کشاورزی و منابع جنگلداری مدیریت‌شده تولید می‌شود، نه از قطع درختان زنده.</p><p>استفاده از گواهینامه‌های استاندارد جنگلداری مانند FSC و SFI اطمینان می‌دهد که منابع چوب از مزارع و جنگل‌های مدیریت‌شده تأمین می‌شوند.</p><h2>زغال به عنوان راه‌حل اقلیمی</h2><p>شاید باورنکردنی به نظر برسد، اما زغال (به ویژه بایوچار) یکی از راه‌حل‌های موجود برای مقابله با تغییرات اقلیمی است. بایوچار می‌تواند کربن را برای قرن‌ها در خاک نگه دارد و از بازگشت آن به جو جلوگیری کند.</p><h3>چرخه کربن در تولید زغال پایدار</h3><ul><li>درختان در طول رشد خود CO₂ را جذب می‌کنند</li><li>تبدیل چوب به زغال کربن را در حالت جامد تثبیت می‌کند</li><li>بایوچار در خاک به مدت صدها سال باقی می‌ماند</li><li>تکنولوژی‌های مدرن کوره‌ها انتشار گازهای گلخانه‌ای را تا ۹۰٪ کاهش می‌دهند</li></ul><h2>مسئولیت اجتماعی تولیدکنندگان</h2><p>تولیدکنندگان پیشرو در صنعت زغال متعهد به رعایت استانداردهای زیست‌محیطی هستند. این تعهدات شامل استفاده از انرژی‌های تجدیدپذیر در فرآیند تولید، مدیریت پسماند، کاهش انتشار و سرمایه‌گذاری در تحقیقات پایدار است.</p><h2>نتیجه‌گیری</h2><p>صنعت زغال به خودی خود دشمن محیط زیست نیست. مشکل از روش‌های سنتی و غیرمدیریت‌شده تولید ناشی می‌شود. با به‌کارگیری تکنولوژی‌های مدرن، منابع پایدار و رعایت استانداردهای زیست‌محیطی، این صنعت می‌تواند نه تنها بی‌ضرر بلکه مفید برای محیط زیست باشد.</p>",
-        "hashtags": "#محیط_زیست #پایداری #بایوچار #تغییر_اقلیمی #سبز",
+        "topic": "برنامه‌نویسی",
+        "title": "چرا async در پایتون برای کارهای I/O عالی است؟",
+        "body_html": """
+            <h2>Async در پایتون</h2>
+            <p>وقتی کارهای تو بیشتر I/O-bound هستند مثل دیتابیس، شبکه یا API call، async می‌تواند throughput را به‌طور محسوسی بهتر کند.</p>
+            <p>اما برای محاسبات CPU-bound، معمولاً async راه‌حل اصلی نیست.</p>
+        """,
+        "summary": "توضیح ساده و فنی درباره مزیت‌های async در پایتون برای I/O.",
+        "category": "Programming",
+        "poster": "رامان",
+        "cover_image_url": "https://example.com/images/python-async.jpg",
+        "instagram_caption": "Async در پایتون یعنی بهره‌وری بیشتر در کارهای I/O ⚡",
+        "hashtags": "#python #asyncio #programming #backend #api",
+        "website_status": "published",
+        "meta_title": "چرا async در پایتون مهم است؟",
+        "meta_description": "مزیت‌های async برای عملیات I/O در پایتون را یاد بگیر.",
+        "og_title": "مزیت‌های async در پایتون",
+        "og_description": "اگر با API، دیتابیس یا شبکه کار می‌کنی، async را بشناس.",
+        "og_image": "https://example.com/images/python-async-og.jpg",
+        "source_type": "seed",
+        "blog_enabled": True,
+        "instagram_enabled": True,
+        "ai_prompt": None,
+        "ai_payload": None,
     },
     {
-        "topic": "مقایسه روش‌های باربیکیو",
-        "title": "مقایسه کامل روش‌های پخت روی آتش: کدام زغال برای کدام غذا مناسب است؟",
-        "slug": "barbecue-coal-comparison-guide",
-        "body_html": "<h2>مقدمه</h2><p>پخت روی آتش یکی از لذت‌بخش‌ترین تجربه‌های آشپزی است. اما انتخاب نوع زغال و روش پخت تأثیر چشمگیری بر نتیجه نهایی دارد. در این پست به بررسی دقیق انواع روش‌های پخت روی آتش و زغال‌های مناسب هر کدام می‌پردازیم.</p><h2>پخت مستقیم vs پخت غیرمستقیم</h2><p>دو روش اصلی پخت روی آتش وجود دارد:</p><h3>پخت مستقیم (Direct Grilling)</h3><p>در این روش، غذا مستقیماً روی توری و بالای زغال‌های در حال سوختن قرار می‌گیرد. این روش برای غذاهایی با ضخامت کم مانند کباب تکه‌ای، استیک، برگر و سبزیجات مناسب است. دما معمولاً بین ۲۵۰ تا ۳۵۰ درجه سانتی‌گراد است.</p><p><strong>بهترین زغال:</strong> برای پخت مستقیم، زغالی با حرارت بالا و زمان سوختن متوسط مناسب است. زغال بامبو و زغال چوب گردو انتخاب‌های عالی هستند.</p><h3>پخت غیرمستقیم (Indirect Grilling)</h3><p>در پخت غیرمستقیم، زغال‌ها به دو طرف توری منتقل می‌شوند و غذا در وسط قرار می‌گیرد. این روش برای پخت گوشت‌های بزرگ مانند راسته بره، مرغ کامل و تنه گوشت مناسب است. دما معمولاً ۱۲۰ تا ۲۰۰ درجه سانتی‌گراد است.</p><p><strong>بهترین زغال:</strong> برای پخت غیرمستقیم، زغال‌هایی با زمان سوختن طولانی‌تر نیاز است. بریکت‌های فشرده و زغال چوب بلوط انتخاب‌های مناسبی هستند.</p><h2>تأثیر نوع زغال بر طعم غذا</h2><p>نوع چوب مورد استفاده در تولید زغال تأثیر مستقیمی بر طعم غذا دارد:</p><ul><li><strong>بلوط:</strong> طعم ملایم و متعادل، مناسب برای انواع گوشت</li><li><strong>گردو:</strong> طعم غنی و قوی، مناسب برای گوشت قرمز</li><li><strong>افرا:</strong> طعم شیرین ملایم، عالی برای مرغ و ماهی</li><li><strong>میپل:</strong> طعم متوسط و دود ملایم، مناسب برای سبزیجات و میگو</li><li><strong>بامبو:</strong> طعم خنثی، مناسب وقتی می‌خواهید طعم ادویه‌ها برجسته شود</li></ul><h2>نکات حرفه‌ای برای پخت بهتر</h2><ul><li>زغال را حداقل ۲۰ دقیقه قبل از گذاشتن غذا روشن کنید و صبر کنید تا خاکستری شود</li><li>از زغال‌های فشرده برای پخت طولانی‌مدت استفاده کنید</li><li>برای طعم دودی بیشتر، چند تکه چوب معطر کنار زغال‌ها بگذارید</li><li>دمای کباب‌پز را با تنظیم محل باز و بسته بودن دریچه‌ها کنترل کنید</li></ul><h2>نتیجه‌گیری</h2><p>هیچ زغال «بهترین» مطلق وجود ندارد. بهترین زغال زغالی است که با نوع غذا، روش پخت و ذائقه شما هماهنگ باشد. با آزمایش و تجربه، می‌توانید ترکیب ایده‌آل خود را پیدا کنید.</p>",
-        "hashtags": "#باربیکیو #کباب #آشپزی #پخت_روی_آتش #حرفه_ای",
+        "topic": "DevOps",
+        "title": "Docker چیست و چرا برای محیط‌های توسعه و production مهم است؟",
+        "body_html": """
+            <h2>Docker</h2>
+            <p>Docker کمک می‌کند وابستگی‌های برنامه را در یک محیط قابل حمل و تکرارپذیر بسته‌بندی کنی.</p>
+            <p>این یعنی dev و production بیشتر شبیه هم می‌شوند و خطاهای محیطی کمتر می‌شود.</p>
+        """,
+        "summary": "مقدمه‌ای کاربردی بر Docker و نقش آن در توسعه و استقرار.",
+        "category": "DevOps",
+        "poster": "رامان",
+        "cover_image_url": "https://example.com/images/docker.jpg",
+        "instagram_caption": "Docker یکی از ستون‌های اصلی دنیای DevOps است 🐳",
+        "hashtags": "#docker #devops #containers #linux #backend",
+        "website_status": "published",
+        "meta_title": "Docker چیست؟",
+        "meta_description": "با مفهوم Docker و کاربرد آن در dev و production آشنا شو.",
+        "og_title": "Docker برای توسعه و production",
+        "og_description": "چرا Docker برای محیط‌های توسعه و استقرار مهم است؟",
+        "og_image": "https://example.com/images/docker-og.jpg",
+        "source_type": "seed",
+        "blog_enabled": True,
+        "instagram_enabled": True,
+        "ai_prompt": None,
+        "ai_payload": None,
     },
     {
-        "topic": "تجارت زغال",
-        "title": "راهنمای شروع کسب‌وکار در صنعت زغال: از تولید تا فروش",
-        "slug": "starting-coal-business-guide",
-        "body_html": "<h2>مقدمه</h2><p>صنعت زغال یکی از صنایع پردرآمد و در حال رشد در خاورمیانه است. با افزایش فرهنگ باربیکیو و توسعه صنعت رستوراداری، تقاضا برای زغال باکیفیت به طور پیوسته در حال افزایش است. در این پست مراحل راه‌اندازی و مدیریت یک کسب‌وکار موفق در صنعت زغال را بررسی می‌کنیم.</p><h2>تحقیقات بازار و نیازسنجی</h2><p>قبل از هر اقدامی، باید بازار هدف خود را بشناسید. بازار زغال به چند دسته اصلی تقسیم می‌شود:</p><ul><li><strong>بازار مصرف خانگی:</strong> مصرف‌کنندگان عادی که برای باربیکیوهای خانگی زغال می‌خرند. حجم خرید کم اما تعداد خریدار زیاد.</li><li><strong>بازار رستوران و کافه:</strong> رستوران‌ها و کافه‌هایی که روزانه به زغال نیاز دارند. حجم خرید بالا و تکرار سفارش منظم.</li><li><strong>بازار صنعتی:</strong> کارخانه‌ها و تولیدکنندگانی که زغال به عنوان ماده اولیه یا سوخت استفاده می‌کنند. بزرگ‌ترین حجم خرید اما قیمت رقابتی پایین‌تر.</li></ul><h2>مدل‌های کسب‌وکار در صنعت زغال</h2><h3>تولید و فروش</h3><p>این مدل نیاز به سرمایه بیشتری دارد اما سودآوری بالاتری دارد. شامل خرید تجهیزات کوره، تأمین مواد اولیه، فرآیند تولید و بسته‌بندی است.</p><h3>توزیع و فروش عمده</h3><p>در این مدل، شما از تولیدکنندگان بزرگ خرید کرده و به فروشندگان خرده‌فروش یا مصرف‌کنندگان عمده می‌فروشید. نیاز به سرمایه انبارداری و لجستیک دارد.</p><h3>برندسازی و فروش آنلاین</h3><p>یک مدل جدید و رو به رشد که در آن برند خود را می‌سازید و از طریق شبکه‌های اجتماعی و فروشگاه آنلاین مستقیماً به مصرف‌کننده می‌فروشید. نیاز به سرمایه تولیدی کمتری دارد.</p><h2>مراحل راه‌اندازی</h2><ol><li><strong>تحقیقات بازار:</strong> نیازهای محلی و رقبا را بشناسید</li><li><strong>تدوین طرح تجاری:</strong> مدل کسب‌وکار، منابع مالی و پیش‌بینی درآمد</li><li><strong>مجوزها و تأییدیه‌ها:</strong> مجوزهای بهداشتی، زیست‌محیطی و تجاری</li><li><strong>تأمین منابع:</strong> مواد اولیه، تجهیزات، نیروی انسانی</li><li><strong>بسته‌بندی و برندسازی:</strong> طراحی برند و بسته‌بندی حرفه‌ای</li><li><strong>توزیع و فروش:</strong> کانال‌های فروش و بازاریابی</li></ol><h2>چالش‌های اصلی</h2><p>صنعت زغال با چالش‌هایی مانند نوسانات قیمت مواد اولیه، قوانین زیست‌محیطی سخت‌گیرانه‌تر، رقابت شدید و تغییر ذائقه مصرف‌کنندگان مواجه است. موفق در این کسب‌وکار کسی است که بتواند با کیفیت‌سازی و نوآوری، این چالش‌ها را به فرصت تبدیل کند.</p><h2>نتیجه‌گیری</h2><p>صنعت زغال پتانسیل رشد بالایی دارد و با برنامه‌ریزی مناسب و تمرکز بر کیفیت، می‌توان کسب‌وکاری سودآور و پایدار در این حوزه ایجاد کرد. کلید موفقیت، شناخت دقیق بازار، تعهد به کیفیت و نوآوری مداوم در محصول و خدمات است.</p>",
-        "hashtags": "#کسب_و_کار #تجارت #زغال #کارآفرینی #بازرگانی",
+        "topic": "امنیت",
+        "title": "اصول اولیه امنیت لینوکس که هر مدیر سرور باید بداند",
+        "body_html": """
+            <h2>امنیت پایه در لینوکس</h2>
+            <p>امنیت واقعی از تنظیمات ساده شروع می‌شود: یوزر کم‌دسترسی، SSH امن، فایروال، آپدیت منظم و لاگ‌خوانی.</p>
+            <p>اگر این پایه‌ها درست نباشند، ابزارهای پیچیده هم معجزه نمی‌کنند.</p>
+        """,
+        "summary": "مهم‌ترین اصول ابتدایی امنیت در سرورهای لینوکسی.",
+        "category": "Security",
+        "poster": "رامان",
+        "cover_image_url": "https://example.com/images/linux-security.jpg",
+        "instagram_caption": "امنیت لینوکس از پایه‌های ساده شروع می‌شود 🔐",
+        "hashtags": "#security #linux #server #ssh #hardening",
+        "website_status": "published",
+        "meta_title": "اصول امنیت لینوکس",
+        "meta_description": "با پایه‌های امنیت سرور لینوکسی آشنا شو.",
+        "og_title": "امنیت پایه در لینوکس",
+        "og_description": "برای هر مدیر سرور، امنیت از همین اصول اولیه شروع می‌شود.",
+        "og_image": "https://example.com/images/linux-security-og.jpg",
+        "source_type": "seed",
+        "blog_enabled": True,
+        "instagram_enabled": True,
+        "ai_prompt": None,
+        "ai_payload": None,
     },
 ]
 
 
-async def seed():
-    async with engine.begin() as conn:
-        result = await conn.execute(text("SELECT count(*) FROM posts"))
-        count = result.scalar_one()
-        if count > 0:
-            print(f"Database already has {count} posts. Skipping seed.")
-            return
+async def seed_posts() -> None:
+    db_url = settings.DATABASE_URL
+    if not db_url:
+        raise RuntimeError("DATABASE_URL is empty or not loaded.")
 
-        for data in ARTICLES:
-            await conn.execute(text("""
-                INSERT INTO posts (topic, title, slug, body_html, instagram_caption, hashtags,
-                                   website_status, instagram_status, instagram_media_id,
-                                   published_to_website_at, published_to_instagram_at,
-                                   created_at, updated_at)
-                VALUES (:topic, :title, :slug, :body_html, :instagram_caption, :hashtags,
-                        :website_status, :instagram_status, :instagram_media_id,
-                        :published_to_website_at, :published_to_instagram_at,
-                        :created_at, :updated_at)
-            """), {
-                "topic": data["topic"],
-                "title": data["title"],
-                "slug": data["slug"],
-                "body_html": data["body_html"],
-                "instagram_caption": None,
-                "hashtags": data["hashtags"],
-                "website_status": "published",
-                "instagram_status": "not_published",
-                "instagram_media_id": None,
-                "published_to_website_at": datetime.now(timezone.utc),
-                "published_to_instagram_at": None,
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc),
-            })
-            print(f"Inserted: {data['title']} (slug={data['slug']})")
+    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
+    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    async with engine.connect() as conn:
-        result = await conn.execute(text("SELECT count(*) FROM posts"))
-        print(f"\nSuccessfully seeded {result.scalar_one()} articles!")
+    try:
+        async with SessionLocal() as db:
+            inserted = 0
+            skipped = 0
+
+            for item in POSTS:
+                slug = slugify(item["title"])
+
+                exists_stmt = text("SELECT id FROM posts WHERE slug = :slug LIMIT 1")
+                result = await db.execute(exists_stmt, {"slug": slug})
+                existing = result.scalar_one_or_none()
+
+                if existing is not None:
+                    print(f"Skipped existing post: {slug}")
+                    skipped += 1
+                    continue
+
+                post = Post(
+                    topic=item["topic"],
+                    title=item["title"],
+                    slug=slug,
+                    body_html=item["body_html"],
+                    summary=item["summary"],
+                    category=item["category"],
+                    poster=item["poster"],
+                    cover_image_url=item["cover_image_url"],
+                    instagram_caption=item["instagram_caption"],
+                    hashtags=item["hashtags"],
+                    website_status=item["website_status"],
+                    meta_title=item["meta_title"],
+                    meta_description=item["meta_description"],
+                    og_title=item["og_title"],
+                    og_description=item["og_description"],
+                    og_image=item["og_image"],
+                    source_type=item["source_type"],
+                    blog_enabled=item["blog_enabled"],
+                    instagram_enabled=item["instagram_enabled"],
+                    ai_prompt=item["ai_prompt"],
+                    ai_payload=item["ai_payload"],
+                )
+
+                db.add(post)
+                inserted += 1
+
+            await db.commit()
+
+            print(f"Seed completed. Inserted: {inserted}, Skipped: {skipped}")
+
+    except SQLAlchemyError as exc:
+        raise RuntimeError(f"Database error while seeding posts: {exc}") from exc
+    finally:
+        await engine.dispose()
 
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    asyncio.run(seed_posts())

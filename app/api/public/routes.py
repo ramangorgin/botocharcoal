@@ -3,8 +3,9 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.templating import Jinja2Templates
+from app.core.config import settings
 
-from app.db.session import get_db
+from app.db.session import get_db, AsyncSessionLocal
 from app.db.models import Post, MediaAsset
 
 router = APIRouter()
@@ -12,24 +13,26 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates/public")
 
 
-@router.get("/", response_class=HTMLResponse)
-async def home(request: Request, db: AsyncSession = Depends(get_db)):
-
-    result = await db.execute(
-        select(Post)
-        .where(Post.website_status == "published")
-        .order_by(Post.published_to_website_at.desc())
-        .limit(3)
-    )
-
-    posts = result.scalars().all()
+@router.get("/")
+async def home(request: Request):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Post)
+            .where(
+                Post.blog_enabled == True,
+                Post.website_status == "published"
+            )
+            .order_by(Post.created_at.desc())
+            .limit(6)
+        )
+        recent_posts = result.scalars().all()
 
     return templates.TemplateResponse(
         "home.html",
         {
             "request": request,
-            "posts": posts,
-        },
+            "recent_posts": recent_posts,
+        }
     )
 
 
@@ -45,7 +48,7 @@ async def blog_index(request: Request, db: AsyncSession = Depends(get_db)):
     posts = result.scalars().all()
 
     return templates.TemplateResponse(
-        "blog_index.html",
+        "blog/index.html",
         {
             "request": request,
             "posts": posts,
@@ -78,7 +81,7 @@ async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(ge
     images = media.scalars().all()
 
     return templates.TemplateResponse(
-        "blog_detail.html",
+        "blog/show.html",
         {
             "request": request,
             "post": post,

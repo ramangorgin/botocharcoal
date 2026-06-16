@@ -1,61 +1,72 @@
-"""Create the initial admin user.
-
-Usage:
-    python -m scripts.create_admin
-
-Environment variables (or .env file):
-    ADMIN_USERNAME  — admin username (default: admin)
-    ADMIN_PASSWORD  — admin password (default: Admin@123456)
-    DATABASE_URL    — PostgreSQL connection string
-"""
-
 import asyncio
 import os
 import sys
 from pathlib import Path
 
-# Ensure project root is on sys.path so imports work
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
-sys.path.insert(0, str(PROJECT_ROOT))
-
+from dotenv import load_dotenv
 from sqlalchemy import text
-from app.db.session import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+# project root
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# load .env explicitly
+load_dotenv(PROJECT_ROOT / ".env")
+
 from app.core.config import settings
 from app.core.security import hash_password
 from app.db.models.user import User
 
-DEFAULT_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-DEFAULT_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin@123456")
+
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@123456")
+
+
+def validate_database_url(url: str) -> None:
+    if not url:
+        raise RuntimeError("DATABASE_URL is empty or not loaded.")
+    if "://" not in url:
+        raise RuntimeError(f"DATABASE_URL looks invalid: {url!r}")
 
 
 async def create_admin_user() -> None:
-    engine = create_async_engine(settings.DATABASE_URL, pool_pre_ping=True)
-    AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession)
+    db_url = settings.DATABASE_URL
+    validate_database_url(db_url)
 
-    async with AsyncSessionLocal() as db:
-        # Check if admin already exists
-        result = await db.execute(text(f"SELECT id FROM users WHERE username = :u"), {"u": DEFAULT_USERNAME})
-        existing = result.scalar_one_or_none()
+    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
+    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-        if existing:
-            print(f"Admin user '{DEFAULT_USERNAME}' already exists (id={existing}). Skipping.")
-            await engine.dispose()
-            return
+    try:
+        async with SessionLocal() as db:
+            # check if user already exists
+            stmt = text("SELECT id FROM users WHERE username = :u LIMIT 1")
+            result = await db.execute(stmt, {"u": ADMIN_USERNAME})
+            existing = result.scalar_one_or_none()
 
-        password_hash = hash_password(DEFAULT_PASSWORD)
-        admin = User(
-            username=DEFAULT_USERNAME,
-            password_hash=password_hash,
-            is_active=True,
-        )
-        db.add(admin)
-        await db.commit()
-        await db.refresh(admin)
+            if existing is not None:
+                print(f"Admin user already exists: {ADMIN_USERNAME}")
+                return
 
-        print(f"Created admin user '{DEFAULT_USERNAME}' with id={admin.id}")
-        print(f"Password: {DEFAULT_PASSWORD}")
-        print("Please change this password after first login.")
+            # create admin user
+            user = User(
+                username=ADMIN_USERNAME,
+                password_hash=hash_password(ADMIN_PASSWORD),
+                is_admin=True,
+            )
 
+            db.add(user)
+            await db.commit()
+
+            print("Admin user created successfully.")
+            print(f"Username: {ADMIN_USERNAME}")
+            print(f"Password: {ADMIN_PASSWORD}")
+
+    except SQLAlchemyError as exc:
+        raise RuntimeError(f"Database error while creating admin user: {exc}") from exc
+    finally:
         await engine.dispose()
 
 

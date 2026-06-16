@@ -15,7 +15,6 @@ templates = Jinja2Templates(directory="app/templates/admin")
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str | None = None):
-
     return templates.TemplateResponse(
         "login.html",
         {
@@ -32,7 +31,6 @@ async def login(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-
     result = await db.execute(
         select(User).where(User.username == username)
     )
@@ -63,9 +61,6 @@ async def login(
 
 @router.get("/logout")
 async def logout():
-
     response = RedirectResponse("/admin/login", status_code=302)
-
     response.delete_cookie("admin_session")
-
     return response
