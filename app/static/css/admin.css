@@ -34,6 +34,14 @@
   --transition-slow: 0.5s ease;
 }
 
+.channel-card {
+  background-color: #B0B0B0 !important;
+  color: black !important;
+}
+.channel-card.svg {
+  background-color: #B0B0B0 !important;
+}
+
 /* Base Reset */
 *,
 *::before,

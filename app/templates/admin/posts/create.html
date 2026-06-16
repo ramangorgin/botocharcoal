@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}{{ title|default('ایجاد پست جدید') }} | پنل مدیریت{% endblock %}
 
 {% block header_title %}{{ title|default('ایجاد پست جدید') }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/vendors/select2/select2.min.css">
-<link rel="stylesheet" href="/static/vendors/jalalidatepicker/jalalidatepicker.min.css">
+<link rel="stylesheet" href="/static/css/select2.min.css">
+<link rel="stylesheet" href="/static/css/jalalidatepicker.min.css">
 {% endblock %}
 
 {% block content %}
@@ -18,34 +18,44 @@
         <input type="hidden" name="content_item_id" value="{{ content_item_id|default('') }}">
         {% endif %}
 
-            <!-- Channel Selection Cards -->
-            <div class="admin-form-group">
-                <label class="admin-form-label">کجا منتشر بشه؟</label>
-                <div class="channel-selector-grid">
-                    <label class="channel-card {% if blog_enabled %}active{% endif %}" for="blogEnabled">
-                        <input type="checkbox" name="blog_enabled" id="blogEnabled" value="on"
-                            {% if blog_enabled or not post %}checked{% endif %}
-                            onchange="updateChannelUI('blog', this.checked)">
-                        <div class="channel-icon">🌐</div>
-                        <div class="channel-info">
-                            <span class="channel-name">وبلاگ سایت</span>
-                            <span class="channel-desc">انتشار به عنوان پست بلاگ</span>
-                        </div>
-                    </label>
+        <!-- Channel Selection Cards -->
+        <div class="admin-form-group">
+            <label class="admin-form-label">کجا منتشر بشه؟</label>
+            <div class="channel-selector-grid">
+                <label class="channel-card {% if blog_enabled %}active{% endif %}" for="blogEnabled">
+                    <input type="checkbox" name="blog_enabled" id="blogEnabled" value="on"
+                        {% if blog_enabled or not post %}checked{% endif %}
+                        onchange="updateChannelUI('blog', this.checked)">
+                    <div class="channel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </div>
+                    <div class="channel-info">
+                        <span class="channel-name">وبلاگ سایت</span>
+                        <span class="channel-desc">انتشار به عنوان پست بلاگ</span>
+                    </div>
+                </label>
 
-                    <label class="channel-card {% if instagram_enabled %}active{% endif %}" for="instagramEnabled">
-                        <input type="checkbox" name="instagram_enabled" id="instagramEnabled" value="on"
-                            {% if instagram_enabled %}checked{% endif %}
-                            onchange="updateChannelUI('instagram', this.checked)">
-                        <div class="channel-icon">📸</div>
-                        <div class="channel-info">
-                            <span class="channel-name">اینستاگرام</span>
-                            <span class="channel-desc">آماده‌سازی کپشن و تصاویر</span>
-                        </div>
-                    </label>
-                </div>
+                <label class="channel-card {% if instagram_enabled %}active{% endif %}" for="instagramEnabled">
+                    <input type="checkbox" name="instagram_enabled" id="instagramEnabled" value="on"
+                        {% if instagram_enabled %}checked{% endif %}
+                        onchange="updateChannelUI('instagram', this.checked)">
+                    <div class="channel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                        </svg>
+                    </div>
+                    <div class="channel-info">
+                        <span class="channel-name">اینستاگرام</span>
+                        <span class="channel-desc">آماده‌سازی کپشن و تصاویر</span>
+                    </div>
+                </label>
             </div>
-
         </div>
 
         <div class="admin-divider"></div>
@@ -56,20 +66,20 @@
         <div id="blogSection">
             <h3 class="admin-form-section__title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
                 اطلاعات پست وبلاگ
             </h3>
 
+            <!-- Row 1: Title + Slug -->
             <div class="admin-form-grid admin-form-grid--2col">
-                <!-- Title -->
                 <div class="admin-form-group">
                     <label for="title" class="admin-form-label">عنوان پست <span class="admin-required">*</span></label>
-                    <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="512" value="{{ post.title if post else (ci.blog_title if ci and ci.blog_title else '') }}">
+                    <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="255" value="{{ post.title if post else (ci.blog_title if ci and ci.blog_title else '') }}">
                 </div>
-
-                <!-- Slug -->
                 <div class="admin-form-group">
                     <label for="slug" class="admin-form-label">اسلاگ</label>
                     <input type="text" id="slug" name="slug" class="admin-form-input" placeholder="slug-auto-generated" value="{{ post.slug if post else (ci.blog_slug if ci and ci.blog_slug else '') }}">
@@ -77,21 +87,38 @@
                 </div>
             </div>
 
-            <div class="admin-form-grid admin-form-grid--3col">
-                <!-- Subject / Topic -->
+            <!-- Row 2: Topic + Category + Poster + Source Type -->
+            <div class="admin-form-grid admin-form-grid--4col">
                 <div class="admin-form-group">
                     <label for="topic" class="admin-form-label">موضوع</label>
-                    <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" value="{{ post.topic if post else (ci.blog_title if ci and ci.blog_title else '') }}">
+                    <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" maxlength="255" value="{{ post.topic if post else (ci.blog_title if ci and ci.blog_title else '') }}">
                 </div>
-
-                <!-- Publish Date -->
                 <div class="admin-form-group">
-                    <label for="publish_date" class="admin-form-label">تاریخ انتشار</label>
-                    <input type="text" id="publish_date" name="publish_date" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
+                    <label for="category" class="admin-form-label">دسته‌بندی</label>
+                    <input type="text" id="category" name="category" class="admin-form-input" placeholder="دسته‌بندی پست" maxlength="100" value="{{ post.category if post else '' }}">
+                </div>
+                <div class="admin-form-group">
+                    <label for="poster" class="admin-form-label">نویسنده / منتشرکننده</label>
+                    <input type="text" id="poster" name="poster" class="admin-form-input" placeholder="نام نویسنده" maxlength="255" value="{{ post.poster if post else '' }}">
+                </div>
+                <div class="admin-form-group">
+                    <label for="source_type" class="admin-form-label">منبع پست</label>
+                    <select id="source_type" name="source_type" class="admin-form-input">
+                        <option value="manual" {% if post and post.source_type == 'manual' %}selected{% elif not post %}selected{% endif %}>دستی</option>
+                        <option value="ai" {% if post and post.source_type == 'ai' %}selected{% endif %}>هوش مصنوعی</option>
+                        <option value="job" {% if post and post.source_type == 'job' %}selected{% endif %}>جاب</option>
+                        <option value="import" {% if post and post.source_type == 'import' %}selected{% endif %}>ایمپورت</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Publish Date + Website Status -->
+            <div class="admin-form-grid admin-form-grid--2col">
+                <div class="admin-form-group">
+                    <label for="published_to_website_at" class="admin-form-label">تاریخ انتشار</label>
+                    <input type="text" id="published_to_website_at" name="published_to_website_at" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
                     <small class="admin-form-hint">فرمت: YYYY/MM/DD</small>
                 </div>
-
-                <!-- Publish Status -->
                 <div class="admin-form-group">
                     <label for="website_status" class="admin-form-label">وضعیت انتشار</label>
                     <select id="website_status" name="website_status" class="admin-form-input">
@@ -102,13 +129,20 @@
                 </div>
             </div>
 
+            <!-- Summary -->
+            <div class="admin-form-group">
+                <label for="summary" class="admin-form-label">خلاصه پست</label>
+                <textarea id="summary" name="summary" class="admin-form-input admin-form-input--textarea" rows="4" placeholder="خلاصه یا excerpt پست...">{{ post.summary if post else '' }}</textarea>
+                <small class="admin-form-hint">چکیده کوتاه از محتوای پست برای لیست‌ها و SEO</small>
+            </div>
+
             <!-- Body (CKEditor) -->
             <div class="admin-form-section">
                 <label for="body_html" class="admin-form-label">محتوای پست <span class="admin-required">*</span></label>
                 <textarea id="body_html" name="body_html" rows="20" placeholder="محتوای پست را وارد کنید...">{{ post.body_html if post else (ci.blog_body if ci and ci.blog_body else '') }}</textarea>
             </div>
 
-            <!-- Blog Images -->
+            <!-- Cover Image -->
             <div class="admin-form-section">
                 <label class="admin-form-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px; color:var(--color-ember);">
@@ -116,22 +150,21 @@
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
-                    تصاویر وبلاگ (تصویر شاخص)
+                    تصویر شاخص (Cover Image)
                 </label>
 
-                <!-- Image Upload -->
-                <div class="image-upload-area" id="blogImageUploadArea">
-                    <input type="file" id="blog_image_file" class="blog-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
-                    <div class="image-upload-area__content" id="blogUploadContent">
+                <div class="image-upload-area" id="blogImageUploadArea" style="cursor:pointer;">
+                    <input type="file" id="blog_image_file" class="blog-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+                    <div class="image-upload-area__content" id="blogUploadContent" style="pointer-events:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        <p class="image-upload-area__text">تصاویر را اینجا بکشید یا کلیک کنید</p>
-                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت — چند انتخابی</p>
+                        <p class="image-upload-area__text">تصویر را اینجا بکشید یا کلیک کنید</p>
+                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
                     </div>
-                    <div class="image-upload-area__preview" id="blogImagePreview" style="display:none">
+                    <div class="image-upload-area__preview" id="blogImagePreview" style="display:none;">
                         <img id="blogPreviewImg" src="" alt="پیش‌نمایش">
                         <button type="button" class="image-upload-area__remove" id="removeBlogImageBtn" title="حذف تصویر">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
@@ -143,14 +176,12 @@
                 </div>
                 <small class="admin-form-error" id="blogImageError" style="display:none"></small>
 
-                <!-- OR URL Input -->
                 <div class="image-url-input-wrapper" style="margin-top:12px;">
-                    <label for="blog_image_url" class="admin-form-label" style="font-size:13px;">یا URL تصویر را وارد کنید</label>
-                    <input type="text" id="blog_image_url" name="blog_image_url" class="admin-form-input" placeholder="https://example.com/image.jpg" value="">
-                    <small class="admin-form-hint">URL تصویر شاخص وبلاگ</small>
+                    <label for="cover_image_url" class="admin-form-label" style="font-size:13px;">یا URL تصویر را وارد کنید</label>
+                    <input type="text" id="cover_image_url" name="cover_image_url" class="admin-form-input" placeholder="https://example.com/image.jpg" value="{{ post.cover_image_url if post else '' }}">
+                    <small class="admin-form-hint">URL تصویر شاخص (در مدل به‌عنوان cover_image_url ذخیره می‌شود)</small>
                 </div>
 
-                <!-- Uploaded/Fetched Images Preview -->
                 <div id="blogImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
             </div>
 
@@ -165,25 +196,22 @@
                 سئو (Meta Tags)
             </h3>
 
-            <div class="admin-form-grid">
+            <div class="admin-form-grid admin-form-grid--2col">
                 <div class="admin-form-group">
                     <label for="meta_title" class="admin-form-label">عنوان Meta</label>
-                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو (حداکثر ۶۰ کاراکتر)" maxlength="256" value="{{ post.meta_title if post else '' }}">
+                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو (حداکثر ۶۰ کاراکتر)" maxlength="255" value="{{ post.meta_title if post else '' }}">
                 </div>
-
                 <div class="admin-form-group">
                     <label for="meta_description" class="admin-form-label">توضیحات Meta</label>
-                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو (حداکثر ۱۶۰ کاراکتر)" maxlength="512">{{ post.meta_description if post else '' }}</textarea>
+                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو (حداکثر ۱۶۰ کاراکتر)" maxlength="500">{{ post.meta_description if post else '' }}</textarea>
                 </div>
-
                 <div class="admin-form-group">
                     <label for="og_title" class="admin-form-label">عنوان OG (شبکه‌های اجتماعی)</label>
-                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان هنگام اشتراک‌گذاری" maxlength="512" value="{{ post.og_title if post else '' }}">
+                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان هنگام اشتراک‌گذاری" maxlength="255" value="{{ post.og_title if post else '' }}">
                 </div>
-
                 <div class="admin-form-group">
                     <label for="og_description" class="admin-form-label">توضیحات OG</label>
-                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات هنگام اشتراک‌گذاری">{{ post.og_description if post else '' }}</textarea>
+                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات هنگام اشتراک‌گذاری" maxlength="500">{{ post.og_description if post else '' }}</textarea>
                 </div>
             </div>
 
@@ -191,19 +219,18 @@
             <div class="admin-form-section">
                 <label class="admin-form-label">تصویر OG (پیش‌نمایش شبکه‌های اجتماعی)</label>
 
-                <!-- OG Image Upload -->
-                <div class="image-upload-area" id="ogImageUploadArea">
+                <div class="image-upload-area" id="ogImageUploadArea" style="cursor:pointer;">
                     <input type="file" id="og_image_file" class="og-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
-                    <div class="image-upload-area__content" id="ogUploadContent">
+                    <div class="image-upload-area__content" id="ogUploadContent" style="pointer-events:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                         <p class="image-upload-area__text">تصویر OG را آپلود کنید</p>
                         <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
                     </div>
-                    <div class="image-upload-area__preview" id="ogImagePreview" style="display:none">
+                    <div class="image-upload-area__preview" id="ogImagePreview" style="display:none;">
                         <img id="ogPreviewImg" src="" alt="پیش‌نمایش OG">
                         <button type="button" class="image-upload-area__remove" id="removeOgImageBtn" title="حذف تصویر">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
@@ -215,7 +242,6 @@
                 </div>
                 <small class="admin-form-error" id="ogImageError" style="display:none"></small>
 
-                <!-- OG Image URL -->
                 <div class="image-url-input-wrapper" style="margin-top:12px;">
                     <label for="og_image" class="admin-form-label" style="font-size:13px;">یا URL تصویر OG را وارد کنید</label>
                     <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی" value="{{ post.og_image if post else '' }}">
@@ -261,6 +287,16 @@
                 <small class="admin-form-hint">هشتگ‌ها را تایپ کرده و Enter بزنید</small>
             </div>
 
+            <!-- Instagram Status -->
+            <div class="admin-form-group">
+                <label for="instagram_status" class="admin-form-label">وضعیت اینستاگرام</label>
+                <select id="instagram_status" name="instagram_status" class="admin-form-input">
+                    <option value="draft" {% if post and post.instagram_status == 'draft' %}selected{% elif not post %}selected{% endif %}>پیش‌نویس</option>
+                    <option value="ready" {% if post and post.instagram_status == 'ready' %}selected{% endif %}>آماده انتشار</option>
+                    <option value="published" {% if post and post.instagram_status == 'published' %}selected{% endif %}>منتشر شده</option>
+                </select>
+            </div>
+
             <!-- Instagram Images -->
             <div class="admin-form-section">
                 <label class="admin-form-label">
@@ -274,12 +310,11 @@
 
                 <p class="admin-form-hint" style="margin-bottom:12px;">تصاویر را آپلود کنید یا URL آن‌ها را وارد کنید</p>
 
-                <!-- Upload Area -->
-                <div class="image-upload-area" id="igImageUploadArea">
+                <div class="image-upload-area" id="igImageUploadArea" style="cursor:pointer;">
                     <input type="file" id="ig_image_file" class="ig-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
-                    <div class="image-upload-area__content" id="igUploadContent">
+                    <div class="image-upload-area__content" id="igUploadContent" style="pointer-events:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2v-4"/>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
@@ -289,15 +324,42 @@
                 </div>
                 <small class="admin-form-error" id="igImageError" style="display:none"></small>
 
-                <!-- URL Input -->
                 <div class="image-url-input-wrapper" style="margin-top:12px;">
                     <label for="ig_image_urls" class="admin-form-label" style="font-size:13px;">یا URL تصاویر را وارد کنید (هر URL در یک خط)</label>
                     <textarea id="ig_image_urls" name="ig_image_urls" class="admin-form-input admin-form-input--textarea" rows="4" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg">{{ ig_image_urls_text }}</textarea>
                     <small class="admin-form-hint">هر URL در یک خط جداگانه وارد کنید</small>
                 </div>
 
-                <!-- Instagram Images Preview -->
                 <div id="igImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+            </div>
+        </div>
+
+        <div class="admin-divider"></div>
+
+        <!-- ============================================ -->
+        <!-- AI SECTION                                   -->
+        <!-- ============================================ -->
+        <div id="aiSection" style="display:none;">
+            <h3 class="admin-form-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                    <path d="M12 2a10 10 0 0 1 10 10h-10V2z"/>
+                    <path d="M8.5 8.5a3.5 3.5 0 0 0 7 0 3.5 3.5 0 0 0-7 0z"/>
+                    <path d="M2 18c1.5-2 5-4 10-4s8.5 2 10 4"/>
+                </svg>
+                اطلاعات هوش مصنوعی
+            </h3>
+
+            <div class="admin-form-group">
+                <label for="ai_prompt" class="admin-form-label">پرامپت AI</label>
+                <textarea id="ai_prompt" name="ai_prompt" class="admin-form-input admin-form-input--textarea" rows="6" placeholder="پرامپت ارسال‌شده به AI...">{{ post.ai_prompt if post else '' }}</textarea>
+                <small class="admin-form-hint">پرامپت استفاده‌شده برای تولید محتوا (در صورت وجود)</small>
+            </div>
+
+            <div class="admin-form-group">
+                <label for="ai_payload" class="admin-form-label">پاسخ JSON (ai_payload)</label>
+                <textarea id="ai_payload" name="ai_payload" class="admin-form-input admin-form-input--textarea" rows="8" placeholder='{"key": "value", ...}'>{{ post.ai_payload | tojson if post and post.ai_payload else '' }}</textarea>
+                <small class="admin-form-hint">پاسخ کامل AI به فرمت JSON</small>
             </div>
         </div>
 
@@ -324,10 +386,10 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/vendors/jquery/jquery.min.js"></script>
-<script src="/static/vendors/select2/js/select2.min.js"></script>
-<script src="/static/vendors/jalalidatepicker/jalalidatepicker.min.js"></script>
-<script src="/static/vendors/ckeditor5/ckeditor.js"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/select2.min.js"></script>
+<script src="/static/js/jalalidatepicker.min.js"></script>
+<script src="/static/js/ckeditor.js"></script>
 <script src="/static/js/admin.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -343,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isChecked) {
             card.classList.add('active');
-            $(section).slideDown(300); // استفاده از slideDown برای UX بهتر
+            $(section).slideDown(300);
         } else {
             card.classList.remove('active');
             $(section).slideUp(300);
@@ -353,6 +415,23 @@ document.addEventListener('DOMContentLoaded', function() {
     window.toggleInstagramSection = function(checked) {
         document.getElementById('instagramSection').style.display = checked ? 'block' : 'none';
     };
+
+    // --- Show AI section if source_type is 'ai' ---
+    const sourceTypeSelect = document.getElementById('source_type');
+    const aiSection = document.getElementById('aiSection');
+    function toggleAISection() {
+        if (sourceTypeSelect && aiSection) {
+            if (sourceTypeSelect.value === 'ai') {
+                $(aiSection).slideDown(300);
+            } else {
+                $(aiSection).slideUp(300);
+            }
+        }
+    }
+    if (sourceTypeSelect) {
+        sourceTypeSelect.addEventListener('change', toggleAISection);
+        toggleAISection(); // initial state
+    }
 
     // --- Auto-generate slug from title ---
     const titleInput = document.getElementById('title');
@@ -410,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Jalali Datepicker ---
-    const publishDate = document.getElementById('publish_date');
+    const publishDate = document.getElementById('published_to_website_at');
     if (publishDate) {
         jalaliDatepicker.startWatch({
             selector: 'input.admin-form-date',
@@ -422,13 +501,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Section defaults ---
-    // Show blog by default, instagram if checkbox was checked
     toggleBlogSection(true);
     var igEnabled = document.getElementById('instagramEnabled');
     if (igEnabled && igEnabled.checked) toggleInstagramSection(true);
 
     // --- Blog image upload (single preview) ---
-    setupSingleImageUpload('blogImageUploadArea', 'blog_image_file', 'blogUploadContent', 'blogImagePreview', 'blogPreviewImg', 'removeBlogImageBtn', 'blogImageError', 'blog_image_url');
+    setupSingleImageUpload('blogImageUploadArea', 'blog_image_file', 'blogUploadContent', 'blogImagePreview', 'blogPreviewImg', 'removeBlogImageBtn', 'blogImageError', 'cover_image_url');
 
     // --- OG image upload (single preview) ---
     setupSingleImageUpload('ogImageUploadArea', 'og_image_file', 'ogUploadContent', 'ogImagePreview', 'ogPreviewImg', 'removeOgImageBtn', 'ogImageError', 'og_image');
@@ -451,8 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.onclick = function() { window.open(url, '_blank'); };
                 blogPreviewList.appendChild(img);
             });
-            // Also populate URL field
-            document.getElementById('blog_image_url').value = blogImgUrls[0];
+            document.getElementById('cover_image_url').value = blogImgUrls[0];
         }
     } catch(e) {}
     {% endif %}
@@ -471,7 +548,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.onclick = function() { window.open(url, '_blank'); };
                 igPreviewList.appendChild(img);
             });
-            // Also populate URL textarea
             var igUrlsTextarea = document.getElementById('ig_image_urls');
             if (igUrlsTextarea) {
                 igUrlsTextarea.value = igImgUrls.join('\n');
@@ -518,6 +594,7 @@ function setupSingleImageUpload(areaId, fileId, contentId, previewId, imgId, rem
         if (urlInput) urlInput.value = '';
     }
 
+    // Click handler on area (only if not clicking remove button)
     area.addEventListener('click', function(e) {
         if (e.target.closest('.image-upload-area__remove')) return;
         fileInput.click();
@@ -565,11 +642,14 @@ function setupMultiImageUpload(areaId, fileId, contentId, errorId, previewListId
     var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     var MAX_SIZE = 5 * 1024 * 1024;
 
-    area.addEventListener('click', function() { fileInput.click(); });
+    area.addEventListener('click', function(e) {
+        if (e.target.closest('.image-upload-area__remove')) return;
+        fileInput.click();
+    });
 
     fileInput.addEventListener('change', function() {
         Array.from(this.files).forEach(addImage);
-        this.value = ''; // reset so same files can be re-selected
+        this.value = '';
     });
 
     ['dragenter', 'dragover'].forEach(function(ev) {
