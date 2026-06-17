@@ -1,0 +1,155 @@
+{% extends "admin/base.html" %}
+
+{% block title %}ویرایش فرآیند | پنل مدیریت{% endblock %}
+
+{% block header_title %}ویرایش فرآیند #{{ job.id }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-form-card">
+        <form method="post" action="/admin/jobs/{{ job.id }}/update" class="admin-post-form" id="editJobForm">
+            <div class="admin-form-grid">
+                <div class="admin-form-group admin-form-group--full">
+                    <label for="topic" class="admin-form-label">
+                        موضوع <span class="admin-required">*</span>
+                    </label>
+                    <input type="text" id="topic" name="topic" class="admin-form-input"
+                           value="{{ job.topic }}" required minlength="3"
+                           placeholder="مثال: معرفی محصول جدید">
+                    <small class="admin-form-hint">موضوع اصلی تولید محتوا (حداقل ۳ کاراکتر)</small>
+                </div>
+
+                <div class="admin-form-group admin-form-group--full">
+                    <label for="text_instructions" class="admin-form-label">
+                        دستورالعمل متن (اختیاری)
+                    </label>
+                    <textarea id="text_instructions" name="text_instructions"
+                              class="admin-form-input admin-form-input--textarea" rows="4"
+                              placeholder="راهنمایی‌های خاص برای تولید متن...">{{ job.text_instructions if job.text_instructions else '' }}</textarea>
+                    <small class="admin-form-hint">دستورالعمل‌های اضافی برای هدایت هوش مصنوعی در تولید محتوا</small>
+                </div>
+
+                <div class="admin-form-group admin-form-group--full">
+                    <label for="image_instructions" class="admin-form-label">
+                        دستورالعمل تصویر (اختیاری)
+                    </label>
+                    <textarea id="image_instructions" name="image_instructions"
+                              class="admin-form-input admin-form-input--textarea" rows="4"
+                              placeholder="راهنمایی‌های خاص برای تولید تصویر...">{{ job.image_instructions if job.image_instructions else '' }}</textarea>
+                    <small class="admin-form-hint">توضیحاتی درباره سبک، رنگ، یا المان‌های خاص تصاویر</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="blog_image_count" class="admin-form-label">
+                        تعداد تصاویر بلاگ
+                    </label>
+                    <input type="number" id="blog_image_count" name="blog_image_count"
+                           class="admin-form-input" value="{{ job.blog_image_count }}"
+                           min="0" max="10">
+                    <small class="admin-form-hint">تعداد تصاویر برای پست وبلاگ (۰ تا ۱۰)</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="instagram_image_count" class="admin-form-label">
+                        تعداد تصاویر اینستاگرام
+                    </label>
+                    <input type="number" id="instagram_image_count" name="instagram_image_count"
+                           class="admin-form-input" value="{{ job.instagram_image_count }}"
+                           min="0" max="10">
+                    <small class="admin-form-hint">تعداد تصاویر برای پست اینستاگرام (۰ تا ۱۰)</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <div class="admin-form-check">
+                        <input type="checkbox" id="auto_publish" name="auto_publish" value="true"
+                               {% if job.auto_publish %}checked{% endif %}>
+                        <label for="auto_publish">انتشار خودکار پس از تولید</label>
+                    </div>
+                    <small class="admin-form-hint">در صورت فعال بودن، محتوا به‌طور خودکار منتشر می‌شود</small>
+                </div>
+            </div>
+
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-btn admin-btn--primary admin-btn--lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>ذخیره تغییرات</span>
+                </button>
+                <a href="/admin/jobs" class="admin-btn admin-btn--outline admin-btn--lg">
+                    <span>بازگشت</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/toastr.min.js"></script>
+<script>
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
+// Form submission handling
+document.getElementById('editJobForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+    formData.append('action', 'save');
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalHTML = submitBtn.innerHTML;
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳ در حال ذخیره...</span>';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            toastr.success('تغییرات با موفقیت ذخیره شد', 'موفقیت');
+            setTimeout(() => {
+                window.location.href = '/admin/jobs';
+            }, 1500);
+        } else {
+            throw new Error(data.message || 'خطای نامشخص');
+        }
+    })
+    .catch(error => {
+        toastr.error(error.message || 'خطا در ذخیره تغییرات', 'خطا');
+        submitBtn.innerHTML = originalHTML;
+        submitBtn.disabled = false;
+    });
+});
+</script>
+{% endblock %}
