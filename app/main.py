@@ -1,3 +1,4 @@
+# app/main.py
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -12,10 +13,17 @@ from app.api.router import api_router
 from app.core.config import settings
 
 from app.core.logging import setup_logging
+from app.core.template_filters import to_persian, clean_hashtags, format_jalali
 
 setup_logging()
 
+# Create templates instance
 templates = Jinja2Templates(directory="app/templates")
+
+# Register custom filters
+templates.env.filters['to_persian'] = to_persian
+templates.env.filters['clean_hashtags'] = clean_hashtags
+templates.env.filters['format_jalali'] = format_jalali
 
 
 @asynccontextmanager
@@ -29,6 +37,9 @@ app = FastAPI(
     docs_url="/docs" if not settings.is_production else None,
     redoc_url="/redoc" if not settings.is_production else None,
 )
+
+# Make templates accessible from app
+app.state.templates = templates
 
 
 # -----------------------------
@@ -115,4 +126,4 @@ app.include_router(api_router)
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="/", status_code=307)
+    return RedirectResponse(url="/blog", status_code=307)

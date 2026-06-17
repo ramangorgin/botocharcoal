@@ -10,8 +10,7 @@ from app.core.security import verify_password, create_session_token
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates/admin")
-
+from app.core.template_config import templates
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str | None = None):

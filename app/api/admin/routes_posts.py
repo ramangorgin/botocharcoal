@@ -12,8 +12,7 @@ router = APIRouter()
 
 # مسیر کلی template ها رو تعیین می‌کنیم
 # این پوشه شامل زیرپوشه admin هم هست
-templates = Jinja2Templates(directory="app/templates")
-
+from app.core.template_config import templates
 
 @router.get("/posts")
 async def posts_index(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_admin)):
@@ -206,3 +205,24 @@ async def delete_post(request: Request, post_id: int, db: AsyncSession = Depends
 
     response = RedirectResponse(url="/admin/posts", status_code=status.HTTP_303_SEE_OTHER)
     return response
+
+
+
+# In app/api/admin/routes_posts.py - Add this endpoint
+@router.post("/posts/{post_id}/publish")
+async def publish_post(
+    post_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin),
+):
+    result = await db.execute(select(Post).where(Post.id == post_id))
+    post = result.scalar_one_or_none()
+
+    if not post:
+        return JSONResponse({"status": "error", "message": "Post not found"}, status_code=404)
+
+    post.website_status = "published"
+    post.published_to_website_at = func.now()
+    await db.commit()
+
+    return JSONResponse({"status": "success", "message": "Post published successfully"})

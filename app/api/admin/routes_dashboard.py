@@ -11,8 +11,7 @@ from app.api.admin.dependencies import get_current_admin
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates/admin")
-
+from app.core.template_config import templates
 
 # این تابع الان وضعیت دیتابیس رو هم چک میکنه
 async def check_db_health(db: AsyncSession) -> bool:

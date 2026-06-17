@@ -21,8 +21,7 @@ router = APIRouter()
 # Fix template directory - use absolute path or correct relative path
 # Option 1: Use absolute path (recommended)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # Goes up to app/
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
+from app.core.template_config import templates
 # Option 2: Or if you want to keep relative path, use:
 # templates = Jinja2Templates(directory="app/templates")
 

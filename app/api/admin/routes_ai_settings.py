@@ -10,8 +10,7 @@ from app.api.admin.dependencies import get_current_admin
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates/admin")
-
+from app.core.template_config import templates
 
 @router.get("/ai-settings", response_class=HTMLResponse)
 async def ai_settings_page(
