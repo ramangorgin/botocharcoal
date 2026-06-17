@@ -4,34 +4,23 @@
 
 {% block header_title %}تنظیمات هوش مصنوعی{% endblock %}
 
+{% block head %}
+<!-- Toastr CSS -->
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="admin-page">
-    <!-- Success Message -->
-    {% if request.query_params.get('msg') == 'saved' %}
-    <div class="admin-toast admin-toast--success" style="position: fixed; top: 20px; left: 20px; z-index: 9999; padding: 16px 24px; background: var(--color-success); color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: admin-fade-in 0.3s ease;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>تنظیمات با موفقیت ذخیره شد</span>
-        </div>
-    </div>
-    <script>
-        setTimeout(() => {
-            const t = document.querySelector('.admin-toast[style*="position: fixed"]');
-            if (t) { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }
-        }, 3000);
-    </script>
-    {% endif %}
-
-    <form method="post" action="/admin/ai-settings" class="admin-form-card">
+    <form method="post" action="/admin/ai-settings" class="admin-form-card" id="aiSettingsForm">
         <h3 class="admin-form-section__title">اطلاعات اتصال به API</h3>
-        
+
         <div class="admin-form-grid admin-form-grid--2col">
             <div class="admin-form-group">
                 <label for="provider" class="admin-form-label">پرووایدر</label>
                 <select id="provider" name="provider" class="admin-form-input">
-                    <option value="openai" {% if ai_settings and ai_settings.provider == 'openai' %}selected{% endif %}>OpenAI</option>
-                    <option value="anthropic" {% if ai_settings and ai_settings.provider == 'anthropic' %}selected{% endif %}>Anthropic</option>
-                    <option value="custom" {% if ai_settings and ai_settings.provider == 'custom' %}selected{% endif %}>سفارشی (OpenAI-Compatible)</option>
+                    <option value="openai" {% if settings and settings.provider == 'openai' %}selected{% endif %}>OpenAI</option>
+                    <option value="anthropic" {% if settings and settings.provider == 'anthropic' %}selected{% endif %}>Anthropic</option>
+                    <option value="custom" {% if settings and settings.provider == 'custom' %}selected{% endif %}>سفارشی (OpenAI-Compatible)</option>
                 </select>
             </div>
 
@@ -39,7 +28,7 @@
                 <label for="api_key" class="admin-form-label">کلید API</label>
                 <div class="admin-input-with-icon">
                     <input type="password" id="api_key" name="api_key" class="admin-form-input" style="min-width: 100%;"
-                           placeholder="sk-..." value="{{ ai_settings.api_key if ai_settings else '' }}">
+                           placeholder="sk-..." value="{{ settings.api_key if settings else '' }}">
                     <button type="button" class="admin-input-toggle" onclick="toggleApiKey()" title="نمایش/مخفی">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -51,9 +40,9 @@
             </div>
 
             <div class="admin-form-group admin-form-group--full">
-                <label for="api_base_url" class="admin-form-label">آدرس پایگاه API (فقط برای پرووایدر سفارشی)</label>
+                <label for="base_url" class="admin-form-label">آدرس پایگاه API (فقط برای پرووایدر سفارشی)</label>
                 <input type="text" id="base_url" name="base_url" class="admin-form-input"
-                        placeholder="https://api.example.com/v1" value="{{ ai_settings.base_url if ai_settings and ai_settings.base_url else '' }}">
+                        placeholder="https://api.example.com/v1" value="{{ settings.base_url if settings and settings.base_url else '' }}">
 
                 <small class="admin-form-hint">مثال: https://api.openai.com/v1 یا آدرس API Gateway شما</small>
             </div>
@@ -65,15 +54,15 @@
         <div class="admin-form-grid admin-form-grid--2col">
             <div class="admin-form-group">
                 <label for="text_model" class="admin-form-label">مدل متن</label>
-                <input type="text" id="text_model" name="text_model" class="admin-form-input" 
-                       placeholder="gpt-4o" value="{{ ai_settings.text_model if ai_settings and ai_settings.text_model else '' }}">
+                <input type="text" id="text_model" name="text_model" class="admin-form-input"
+                       placeholder="gpt-4o" value="{{ settings.text_model if settings and settings.text_model else '' }}">
                 <small class="admin-form-hint">مدل مورد استفاده برای تولید متن</small>
             </div>
 
             <div class="admin-form-group">
                 <label for="image_model" class="admin-form-label">مدل تصویر</label>
-                <input type="text" id="image_model" name="image_model" class="admin-form-input" 
-                       placeholder="dall-e-3" value="{{ ai_settings.image_model if ai_settings and ai_settings.image_model else '' }}">
+                <input type="text" id="image_model" name="image_model" class="admin-form-input"
+                       placeholder="dall-e-3" value="{{ settings.image_model if settings and settings.image_model else '' }}">
                 <small class="admin-form-hint">مدل مورد استفاده برای تولید تصویر</small>
             </div>
         </div>
@@ -82,10 +71,10 @@
         <h3 class="admin-form-section__title">پرامپت‌های سفارشی (اختیاری)</h3>
 
         <div class="admin-form-group admin-form-group--full">
-            <label for="prompt_template" class="admin-form-label">قالب پرامپت JSON</label>
+            <label for="system_prompt" class="admin-form-label">قالب پرامپت JSON</label>
             <textarea id="system_prompt" name="system_prompt" class="admin-form-input admin-form-input--textarea"
                     placeholder='{"blog": "system prompt here...", "caption": "..." }' rows="8"
-                    style="font-family: 'Courier New', monospace; font-size: 12px;">{{ ai_settings.system_prompt if ai_settings and ai_settings.system_prompt else '' }}</textarea>
+                    style="font-family: 'Courier New', monospace; font-size: 12px;">{{ settings.system_prompt if settings and settings.system_prompt else '' }}</textarea>
 
             <small class="admin-form-hint">اختیاری — قالب JSON سفارشی برای کنترل دقیق‌تر پرامپت‌ها. در صورت خالی بودن از پرامپت‌های پیش‌فرض استفاده می‌شود.</small>
         </div>
@@ -121,9 +110,35 @@
         </div>
     </form>
 </div>
+{% endblock %}
 
 {% block scripts %}
+<!-- jQuery (required by toastr) -->
+<script src="/static/js/jquery.min.js"></script>
+<!-- Toastr JS -->
+<script src="/static/js/toastr.min.js"></script>
+
 <script>
+// Configure toastr for RTL
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
 function toggleApiKey() {
     const input = document.getElementById('api_key');
     const btn = document.querySelector('.admin-input-toggle svg');
@@ -135,6 +150,61 @@ function toggleApiKey() {
         btn.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
     }
 }
+
+// Handle form submission with AJAX
+document.getElementById('aiSettingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+
+    // Show loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span>در حال ذخیره...</span>';
+    submitBtn.disabled = true;
+
+    fetch('/admin/ai-settings', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Show success toast
+            toastr.success('تنظیمات با موفقیت ذخیره شد', 'موفقیت');
+
+            // Redirect after a short delay to show the toast
+            setTimeout(() => {
+                window.location.href = '/admin/jobs/';
+            }, 1500);
+        } else {
+            throw new Error('خطا در ذخیره‌سازی');
+        }
+    })
+    .catch(error => {
+        // Show error toast
+        toastr.error('خطا در ذخیره تنظیمات. لطفاً دوباره تلاش کنید.', 'خطا');
+
+        // Reset button
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+
+        console.error('Error:', error);
+    });
+});
+
+// Check for server-side flash messages
+document.addEventListener('DOMContentLoaded', function() {
+    {% if request.query_params.get('msg') == 'saved' %}
+    toastr.success('تنظیمات با موفقیت ذخیره شد', 'موفقیت');
+    {% endif %}
+
+    {% if request.query_params.get('msg') == 'error' %}
+    toastr.error('خطا در ذخیره تنظیمات', 'خطا');
+    {% endif %}
+});
 </script>
-{% endblock %}
 {% endblock %}

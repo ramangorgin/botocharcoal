@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.templating import Jinja2Templates
@@ -27,19 +27,20 @@ async def ai_settings_page(
         "ai_settings.html",
         {
             "request": request,
-            "settings": settings,
+            "settings": settings,  # Make sure this matches the template variable name
         },
     )
 
 
 @router.post("/ai-settings")
 async def update_ai_settings(
+    request: Request,
     provider: str = Form(...),
     api_key: str = Form(...),
-    base_url: str = Form(...),
+    base_url: str = Form(""),
     text_model: str = Form(...),
     image_model: str = Form(...),
-    system_prompt: str = Form(...),
+    system_prompt: str = Form(""),
     db: AsyncSession = Depends(get_db),
     user=Depends(get_current_admin),
 ):
@@ -68,4 +69,9 @@ async def update_ai_settings(
 
     await db.commit()
 
-    return RedirectResponse("/admin/ai-settings", status_code=302)
+    # Check if it's an AJAX request
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JSONResponse({"status": "success", "message": "Settings saved successfully"})
+
+    # For non-AJAX requests, redirect with success message
+    return RedirectResponse("/admin/jobs/?msg=saved", status_code=302)
