@@ -64,3 +64,5 @@ alembic/versions/__pycache__/
 # Node (if later)
 # -----------------------------
 node_modules/
+
+pgadmin4
