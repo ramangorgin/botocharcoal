@@ -5,13 +5,17 @@
 
 {% block header_title %}فرآیندها{% endblock %}
 
+{% block head %}
+<!-- Toastr CSS -->
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="admin-page">
     <div class="admin-toolbar">
         <div class="admin-toolbar__title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/>
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
             </svg>
             <span>مدیریت فرآیندهای تولید محتوا</span>
         </div>
@@ -19,7 +23,7 @@
             <a href="/admin/ai-settings" class="admin-btn admin-btn--outline">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
                     <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v2m0 18v2m11-11h-2M3 12H1"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51 1V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 0 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0-3.32 15a1.65 1.65 0 0 0-1.51 1V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0-11 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0-15.32 15a1.65 1.65 0 0 0-1.51 1V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0-22 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0-26.32 15a1.65 1.65 0 0 0-1.51 1V21a2 2 0 0 1-2 2"/>
                 </svg>
                 <span>تنظیمات هوش مصنوعی</span>
             </a>
@@ -34,7 +38,7 @@
     </div>
 
     <!-- کارت‌های آمار -->
-    <div class="admin-stats-grid" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+    <div class="admin-stats-grid" style="margin-bottom: 24px;">
         <div class="admin-stat-card">
             <div class="admin-stat-card__value">{{ jobs|length }}</div>
             <div class="admin-stat-card__label">کل فرآیندها</div>
@@ -64,31 +68,24 @@
         {% if jobs %}
         <div class="admin-table-wrapper">
             <table class="admin-table">
-                <thead>
+                <thead style="margin-bottom: 10px !important;">
                     <tr>
-                        <th style="width:50px;">#</th>
-                        <th>موضوع</th>
-                        <th style="width:120px;">وضعیت</th>
-                        <th style="width:100px;">نوع محتوا</th>
-                        <th style="width:100px;">تاریخ ایجاد</th>
-                        <th style="width:180px;">عملیات</th>
+                        <th class="admin-th" style="width:60px;">شماره</th>
+                        <th class="admin-th">موضوع</th>
+                        <th class="admin-th" style="width:140px;">وضعیت</th>
+                        <th class="admin-th" style="width:140px;">نوع محتوا</th>
+                        <th class="admin-th" style="width:130px;">تاریخ ایجاد</th>
+                        <th class="admin-th" style="width:180px;">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for job in jobs %}
-                    <tr>
-                        <td>{{ job.id }}</td>
-                        <td>
+                    <tr class="admin-table__row">
+                        <td class="admin-table__cell admin-table__cell--number">{{ job.id }}</td>
+                        <td class="admin-table__cell">
                             <a href="/admin/jobs/{{ job.id }}" class="admin-table__link">{{ job.topic }}</a>
-                            <small style="color: var(--color-text-muted); display: block; margin-top: 4px;">
-                                {% if job.text_instructions %}
-                                {{ job.text_instructions[:60] }}{% if job.text_instructions|length > 60 %}...{% endif %}
-                                {% else %}
-                                بدون دستورالعمل
-                                {% endif %}
-                            </small>
                         </td>
-                        <td>
+                        <td class="admin-table__cell">
                             {% if job.status == 'completed' %}
                             <span class="admin-badge admin-badge--success">تکمیل شده</span>
                             {% elif job.status == 'pending' %}
@@ -99,17 +96,23 @@
                             <span class="admin-badge admin-badge--error">شکست</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <span style="font-size: 12px;">
-                                {% if job.blog_image_count > 0 %}بلاگ ({{ job.blog_image_count }}){% endif %}
-                                {% if job.blog_image_count > 0 and job.instagram_image_count > 0 %} + {% endif %}
-                                {% if job.instagram_image_count > 0 %}اینستاگرام ({{ job.instagram_image_count }}){% endif %}
+                        <td class="admin-table__cell">
+                            <span style="font-size: 13px;">
+                                {% if job.blog_image_count > 0 and job.instagram_image_count > 0 %}
+                                بلاگ + اینستاگرام
+                                {% elif job.blog_image_count > 0 %}
+                                بلاگ ({{ job.blog_image_count }})
+                                {% elif job.instagram_image_count > 0 %}
+                                اینستاگرام ({{ job.instagram_image_count }})
+                                {% else %}
+                                -
+                                {% endif %}
                             </span>
                         </td>
-                        <td style="font-size: 13px; color: var(--color-text-secondary);">
+                        <td class="admin-table__cell admin-table__cell--date">
                             {{ job.created_at.strftime('%Y/%m/%d %H:%M') if job.created_at else '-' }}
                         </td>
-                        <td>
+                        <td class="admin-table__cell">
                             <div class="admin-table__actions">
                                 <a href="/admin/jobs/{{ job.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
@@ -118,7 +121,7 @@
                                     </svg>
                                 </a>
                                 {% if job.status == 'failed' %}
-                                <form method="post" action="/admin/jobs/{{ job.id }}/retry" style="display:inline;">
+                                <form method="post" action="/admin/jobs/{{ job.id }}/retry" style="display:inline;" onsubmit="return handleRetry(event, {{ job.id }})">
                                     <button type="submit" class="admin-btn admin-btn--sm admin-btn--outline" title="تلاش مجدد">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
                                             <polyline points="23 4 23 10 17 10"/>
@@ -144,18 +147,101 @@
         </div>
         {% else %}
         <div class="admin-empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
             </svg>
             <p>هنوز فرآیندی ایجاد نشده</p>
             <a href="/admin/jobs/create" class="admin-btn admin-btn--primary">ایجاد فرآیند جدید</a>
-            <p style="margin-top: 8px; font-size: 13px;">
+            <p style="margin-top: 12px; font-size: 13px; color: var(--color-text-secondary);">
                 با فرآیندها، هوش مصنوعی به‌طور خودکار محتوا تولید می‌کند.
-                <a href="/admin/ai-settings">تنظیمات هوش مصنوعی</a> را بررسی کنید.
+                <a href="/admin/ai-settings" style="color: var(--color-ember);">تنظیمات هوش مصنوعی</a> را بررسی کنید.
             </p>
         </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- jQuery (required by toastr) -->
+<script src="/static/js/jquery.min.js"></script>
+<!-- Toastr JS -->
+<script src="/static/js/toastr.min.js"></script>
+
+<script>
+// Configure toastr for RTL
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
+// Handle retry form submission
+function handleRetry(event, jobId) {
+    event.preventDefault();
+
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalHTML = submitBtn.innerHTML;
+
+    // Show loading state
+    submitBtn.innerHTML = '<span style="font-size: 12px;">⏳</span>';
+    submitBtn.disabled = true;
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => {
+        if (response.redirected) {
+            // If redirected, follow the redirect
+            toastr.success('فرآیند با موفقیت دوباره ارسال شد', 'موفقیت');
+            setTimeout(() => {
+                window.location.href = response.url;
+            }, 1500);
+        } else if (response.ok) {
+            toastr.success('فرآیند با موفقیت دوباره ارسال شد', 'موفقیت');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            throw new Error('خطا در ارسال مجدد');
+        }
+    })
+    .catch(error => {
+        toastr.error('خطا در تلاش مجدد فرآیند', 'خطا');
+        submitBtn.innerHTML = originalHTML;
+        submitBtn.disabled = false;
+        console.error('Error:', error);
+    });
+
+    return false;
+}
+
+// Check for flash messages from redirect
+document.addEventListener('DOMContentLoaded', function() {
+    {% if request.query_params.get('msg') == 'saved' %}
+    toastr.success('تنظیمات هوش مصنوعی با موفقیت ذخیره شد', 'موفقیت');
+    {% endif %}
+
+    {% if request.query_params.get('msg') == 'error' %}
+    toastr.error('خطا در ذخیره تنظیمات', 'خطا');
+    {% endif %}
+});
+</script>
 {% endblock %}
