@@ -1,6 +1,11 @@
 # app/services/ai_service.py
 import json
 import logging
+import httpx
+import aiofiles
+import os
+from pathlib import Path
+from uuid import uuid4
 from openai import OpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -25,8 +30,8 @@ KNOWN_WORKING_MODELS = {
     ],
     "image": [
         "dall-e-3",
-        "gpt-image-2",
         "gpt-image-1",
+        "dall-e-2",
     ]
 }
 
@@ -184,8 +189,18 @@ class AIService:
             logger.info(f"   Content Preview: {content[:200]}...")
 
             # Try to parse as JSON if it's a JSON string
+            # First, clean the content - remove markdown code blocks if present
+            cleaned_content = content.strip()
+            if cleaned_content.startswith("```json"):
+                cleaned_content = cleaned_content[7:]
+            if cleaned_content.startswith("```"):
+                cleaned_content = cleaned_content[3:]
+            if cleaned_content.endswith("```"):
+                cleaned_content = cleaned_content[:-3]
+            cleaned_content = cleaned_content.strip()
+
             try:
-                parsed_content = json.loads(content)
+                parsed_content = json.loads(cleaned_content)
                 logger.info("   ✅ Content parsed as JSON successfully")
                 logger.debug(f"   JSON keys: {list(parsed_content.keys())}")
                 return parsed_content
@@ -242,14 +257,20 @@ class AIService:
             ai = await self.get_settings()
             client = await self._get_client()
 
-            logger.info(f"   Model: {ai.image_model}")
+            # Validate image model - try multiple fallbacks
+            image_model = ai.image_model.strip() if ai.image_model else "dall-e-3"
+
+            # Known working image models for GapGPT
+            working_models = ["dall-e-3", "gpt-image-1", "dall-e-2"]
+
+            if image_model not in working_models:
+                logger.warning(f"⚠️  Image model '{image_model}' might not work. Trying dall-e-3 instead")
+                image_model = "dall-e-3"
+
+            logger.info(f"   Model: {image_model}")
             logger.info(f"📤 Sending image generation request to: {ai.base_url}/images/generations")
 
-            # Validate image model
-            image_model = ai.image_model.strip() if ai.image_model else "gpt-image-2"
-            if image_model not in KNOWN_WORKING_MODELS["image"]:
-                logger.warning(f"⚠️  Image model '{image_model}' not in known working models list")
-
+            # Make the API call
             response = client.images.generate(
                 model=image_model,
                 prompt=prompt,
@@ -257,9 +278,22 @@ class AIService:
                 n=1,
             )
 
-            image_url = response.data[0].url
-            logger.info(f"✅ IMAGE GENERATED SUCCESSFULLY")
-            logger.info(f"   Image URL: {image_url[:100]}...")
+            # Handle different response formats
+            logger.info(f"📥 Image response received")
+            logger.debug(f"   Response data: {response}")
+
+            # Extract image URL - handle different response structures
+            image_url = None
+            if hasattr(response, 'data') and response.data and len(response.data) > 0:
+                image_url = response.data[0].url
+            elif hasattr(response, 'url'):
+                image_url = response.url
+
+            if not image_url:
+                logger.error(f"❌ No image URL in response. Response: {response}")
+                raise ValueError("No image URL in API response")
+
+            logger.info(f"✅ IMAGE URL OBTAINED: {image_url[:100]}...")
 
             return image_url
 
@@ -274,6 +308,24 @@ class AIService:
                     logger.error(f"   Response Body: {e.response.text[:500]}")
                 except:
                     pass
+
+            # If the first model fails, try with a fallback
+            if "404" in str(e) or "403" in str(e) or "NoneType" in str(e):
+                logger.warning("🔄 Trying with fallback image model 'dall-e-3'...")
+                try:
+                    client = await self._get_client()
+                    response = client.images.generate(
+                        model="dall-e-3",
+                        prompt=prompt,
+                        size=size,
+                        n=1,
+                    )
+                    image_url = response.data[0].url if response.data else None
+                    if image_url:
+                        logger.info(f"✅ Fallback image generated: {image_url[:100]}...")
+                        return image_url
+                except Exception as fallback_error:
+                    logger.error(f"❌ Fallback also failed: {str(fallback_error)}")
 
             raise
 
@@ -314,19 +366,48 @@ class AIService:
         return images
 
 
+async def download_and_save_image(image_url: str, filename_prefix: str = "image") -> Optional[str]:
+    """Download image from URL and save locally, return local path"""
+    try:
+        # Create media directory if it doesn't exist
+        media_dir = Path("media/generated_images")
+        media_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate unique filename
+        file_name = f"{filename_prefix}_{uuid4().hex[:12]}.png"
+        file_path = media_dir / file_name
+
+        logger.info(f"📥 Downloading image from: {image_url[:100]}...")
+
+        # Download with httpx
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.get(image_url)
+            response.raise_for_status()
+
+            # Save file
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(response.content)
+
+            logger.info(f"✅ Image downloaded to: {file_path}")
+            return str(file_path)
+
+    except Exception as e:
+        logger.error(f"❌ Failed to download image: {str(e)}")
+        return None
+
+
 # Helper functions for backward compatibility
 async def generate_content_with_ai(topic: str, instructions: str = "") -> Dict[str, Any]:
     """Helper function for generating content (used in tasks)"""
     logger.info("🔄 Using helper function generate_content_with_ai")
 
     from app.db.session import async_session
-    from app.services.ai_service import AIService
 
     async with async_session() as db:
         service = AIService(db)
         prompt = f"موضوع: {topic}"
         if instructions:
-            prompt += f"\nدستورالعمل‌ها: {instructions}"
+            prompt += f"\n\nدستورالعمل‌ها:\n{instructions}"
 
         logger.info(f"📝 Generating content for topic: {topic}")
         result = await service.generate_text(prompt)
@@ -339,7 +420,6 @@ async def generate_images_with_ai(prompts: List[str], count: int = 1, size: str 
     logger.info("🔄 Using helper function generate_images_with_ai")
 
     from app.db.session import async_session
-    from app.services.ai_service import AIService
 
     async with async_session() as db:
         service = AIService(db)

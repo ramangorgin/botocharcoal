@@ -6,8 +6,10 @@ from datetime import datetime
 
 class JobBase(BaseModel):
     topic: str
-    image_instructions: Optional[str] = None
-    text_instructions: Optional[str] = None
+    blog_text_instructions: Optional[str] = None
+    blog_image_instructions: Optional[str] = None
+    instagram_text_instructions: Optional[str] = None
+    instagram_image_instructions: Optional[str] = None
     blog_image_count: int = 1
     instagram_image_count: int = 1
     auto_publish: bool = False
@@ -26,7 +28,8 @@ class JobUpdate(BaseModel):
 class JobOut(JobBase):
     id: int
     status: str
-    post_id: Optional[int]
+    post_id: Optional[int] = None
+    error_message: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

@@ -11,15 +11,20 @@ class Job(Base):
 
     # اطلاعات اصلی درخواست
     topic = Column(String(255), nullable=False)
-    image_instructions = Column(Text)  # دستورالعمل‌های اضافی برای مدل تصویر
-    text_instructions = Column(Text)   # دستورالعمل‌های اضافی برای مدل متنی
-    blog_image_count = Column(Integer, default=1)  # تعداد تصویر برای بلاگ
+
+    # Separate instructions for blog and Instagram
+    blog_text_instructions = Column(Text)   # دستورالعمل برای متن بلاگ
+    blog_image_instructions = Column(Text)  # دستورالعمل برای تصویر کاور بلاگ
+    instagram_text_instructions = Column(Text)  # دستورالعمل برای کپشن اینستاگرام
+    instagram_image_instructions = Column(Text) # دستورالعمل برای تصاویر اینستاگرام
+
+    blog_image_count = Column(Integer, default=1)  # تعداد تصویر برای بلاگ (معمولاً ۱ برای کاور)
     instagram_image_count = Column(Integer, default=1)  # تعداد تصویر برای اینستاگرام
-    auto_publish = Column(Boolean, default=False)  # آیا به طور خودکار در بلاگ پابلیش شود؟
+    auto_publish = Column(Boolean, default=False)
 
     # وضعیت و نتایج
-    status = Column(String(50), default="pending")  # pending, processing, completed, failed
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=True)  # پست ایجاد شده
+    status = Column(String(50), default="pending")
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=True)
     error_message = Column(Text, nullable=True)
 
     # متادیتا
