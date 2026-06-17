@@ -26,8 +26,7 @@ async def home(
     query = (
         select(Post)
         .where(
-            Post.website_status == "published",
-            Post.blog_enabled == True
+            Post.website_status == "published"
         )
         .options(selectinload(Post.media_assets))
         .order_by(Post.created_at.desc())

@@ -1,385 +1,514 @@
 {% extends "admin/base.html" %}
 
-{% block title %}{{ title|default('ایجاد پست جدید') }} | پنل مدیریت{% endblock %}
+{% block title %}ایجاد پست جدید | پنل مدیریت{% endblock %}
 
-{% block header_title %}{{ title|default('ایجاد پست جدید') }}{% endblock %}
+{% block header_title %}ایجاد پست جدید{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/select2.min.css">
-<link rel="stylesheet" href="/static/css/jalalidatepicker.min.css">
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+<style>
+    .create-post-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .platform-toggle {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .platform-card {
+        flex: 1;
+        min-width: 200px;
+        padding: 20px;
+        border: 2px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        background: var(--color-bg-card);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        user-select: none;
+    }
+
+    .platform-card:hover {
+        border-color: var(--color-charcoal-lighter);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .platform-card.active {
+        border-color: var(--color-ember);
+        background: rgba(230, 81, 0, 0.05);
+        box-shadow: 0 0 0 4px rgba(230, 81, 0, 0.1);
+    }
+
+    .platform-card__checkbox {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        accent-color: var(--color-ember);
+    }
+
+    .platform-card__icon {
+        margin-bottom: 12px;
+        color: var(--color-ember);
+    }
+
+    .platform-card__title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-white);
+        margin: 0 0 4px 0;
+    }
+
+    .platform-card__desc {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        margin: 0;
+    }
+
+    .content-section-collapsible {
+        transition: all 0.4s ease;
+        overflow: hidden;
+    }
+
+    .content-section-collapsible.collapsed {
+        max-height: 0;
+        opacity: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .content-section-collapsible.expanded {
+        max-height: 5000px;
+        opacity: 1;
+    }
+
+    .image-upload-area {
+        border: 2px dashed var(--color-border);
+        border-radius: var(--border-radius-md);
+        padding: 32px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--color-charcoal);
+    }
+
+    .image-upload-area:hover {
+        border-color: var(--color-ember);
+        background: rgba(230, 81, 0, 0.03);
+    }
+
+    .image-upload-area--dragover {
+        border-color: var(--color-ember);
+        background: rgba(230, 81, 0, 0.06);
+    }
+
+    .image-upload-area__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .image-upload-area__icon {
+        color: var(--color-ash-gray);
+        transition: color 0.2s;
+    }
+
+    .image-upload-area:hover .image-upload-area__icon {
+        color: var(--color-ember);
+    }
+
+    .image-upload-area__text {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text-primary);
+    }
+
+    .image-upload-area__hint {
+        margin: 0;
+        font-size: 12px;
+        color: var(--color-text-muted);
+    }
+
+    .image-upload-area__preview {
+        position: relative;
+        display: none;
+    }
+
+    .image-upload-area__preview img {
+        max-width: 100%;
+        max-height: 250px;
+        border-radius: var(--border-radius-sm);
+        margin: 0 auto;
+        display: block;
+    }
+
+    .image-upload-area__remove {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 50%;
+        background: #ef4444;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+
+    .image-upload-area__remove:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+    }
+
+    .image-preview-list {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .image-preview-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+    }
+
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview-item__remove {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 10px;
+        padding: 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .image-preview-item:hover .image-preview-item__remove {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .platform-toggle {
+            flex-direction: column;
+        }
+
+        .platform-card {
+            min-width: 100%;
+        }
+
+        .admin-form-grid--2col,
+        .admin-form-grid--4col {
+            grid-template-columns: 1fr !important;
+        }
+
+        .image-upload-area {
+            padding: 24px 16px;
+        }
+
+        .admin-form-actions {
+            flex-direction: column;
+        }
+
+        .admin-form-actions .admin-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="admin-post-form">
-    <form method="post" id="postForm" class="admin-form-card" enctype="multipart/form-data">
-        {% if source == 'job' %}
-        <input type="hidden" name="source" value="job">
-        <input type="hidden" name="job_id" value="{{ job_id|default('') }}">
-        <input type="hidden" name="content_item_id" value="{{ content_item_id|default('') }}">
-        {% endif %}
+<div class="admin-page create-post-container">
+    <div class="admin-toolbar" style="margin-bottom: 24px;">
+        <div class="admin-toolbar__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>ایجاد پست جدید</span>
+        </div>
+        <div class="admin-toolbar__actions">
+            <a href="/admin/posts" class="admin-btn admin-btn--outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>بازگشت به لیست</span>
+            </a>
+        </div>
+    </div>
 
-        <!-- Channel Selection Cards -->
-        <div class="admin-form-group">
-            <label class="admin-form-label">کجا منتشر بشه؟</label>
-            <div class="channel-selector-grid">
-                <label class="channel-card {% if blog_enabled %}active{% endif %}" for="blogEnabled">
-                    <input type="checkbox" name="blog_enabled" id="blogEnabled" value="on"
-                        {% if blog_enabled or not post %}checked{% endif %}
-                        onchange="updateChannelUI('blog', this.checked)">
-                    <div class="channel-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+    <form method="post" action="/admin/posts/create" class="admin-form-card" id="createPostForm" enctype="multipart/form-data">
+        <!-- Platform Selection Cards -->
+        <div class="admin-form-section">
+            <h3 class="admin-form-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="3" y1="9" x2="21" y2="9"/>
+                    <line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                انتخاب پلتفرم
+            </h3>
+
+            <div class="platform-toggle">
+                <div class="platform-card active" id="blogPlatformCard" onclick="togglePlatform('blog')">
+                    <input type="checkbox" name="blog_enabled" id="blogEnabled" value="true" class="platform-card__checkbox" checked onchange="event.stopPropagation(); togglePlatform('blog')">
+                    <div class="platform-card__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="2" y1="12" x2="22" y2="12"/>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
                     </div>
-                    <div class="channel-info">
-                        <span class="channel-name">وبلاگ سایت</span>
-                        <span class="channel-desc">انتشار به عنوان پست بلاگ</span>
-                    </div>
-                </label>
+                    <h4 class="platform-card__title">وبلاگ</h4>
+                    <p class="platform-card__desc">ایجاد پست در وبلاگ سایت</p>
+                </div>
 
-                <label class="channel-card {% if instagram_enabled %}active{% endif %}" for="instagramEnabled">
-                    <input type="checkbox" name="instagram_enabled" id="instagramEnabled" value="on"
-                        {% if instagram_enabled %}checked{% endif %}
-                        onchange="updateChannelUI('instagram', this.checked)">
-                    <div class="channel-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <div class="platform-card" id="instagramPlatformCard" onclick="togglePlatform('instagram')">
+                    <input type="checkbox" name="instagram_enabled" id="instagramEnabled" value="true" class="platform-card__checkbox" onchange="event.stopPropagation(); togglePlatform('instagram')">
+                    <div class="platform-card__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
                             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
                         </svg>
                     </div>
-                    <div class="channel-info">
-                        <span class="channel-name">اینستاگرام</span>
-                        <span class="channel-desc">آماده‌سازی کپشن و تصاویر</span>
-                    </div>
-                </label>
+                    <h4 class="platform-card__title">اینستاگرام</h4>
+                    <p class="platform-card__desc">آماده‌سازی کپشن و هشتگ</p>
+                </div>
             </div>
         </div>
 
         <div class="admin-divider"></div>
 
-        <!-- ============================================ -->
-        <!-- BLOG POST SECTION                            -->
-        <!-- ============================================ -->
-        <div id="blogSection">
-            <h3 class="admin-form-section__title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-                اطلاعات پست وبلاگ
-            </h3>
+        <!-- Blog Section -->
+        <div id="blogSection" class="content-section-collapsible expanded">
+            <div class="admin-form-section">
+                <h3 class="admin-form-section__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    اطلاعات پست وبلاگ
+                </h3>
 
-            <!-- Row 1: Title + Slug -->
-            <div class="admin-form-grid admin-form-grid--2col">
-                <div class="admin-form-group">
-                    <label for="title" class="admin-form-label">عنوان پست <span class="admin-required">*</span></label>
-                    <input type="text" id="title" name="title" class="admin-form-input" placeholder="عنوان را وارد کنید" required maxlength="255" value="{{ post.title if post else (ci.blog_title if ci and ci.blog_title else '') }}">
+                <div class="admin-form-grid admin-form-grid--2col">
+                    <div class="admin-form-group">
+                        <label for="title" class="admin-form-label">عنوان <span class="admin-required">*</span></label>
+                        <input type="text" id="title" name="title" class="admin-form-input"
+                               placeholder="عنوان پست را وارد کنید" required maxlength="255">
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="slug" class="admin-form-label">اسلاگ</label>
+                        <input type="text" id="slug" name="slug" class="admin-form-input"
+                               placeholder="اسلاگ خودکار تولید می‌شود">
+                        <small class="admin-form-hint">در صورت خالی بودن، از عنوان تولید می‌شود</small>
+                    </div>
                 </div>
-                <div class="admin-form-group">
-                    <label for="slug" class="admin-form-label">اسلاگ</label>
-                    <input type="text" id="slug" name="slug" class="admin-form-input" placeholder="slug-auto-generated" value="{{ post.slug if post else (ci.blog_slug if ci and ci.blog_slug else '') }}">
-                    <small class="admin-form-hint">اگر خالی بگذارید، از عنوان تولید می‌شود</small>
-                </div>
-            </div>
 
-            <!-- Row 2: Topic + Category + Poster + Source Type -->
-            <div class="admin-form-grid admin-form-grid--4col">
                 <div class="admin-form-group">
                     <label for="topic" class="admin-form-label">موضوع</label>
-                    <input type="text" id="topic" name="topic" class="admin-form-input" placeholder="مثال: تجارت زغال" maxlength="255" value="{{ post.topic if post else (ci.blog_title if ci and ci.blog_title else '') }}">
+                    <input type="text" id="topic" name="topic" class="admin-form-input"
+                           placeholder="موضوع اصلی پست" maxlength="255">
                 </div>
-                <div class="admin-form-group">
-                    <label for="category" class="admin-form-label">دسته‌بندی</label>
-                    <input type="text" id="category" name="category" class="admin-form-input" placeholder="دسته‌بندی پست" maxlength="100" value="{{ post.category if post else '' }}">
-                </div>
-                <div class="admin-form-group">
-                    <label for="poster" class="admin-form-label">نویسنده / منتشرکننده</label>
-                    <input type="text" id="poster" name="poster" class="admin-form-input" placeholder="نام نویسنده" maxlength="255" value="{{ post.poster if post else '' }}">
-                </div>
-                <div class="admin-form-group">
-                    <label for="source_type" class="admin-form-label">منبع پست</label>
-                    <select id="source_type" name="source_type" class="admin-form-input">
-                        <option value="manual" {% if post and post.source_type == 'manual' %}selected{% elif not post %}selected{% endif %}>دستی</option>
-                        <option value="ai" {% if post and post.source_type == 'ai' %}selected{% endif %}>هوش مصنوعی</option>
-                        <option value="job" {% if post and post.source_type == 'job' %}selected{% endif %}>جاب</option>
-                        <option value="import" {% if post and post.source_type == 'import' %}selected{% endif %}>ایمپورت</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- Row 3: Publish Date + Website Status -->
-            <div class="admin-form-grid admin-form-grid--2col">
-                <div class="admin-form-group">
-                    <label for="published_to_website_at" class="admin-form-label">تاریخ انتشار</label>
-                    <input type="text" id="published_to_website_at" name="published_to_website_at" class="admin-form-input admin-form-date" placeholder="تاریخ انتشار (شمسی)" value="{{ post.published_to_website_at.strftime('%Y/%m/%d') if post and post.published_to_website_at else '' }}">
-                    <small class="admin-form-hint">فرمت: YYYY/MM/DD</small>
+                <div class="admin-form-grid admin-form-grid--2col">
+                    <div class="admin-form-group">
+                        <label for="categories" class="admin-form-label">دسته‌بندی</label>
+                        <select id="categories" name="categories" class="admin-form-input admin-form-select2" multiple
+                                data-placeholder="انتخاب یا ایجاد دسته‌بندی">
+                        </select>
+                        <small class="admin-form-hint">می‌توانید دسته‌بندی جدید ایجاد کنید</small>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="tags" class="admin-form-label">برچسب‌ها</label>
+                        <select id="tags" name="tags" class="admin-form-input admin-form-select2" multiple
+                                data-placeholder="انتخاب یا ایجاد برچسب">
+                        </select>
+                        <small class="admin-form-hint">برچسب‌ها برای دسته‌بندی محتوا</small>
+                    </div>
                 </div>
+
                 <div class="admin-form-group">
-                    <label for="website_status" class="admin-form-label">وضعیت انتشار</label>
-                    <select id="website_status" name="website_status" class="admin-form-input">
-                        <option value="draft" {% if post and post.website_status == 'draft' %}selected{% elif not post %}selected{% endif %}>پیش‌نویس</option>
-                        <option value="published" {% if post and post.website_status == 'published' %}selected{% endif %}>منتشر شده</option>
-                        <option value="scheduled" {% if post and post.website_status == 'scheduled' %}selected{% endif %}>زمان‌بندی شده</option>
-                    </select>
+                    <label for="summary" class="admin-form-label">خلاصه</label>
+                    <textarea id="summary" name="summary" class="admin-form-input admin-form-input--textarea"
+                              rows="3" placeholder="خلاصه کوتاه از محتوای پست"></textarea>
+                    <small class="admin-form-hint">برای نمایش در لیست پست‌ها و SEO</small>
                 </div>
-            </div>
 
-            <!-- Summary -->
-            <div class="admin-form-group">
-                <label for="summary" class="admin-form-label">خلاصه پست</label>
-                <textarea id="summary" name="summary" class="admin-form-input admin-form-input--textarea" rows="4" placeholder="خلاصه یا excerpt پست...">{{ post.summary if post else '' }}</textarea>
-                <small class="admin-form-hint">چکیده کوتاه از محتوای پست برای لیست‌ها و SEO</small>
-            </div>
+                <div class="admin-form-group">
+                    <label for="body_html" class="admin-form-label">محتوای اصلی <span class="admin-required">*</span></label>
+                    <textarea id="body_html" name="body_html" rows="20" placeholder="محتوای پست را وارد کنید..."></textarea>
+                </div>
 
-            <!-- Body (CKEditor) -->
-            <div class="admin-form-section">
-                <label for="body_html" class="admin-form-label">محتوای پست <span class="admin-required">*</span></label>
-                <textarea id="body_html" name="body_html" rows="20" placeholder="محتوای پست را وارد کنید...">{{ post.body_html if post else (ci.blog_body if ci and ci.blog_body else '') }}</textarea>
-            </div>
-
-            <!-- Cover Image -->
-            <div class="admin-form-section">
-                <label class="admin-form-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px; color:var(--color-ember);">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    تصویر شاخص (Cover Image)
-                </label>
-
-                <div class="image-upload-area" id="blogImageUploadArea" style="cursor:pointer;">
-                    <input type="file" id="blog_image_file" class="blog-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
-                    <div class="image-upload-area__content" id="blogUploadContent" style="pointer-events:none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
+                <!-- Cover Image -->
+                <div class="admin-form-section">
+                    <label class="admin-form-label" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
                         </svg>
-                        <p class="image-upload-area__text">تصویر را اینجا بکشید یا کلیک کنید</p>
-                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
-                    </div>
-                    <div class="image-upload-area__preview" id="blogImagePreview" style="display:none;">
-                        <img id="blogPreviewImg" src="" alt="پیش‌نمایش">
-                        <button type="button" class="image-upload-area__remove" id="removeBlogImageBtn" title="حذف تصویر">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
+                        تصویر شاخص
+                    </label>
+
+                    <div class="image-upload-area" id="coverImageUploadArea">
+                        <input type="file" id="cover_image_file" name="cover_image_file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+                        <div class="image-upload-area__content" id="coverUploadContent">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
                             </svg>
-                        </button>
+                            <p class="image-upload-area__text">کلیک کنید یا تصویر را اینجا بکشید</p>
+                            <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
+                        </div>
+                        <div class="image-upload-area__preview" id="coverImagePreview">
+                            <img id="coverPreviewImg" src="" alt="پیش‌نمایش">
+                            <button type="button" class="image-upload-area__remove" id="removeCoverImageBtn" title="حذف تصویر">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <label for="cover_image_url" class="admin-form-label" style="font-size: 13px;">یا URL تصویر را وارد کنید</label>
+                        <input type="text" id="cover_image_url" name="cover_image_url" class="admin-form-input"
+                               placeholder="https://example.com/image.jpg">
                     </div>
                 </div>
-                <small class="admin-form-error" id="blogImageError" style="display:none"></small>
-
-                <div class="image-url-input-wrapper" style="margin-top:12px;">
-                    <label for="cover_image_url" class="admin-form-label" style="font-size:13px;">یا URL تصویر را وارد کنید</label>
-                    <input type="text" id="cover_image_url" name="cover_image_url" class="admin-form-input" placeholder="https://example.com/image.jpg" value="{{ post.cover_image_url if post else '' }}">
-                    <small class="admin-form-hint">URL تصویر شاخص (در مدل به‌عنوان cover_image_url ذخیره می‌شود)</small>
-                </div>
-
-                <div id="blogImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
             </div>
+        </div>
 
+        <!-- Instagram Section -->
+        <div id="instagramSection" class="content-section-collapsible collapsed">
             <div class="admin-divider"></div>
 
-            <!-- SEO Meta Tags -->
-            <h3 class="admin-form-section__title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                سئو (Meta Tags)
-            </h3>
-
-            <div class="admin-form-grid admin-form-grid--2col">
-                <div class="admin-form-group">
-                    <label for="meta_title" class="admin-form-label">عنوان Meta</label>
-                    <input type="text" id="meta_title" name="meta_title" class="admin-form-input" placeholder="عنوان سئو (حداکثر ۶۰ کاراکتر)" maxlength="255" value="{{ post.meta_title if post else '' }}">
-                </div>
-                <div class="admin-form-group">
-                    <label for="meta_description" class="admin-form-label">توضیحات Meta</label>
-                    <textarea id="meta_description" name="meta_description" class="admin-form-input" rows="3" placeholder="توضیحات سئو (حداکثر ۱۶۰ کاراکتر)" maxlength="500">{{ post.meta_description if post else '' }}</textarea>
-                </div>
-                <div class="admin-form-group">
-                    <label for="og_title" class="admin-form-label">عنوان OG (شبکه‌های اجتماعی)</label>
-                    <input type="text" id="og_title" name="og_title" class="admin-form-input" placeholder="عنوان هنگام اشتراک‌گذاری" maxlength="255" value="{{ post.og_title if post else '' }}">
-                </div>
-                <div class="admin-form-group">
-                    <label for="og_description" class="admin-form-label">توضیحات OG</label>
-                    <textarea id="og_description" name="og_description" class="admin-form-input" rows="3" placeholder="توضیحات هنگام اشتراک‌گذاری" maxlength="500">{{ post.og_description if post else '' }}</textarea>
-                </div>
-            </div>
-
-            <!-- OG Image -->
             <div class="admin-form-section">
-                <label class="admin-form-label">تصویر OG (پیش‌نمایش شبکه‌های اجتماعی)</label>
-
-                <div class="image-upload-area" id="ogImageUploadArea" style="cursor:pointer;">
-                    <input type="file" id="og_image_file" class="og-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
-                    <div class="image-upload-area__content" id="ogUploadContent" style="pointer-events:none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        <p class="image-upload-area__text">تصویر OG را آپلود کنید</p>
-                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت</p>
-                    </div>
-                    <div class="image-upload-area__preview" id="ogImagePreview" style="display:none;">
-                        <img id="ogPreviewImg" src="" alt="پیش‌نمایش OG">
-                        <button type="button" class="image-upload-area__remove" id="removeOgImageBtn" title="حذف تصویر">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <small class="admin-form-error" id="ogImageError" style="display:none"></small>
-
-                <div class="image-url-input-wrapper" style="margin-top:12px;">
-                    <label for="og_image" class="admin-form-label" style="font-size:13px;">یا URL تصویر OG را وارد کنید</label>
-                    <input type="text" id="og_image" name="og_image" class="admin-form-input" placeholder="URL تصویر شبکه اجتماعی" value="{{ post.og_image if post else '' }}">
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-divider"></div>
-
-        <!-- ============================================ -->
-        <!-- INSTAGRAM POST SECTION                       -->
-        <!-- ============================================ -->
-        <div id="instagramSection" style="display:none;">
-            <h3 class="admin-form-section__title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                </svg>
-                پست اینستاگرام
-            </h3>
-
-            <!-- Instagram Caption -->
-            <div class="admin-form-group">
-                <label for="instagram_caption" class="admin-form-label">کپشن اینستاگرام</label>
-                <textarea id="instagram_caption" name="instagram_caption" class="admin-form-input admin-form-input--textarea" rows="6" placeholder="متن کپشن اینستاگرام...">{{ post.instagram_caption if post else (ci.instagram_caption if ci and ci.instagram_caption else '') }}</textarea>
-            </div>
-
-            <!-- Hashtags -->
-            <div class="admin-form-group">
-                <label for="hashtags" class="admin-form-label">هشتگ‌ها</label>
-                <select id="hashtags" name="hashtags" class="admin-form-input" multiple style="min-height: 50px;">
-                    {% if post and post.hashtags %}
-                        {% for tag in post.hashtags.split() %}
-                        <option value="{{ tag }}" selected>{{ tag }}</option>
-                        {% endfor %}
-                    {% elif ci and ci.instagram_hashtags %}
-                        {% for tag in ci.instagram_hashtags.split() %}
-                        <option value="{{ tag }}" selected>{{ tag }}</option>
-                        {% endfor %}
-                    {% endif %}
-                </select>
-                <small class="admin-form-hint">هشتگ‌ها را تایپ کرده و Enter بزنید</small>
-            </div>
-
-            <!-- Instagram Status -->
-            <div class="admin-form-group">
-                <label for="instagram_status" class="admin-form-label">وضعیت اینستاگرام</label>
-                <select id="instagram_status" name="instagram_status" class="admin-form-input">
-                    <option value="draft" {% if post and post.instagram_status == 'draft' %}selected{% elif not post %}selected{% endif %}>پیش‌نویس</option>
-                    <option value="ready" {% if post and post.instagram_status == 'ready' %}selected{% endif %}>آماده انتشار</option>
-                    <option value="published" {% if post and post.instagram_status == 'published' %}selected{% endif %}>منتشر شده</option>
-                </select>
-            </div>
-
-            <!-- Instagram Images -->
-            <div class="admin-form-section">
-                <label class="admin-form-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-left:4px; color:var(--color-ember);">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
+                <h3 class="admin-form-section__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
                     </svg>
-                    تصاویر اینستاگرام
-                </label>
+                    پست اینستاگرام
+                </h3>
 
-                <p class="admin-form-hint" style="margin-bottom:12px;">تصاویر را آپلود کنید یا URL آن‌ها را وارد کنید</p>
+                <div class="admin-form-group">
+                    <label for="instagram_caption" class="admin-form-label">کپشن</label>
+                    <textarea id="instagram_caption" name="instagram_caption"
+                              class="admin-form-input admin-form-input--textarea" rows="6"
+                              placeholder="متن کپشن اینستاگرام را وارد کنید..."></textarea>
+                </div>
 
-                <div class="image-upload-area" id="igImageUploadArea" style="cursor:pointer;">
-                    <input type="file" id="ig_image_file" class="ig-image-upload-input" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
-                    <div class="image-upload-area__content" id="igUploadContent" style="pointer-events:none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
+                <div class="admin-form-group">
+                    <label for="hashtags" class="admin-form-label">هشتگ‌ها</label>
+                    <select id="hashtags" name="hashtags" class="admin-form-input admin-form-select2" multiple
+                            data-placeholder="هشتگ‌ها را وارد کنید">
+                    </select>
+                    <small class="admin-form-hint">هر هشتگ را تایپ کرده و Enter بزنید</small>
+                </div>
+
+                <div class="admin-form-group">
+                    <label for="instagram_status" class="admin-form-label">وضعیت</label>
+                    <select id="instagram_status" name="instagram_status" class="admin-form-input">
+                        <option value="draft" selected>پیش‌نویس</option>
+                        <option value="ready">آماده انتشار</option>
+                    </select>
+                </div>
+
+                <!-- Instagram Images -->
+                <div class="admin-form-section">
+                    <label class="admin-form-label" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
                         </svg>
-                        <p class="image-upload-area__text">تصاویر اینستاگرام را آپلود کنید</p>
-                        <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت — چند انتخابی</p>
+                        تصاویر اینستاگرام
+                    </label>
+
+                    <div class="image-upload-area" id="igImageUploadArea">
+                        <input type="file" id="ig_image_files" name="ig_image_files" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none;">
+                        <div class="image-upload-area__content" id="igUploadContent">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" class="image-upload-area__icon">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p class="image-upload-area__text">کلیک کنید یا تصاویر را اینجا بکشید</p>
+                            <p class="image-upload-area__hint">PNG, JPG, WEBP — حداکثر ۵ مگابایت — چند انتخابی</p>
+                        </div>
+                    </div>
+                    <div class="image-preview-list" id="igImagesPreviewList"></div>
+
+                    <div style="margin-top: 12px;">
+                        <label for="ig_image_urls" class="admin-form-label" style="font-size: 13px;">یا URL تصاویر را وارد کنید (هر آدرس در یک خط)</label>
+                        <textarea id="ig_image_urls" name="ig_image_urls" class="admin-form-input admin-form-input--textarea"
+                                  rows="3" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
                     </div>
                 </div>
-                <small class="admin-form-error" id="igImageError" style="display:none"></small>
-
-                <div class="image-url-input-wrapper" style="margin-top:12px;">
-                    <label for="ig_image_urls" class="admin-form-label" style="font-size:13px;">یا URL تصاویر را وارد کنید (هر URL در یک خط)</label>
-                    <textarea id="ig_image_urls" name="ig_image_urls" class="admin-form-input admin-form-input--textarea" rows="4" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg">{{ ig_image_urls_text }}</textarea>
-                    <small class="admin-form-hint">هر URL در یک خط جداگانه وارد کنید</small>
-                </div>
-
-                <div id="igImagesPreviewList" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
             </div>
         </div>
+
+        <!-- Hidden fields -->
+        <input type="hidden" name="source_type" value="manual">
+        <input type="hidden" name="published_to_website_at" id="published_to_website_at" value="">
+        <input type="hidden" name="website_status" value="draft">
 
         <div class="admin-divider"></div>
-
-        <!-- ============================================ -->
-        <!-- AI SECTION                                   -->
-        <!-- ============================================ -->
-        <div id="aiSection" style="display:none;">
-            <h3 class="admin-form-section__title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle; margin-left:6px; color:var(--color-ember);">
-                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-                    <path d="M12 2a10 10 0 0 1 10 10h-10V2z"/>
-                    <path d="M8.5 8.5a3.5 3.5 0 0 0 7 0 3.5 3.5 0 0 0-7 0z"/>
-                    <path d="M2 18c1.5-2 5-4 10-4s8.5 2 10 4"/>
-                </svg>
-                اطلاعات هوش مصنوعی
-            </h3>
-
-            <div class="admin-form-group">
-                <label for="ai_prompt" class="admin-form-label">پرامپت AI</label>
-                <textarea id="ai_prompt" name="ai_prompt" class="admin-form-input admin-form-input--textarea" rows="6" placeholder="پرامپت ارسال‌شده به AI...">{{ post.ai_prompt if post else '' }}</textarea>
-                <small class="admin-form-hint">پرامپت استفاده‌شده برای تولید محتوا (در صورت وجود)</small>
-            </div>
-
-            <div class="admin-form-group">
-                <label for="ai_payload" class="admin-form-label">پاسخ JSON (ai_payload)</label>
-                <textarea id="ai_payload" name="ai_payload" class="admin-form-input admin-form-input--textarea" rows="8" placeholder='{"key": "value", ...}'>{{ post.ai_payload | tojson if post and post.ai_payload else '' }}</textarea>
-                <small class="admin-form-hint">پاسخ کامل AI به فرمت JSON</small>
-            </div>
-        </div>
 
         <!-- Form Actions -->
-        <div class="admin-form-actions" style="margin-top: 24px;">
+        <div class="admin-form-actions">
             <button type="submit" class="admin-btn admin-btn--primary admin-btn--lg">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 <span>ذخیره پست</span>
             </button>
-            {% if source == 'job' %}
-            <a href="/admin/jobs/{{ job_id|default('') }}/detail" class="admin-btn admin-btn--outline admin-btn--lg">
-                <span>بازگشت</span>
-            </a>
-            {% else %}
             <a href="/admin/posts" class="admin-btn admin-btn--outline admin-btn--lg">
-                <span>لغو</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                <span>انصراف</span>
             </a>
-            {% endif %}
         </div>
     </form>
 </div>
@@ -388,68 +517,122 @@
 {% block scripts %}
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/select2.min.js"></script>
-<script src="/static/js/jalalidatepicker.min.js"></script>
+<script src="/static/js/toastr.min.js"></script>
 <script src="/static/js/ckeditor.js"></script>
-<script src="/static/js/admin.js"></script>
 <script>
+// Toastr configuration
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('msg') && urlParams.get('msg') === 'created') {
-        setTimeout(() => showPersianToast('پست با موفقیت ایجاد شد', 'success', 4000));
-    }
+    // Set published date automatically (current Jalali date)
+    const now = new Date();
+    const jalaliNow = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(now).replace(/[/]/g, '/');
+    document.getElementById('published_to_website_at').value = jalaliNow;
 
-    // --- Section Toggles ---
-    window.updateChannelUI = function(type, isChecked) {
-        const section = type === 'blog' ? document.getElementById('blogSection') : document.getElementById('instagramSection');
-        const card = document.querySelector(`label[for="${type}Enabled"]`);
+    // Platform toggle
+    window.togglePlatform = function(platform) {
+        const checkbox = document.getElementById(platform === 'blog' ? 'blogEnabled' : 'instagramEnabled');
+        const card = document.getElementById(platform === 'blog' ? 'blogPlatformCard' : 'instagramPlatformCard');
+        const section = document.getElementById(platform === 'blog' ? 'blogSection' : 'instagramSection');
 
-        if (isChecked) {
+        // Toggle checkbox
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) {
             card.classList.add('active');
-            $(section).slideDown(300);
+            section.classList.remove('collapsed');
+            section.classList.add('expanded');
         } else {
             card.classList.remove('active');
-            $(section).slideUp(300);
+            section.classList.remove('expanded');
+            section.classList.add('collapsed');
         }
     };
 
-    window.toggleInstagramSection = function(checked) {
-        document.getElementById('instagramSection').style.display = checked ? 'block' : 'none';
-    };
-
-    // --- Show AI section if source_type is 'ai' ---
-    const sourceTypeSelect = document.getElementById('source_type');
-    const aiSection = document.getElementById('aiSection');
-    function toggleAISection() {
-        if (sourceTypeSelect && aiSection) {
-            if (sourceTypeSelect.value === 'ai') {
-                $(aiSection).slideDown(300);
-            } else {
-                $(aiSection).slideUp(300);
-            }
-        }
-    }
-    if (sourceTypeSelect) {
-        sourceTypeSelect.addEventListener('change', toggleAISection);
-        toggleAISection(); // initial state
-    }
-
-    // --- Auto-generate slug from title ---
+    // Auto-generate slug
     const titleInput = document.getElementById('title');
     const slugInput = document.getElementById('slug');
-    if (titleInput && slugInput) {
-        titleInput.addEventListener('input', function() {
-            if (!slugInput.value) {
-                slugInput.value = this.value
-                    .toLowerCase()
-                    .replace(/[^\w\s\u200D\u0600-\u06FF]/gu, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-')
-                    .trim();
-            }
-        });
-    }
+    let slugAutoGenerated = true;
 
-    // --- CKEditor for body_html ---
+    titleInput.addEventListener('input', function() {
+        if (slugAutoGenerated || !slugInput.value) {
+            slugInput.value = this.value
+                .toLowerCase()
+                .replace(/[^\w\s\u0600-\u06FF-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+            slugAutoGenerated = true;
+        }
+    });
+
+    slugInput.addEventListener('input', function() {
+        slugAutoGenerated = false;
+    });
+
+    // Select2 for categories
+    $('#categories').select2({
+        placeholder: 'انتخاب یا ایجاد دسته‌بندی',
+        allowClear: true,
+        dir: 'rtl',
+        tags: true,
+        language: {
+            noResults: function() { return 'دسته‌بندی مورد نظر را تایپ کنید و Enter بزنید'; }
+        }
+    });
+
+    // Select2 for tags
+    $('#tags').select2({
+        placeholder: 'انتخاب یا ایجاد برچسب',
+        allowClear: true,
+        dir: 'rtl',
+        tags: true,
+        language: {
+            noResults: function() { return 'برچسب مورد نظر را تایپ کنید و Enter بزنید'; }
+        }
+    });
+
+    // Select2 for hashtags
+    $('#hashtags').select2({
+        placeholder: 'هشتگ‌ها را وارد کنید',
+        allowClear: true,
+        dir: 'rtl',
+        tags: true,
+        createTag: function(params) {
+            var term = $.trim(params.term);
+            if (term === '') return null;
+            return {
+                id: term.startsWith('#') ? term : '#' + term,
+                text: term.startsWith('#') ? term : '#' + term
+            };
+        },
+        language: {
+            noResults: function() { return 'هشتگ مورد نظر را تایپ کنید و Enter بزنید'; }
+        }
+    });
+
+    // CKEditor for body_html
     const bodyEditor = document.getElementById('body_html');
     if (bodyEditor) {
         ClassicEditor
@@ -468,212 +651,209 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // --- Select2 for hashtags ---
-    const hashtagsSelect = document.getElementById('hashtags');
-    if (hashtagsSelect) {
-        $(hashtagsSelect).select2({
-            placeholder: 'هشتگ‌ها را انتخاب یا وارد کنید',
-            allowClear: true,
-            dir: 'rtl',
-            tags: true,
-            createTag: function(params) {
-                var term = $.trim(params.term);
-                if (term === '') return null;
-                return {
-                    id: term.startsWith('#') ? term : '#' + term,
-                    text: term.startsWith('#') ? term : '#' + term
-                };
-            },
-            language: { noResults: function() { return 'هشتگ مورد نظر را تایپ کنید و Enter بزنید'; } }
-        });
-    }
+    // Cover image upload
+    setupSingleImageUpload('coverImageUploadArea', 'cover_image_file', 'coverUploadContent', 'coverImagePreview', 'coverPreviewImg', 'removeCoverImageBtn', 'cover_image_url');
 
-    // --- Jalali Datepicker ---
-    const publishDate = document.getElementById('published_to_website_at');
-    if (publishDate) {
-        jalaliDatepicker.startWatch({
-            selector: 'input.admin-form-date',
-            format: 'YYYY/MM/DD',
-            autoClose: true,
-            minDate: 'today',
-            showTodayBtn: true
-        });
-    }
+    // Instagram multi-image upload
+    setupMultiImageUpload('igImageUploadArea', 'ig_image_files', 'igUploadContent', 'igImagesPreviewList');
 
-    // --- Section defaults ---
-    toggleBlogSection(true);
-    var igEnabled = document.getElementById('instagramEnabled');
-    if (igEnabled && igEnabled.checked) toggleInstagramSection(true);
+    // Form submission
+    document.getElementById('createPostForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-    // --- Blog image upload (single preview) ---
-    setupSingleImageUpload('blogImageUploadArea', 'blog_image_file', 'blogUploadContent', 'blogImagePreview', 'blogPreviewImg', 'removeBlogImageBtn', 'blogImageError', 'cover_image_url');
+        const form = this;
+        const title = document.getElementById('title').value.trim();
 
-    // --- OG image upload (single preview) ---
-    setupSingleImageUpload('ogImageUploadArea', 'og_image_file', 'ogUploadContent', 'ogImagePreview', 'ogPreviewImg', 'removeOgImageBtn', 'ogImageError', 'og_image');
-
-    // --- Instagram image upload + URL list ---
-    setupMultiImageUpload('igImageUploadArea', 'ig_image_file', 'igUploadContent', 'igImageError', 'igImagesPreviewList');
-
-    // --- If we have AI-generated image URLs from a job, show them ---
-    {% if ci and ci.blog_image_urls %}
-    try {
-        var blogImgUrls = JSON.parse('{{ ci.blog_image_urls | tojson }}');
-        if (Array.isArray(blogImgUrls) && blogImgUrls.length > 0) {
-            var blogPreviewList = document.getElementById('blogImagesPreviewList');
-            blogImgUrls.forEach(function(url) {
-                if (!url) return;
-                var img = document.createElement('img');
-                img.src = url;
-                img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);cursor:pointer;';
-                img.title = url;
-                img.onclick = function() { window.open(url, '_blank'); };
-                blogPreviewList.appendChild(img);
-            });
-            document.getElementById('cover_image_url').value = blogImgUrls[0];
+        if (!title) {
+            toastr.error('عنوان پست الزامی است', 'خطا');
+            return;
         }
-    } catch(e) {}
-    {% endif %}
 
-    {% if ci and ci.instagram_image_urls %}
-    try {
-        var igImgUrls = JSON.parse('{{ ci.instagram_image_urls | tojson }}');
-        if (Array.isArray(igImgUrls) && igImgUrls.length > 0) {
-            var igPreviewList = document.getElementById('igImagesPreviewList');
-            igImgUrls.forEach(function(url) {
-                if (!url) return;
-                var img = document.createElement('img');
-                img.src = url;
-                img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);cursor:pointer;';
-                img.title = url;
-                img.onclick = function() { window.open(url, '_blank'); };
-                igPreviewList.appendChild(img);
-            });
-            var igUrlsTextarea = document.getElementById('ig_image_urls');
-            if (igUrlsTextarea) {
-                igUrlsTextarea.value = igImgUrls.join('\n');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span>در حال ذخیره...</span>';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }
-    } catch(e) {}
-    {% endif %}
+        })
+        .then(response => {
+            if (response.redirected) {
+                toastr.success('پست با موفقیت ایجاد شد', 'موفقیت');
+                setTimeout(() => window.location.href = response.url, 1500);
+            } else if (response.ok) {
+                toastr.success('پست با موفقیت ایجاد شد', 'موفقیت');
+                setTimeout(() => window.location.href = '/admin/posts', 1500);
+            } else {
+                throw new Error('خطا در ایجاد پست');
+            }
+        })
+        .catch(error => {
+            toastr.error('خطا در ایجاد پست. لطفاً دوباره تلاش کنید.', 'خطا');
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.disabled = false;
+        });
+    });
 });
 
-// --- Single Image Upload Helper ---
-function setupSingleImageUpload(areaId, fileId, contentId, previewId, imgId, removeBtnId, errorId, urlInputId) {
-    var area = document.getElementById(areaId);
-    var fileInput = document.getElementById(fileId);
-    var content = document.getElementById(contentId);
-    var preview = document.getElementById(previewId);
-    var img = document.getElementById(imgId);
-    var removeBtn = document.getElementById(removeBtnId);
-    var errorEl = document.getElementById(errorId);
-    var urlInput = document.getElementById(urlInputId);
+// Single image upload
+function setupSingleImageUpload(areaId, fileId, contentId, previewId, imgId, removeBtnId, urlInputId) {
+    const area = document.getElementById(areaId);
+    const fileInput = document.getElementById(fileId);
+    const content = document.getElementById(contentId);
+    const preview = document.getElementById(previewId);
+    const img = document.getElementById(imgId);
+    const removeBtn = document.getElementById(removeBtnId);
+    const urlInput = document.getElementById(urlInputId);
 
     if (!area || !fileInput) return;
 
-    var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    var MAX_SIZE = 5 * 1024 * 1024;
-
-    function showErr(msg) {
-        if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
-    }
-    function clearErr() {
-        if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; }
-    }
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const MAX_SIZE = 5 * 1024 * 1024;
 
     function showPreview(dataUrl) {
         img.src = dataUrl;
-        if (content) content.style.display = 'none';
-        if (preview) preview.style.display = 'block';
-        clearErr();
-    }
-    function hidePreview() {
-        if (content) content.style.display = 'block';
-        if (preview) preview.style.display = 'none';
-        img.src = '';
-        fileInput.value = '';
+        content.style.display = 'none';
+        preview.style.display = 'block';
         if (urlInput) urlInput.value = '';
     }
 
-    // Click handler on area (only if not clicking remove button)
+    function hidePreview() {
+        content.style.display = 'flex';
+        preview.style.display = 'none';
+        img.src = '';
+        fileInput.value = '';
+    }
+
     area.addEventListener('click', function(e) {
         if (e.target.closest('.image-upload-area__remove')) return;
         fileInput.click();
     });
 
     fileInput.addEventListener('change', function() {
-        var f = this.files[0];
-        if (!f) return;
-        validateAndPreview(f);
-    });
+        const file = this.files[0];
+        if (!file) return;
 
-    ['dragenter', 'dragover'].forEach(function(ev) {
-        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.add('image-upload-area--dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(function(ev) {
-        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.remove('image-upload-area--dragover'); });
-    });
-    area.addEventListener('drop', function(e) {
-        var f = e.dataTransfer.files[0];
-        if (f) validateAndPreview(f);
-    });
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            toastr.error('فرمت تصویر مجاز نیست', 'خطا');
+            return;
+        }
+        if (file.size > MAX_SIZE) {
+            toastr.error('حجم تصویر نباید بیشتر از ۵ مگابایت باشد', 'خطا');
+            return;
+        }
 
-    function validateAndPreview(f) {
-        clearErr();
-        if (!ALLOWED_TYPES.includes(f.type)) { showErr('فرمت تصویر مجاز نیست. فقط JPEG, PNG, WEBP, GIF'); fileInput.value = ''; return; }
-        if (f.size > MAX_SIZE) { showErr('حجم نباید بیشتر از ۵ مگابایت باشد.'); fileInput.value = ''; return; }
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = function(e) { showPreview(e.target.result); };
-        reader.readAsDataURL(f);
-    }
+        reader.readAsDataURL(file);
+    });
+
+    ['dragenter', 'dragover'].forEach(ev => {
+        area.addEventListener(ev, function(e) {
+            e.preventDefault();
+            area.classList.add('image-upload-area--dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(ev => {
+        area.addEventListener(ev, function(e) {
+            e.preventDefault();
+            area.classList.remove('image-upload-area--dragover');
+        });
+    });
+
+    area.addEventListener('drop', function(e) {
+        const file = e.dataTransfer.files[0];
+        if (file && ALLOWED_TYPES.includes(file.type) && file.size <= MAX_SIZE) {
+            const reader = new FileReader();
+            reader.onload = function(e) { showPreview(e.target.result); };
+            reader.readAsDataURL(file);
+        }
+    });
 
     if (removeBtn) {
-        removeBtn.addEventListener('click', function(e) { e.stopPropagation(); hidePreview(); });
+        removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hidePreview();
+        });
     }
 }
 
-// --- Multi Image Upload Helper (Instagram) ---
-function setupMultiImageUpload(areaId, fileId, contentId, errorId, previewListId) {
-    var area = document.getElementById(areaId);
-    var fileInput = document.getElementById(fileId);
-    var previewList = document.getElementById(previewListId);
+// Multi-image upload
+function setupMultiImageUpload(areaId, fileId, contentId, previewListId) {
+    const area = document.getElementById(areaId);
+    const fileInput = document.getElementById(fileId);
+    const previewList = document.getElementById(previewListId);
 
     if (!area || !fileInput || !previewList) return;
 
-    var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    var MAX_SIZE = 5 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const MAX_SIZE = 5 * 1024 * 1024;
+    let imageCounter = 0;
+
+    function addImage(dataUrl) {
+        imageCounter++;
+        const container = document.createElement('div');
+        container.className = 'image-preview-item';
+        container.innerHTML = `
+            <img src="${dataUrl}" alt="Preview ${imageCounter}">
+            <button type="button" class="image-preview-item__remove" title="حذف">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="12" height="12">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        `;
+        container.querySelector('.image-preview-item__remove').addEventListener('click', function() {
+            container.remove();
+        });
+        previewList.appendChild(container);
+    }
 
     area.addEventListener('click', function(e) {
-        if (e.target.closest('.image-upload-area__remove')) return;
         fileInput.click();
     });
 
     fileInput.addEventListener('change', function() {
-        Array.from(this.files).forEach(addImage);
+        Array.from(this.files).forEach(file => {
+            if (ALLOWED_TYPES.includes(file.type) && file.size <= MAX_SIZE) {
+                const reader = new FileReader();
+                reader.onload = function(e) { addImage(e.target.result); };
+                reader.readAsDataURL(file);
+            }
+        });
         this.value = '';
     });
 
-    ['dragenter', 'dragover'].forEach(function(ev) {
-        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.add('image-upload-area--dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(function(ev) {
-        area.addEventListener(ev, function(e) { e.preventDefault(); area.classList.remove('image-upload-area--dragover'); });
-    });
-    area.addEventListener('drop', function(e) {
-        Array.from(e.dataTransfer.files).forEach(addImage);
+    ['dragenter', 'dragover'].forEach(ev => {
+        area.addEventListener(ev, function(e) {
+            e.preventDefault();
+            area.classList.add('image-upload-area--dragover');
+        });
     });
 
-    function addImage(file) {
-        if (!ALLOWED_TYPES.includes(file.type)) return;
-        if (file.size > MAX_SIZE) return;
-        var reader = new FileReader();
-        reader.onload = function(ev) {
-            var img = document.createElement('img');
-            img.src = ev.target.result;
-            img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--color-charcoal-300);';
-            previewList.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-    }
+    ['dragleave', 'drop'].forEach(ev => {
+        area.addEventListener(ev, function(e) {
+            e.preventDefault();
+            area.classList.remove('image-upload-area--dragover');
+        });
+    });
+
+    area.addEventListener('drop', function(e) {
+        Array.from(e.dataTransfer.files).forEach(file => {
+            if (ALLOWED_TYPES.includes(file.type) && file.size <= MAX_SIZE) {
+                const reader = new FileReader();
+                reader.onload = function(e) { addImage(e.target.result); };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
 }
 </script>
 {% endblock %}

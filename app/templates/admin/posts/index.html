@@ -4,9 +4,99 @@
 
 {% block header_title %}پست‌ها{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+<style>
+    /* Mobile responsive table improvements */
+    @media (max-width: 768px) {
+        .admin-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -16px;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .admin-table {
+            min-width: 800px;
+            white-space: nowrap;
+        }
+
+        .admin-table__cell {
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        .admin-badge {
+            white-space: nowrap;
+            display: inline-flex;
+        }
+
+        .admin-table__actions {
+            flex-wrap: nowrap;
+            gap: 4px;
+        }
+
+        .admin-btn--sm {
+            padding: 6px 8px;
+            min-width: 32px;
+        }
+
+        .admin-table__cell--date {
+            white-space: nowrap;
+            direction: ltr;
+            text-align: center;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-track {
+            background: var(--color-charcoal);
+            border-radius: 3px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--color-charcoal-lighter);
+            border-radius: 3px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--color-ash-gray);
+        }
+
+        .admin-toolbar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .admin-toolbar__actions {
+            width: 100%;
+        }
+
+        .admin-toolbar__actions .admin-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="admin-posts-list">
-    <div class="admin-toolbar">
+<div class="admin-page">
+    <div class="admin-toolbar" style="margin-bottom: 24px;">
+        <div class="admin-toolbar__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>مدیریت پست‌ها</span>
+        </div>
         <div class="admin-toolbar__actions">
             <a href="/admin/posts/create" class="admin-btn admin-btn--primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
@@ -18,6 +108,32 @@
         </div>
     </div>
 
+    <!-- کارت‌های آمار -->
+    <div class="admin-stats-grid" style="margin-bottom: 24px;">
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__value">{{ posts|length }}</div>
+            <div class="admin-stat-card__label">کل پست‌ها</div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__value" style="color: var(--color-success);">
+                {{ posts|selectattr('website_status', 'equalto', 'published')|list|length }}
+            </div>
+            <div class="admin-stat-card__label">منتشر شده</div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__value" style="color: var(--color-warning);">
+                {{ posts|selectattr('website_status', 'equalto', 'draft')|list|length }}
+            </div>
+            <div class="admin-stat-card__label">پیش‌نویس</div>
+        </div>
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__value" style="color: var(--color-info);">
+                {{ posts|selectattr('source_type', 'equalto', 'ai')|list|length }}
+            </div>
+            <div class="admin-stat-card__label">هوش مصنوعی</div>
+        </div>
+    </div>
+
     <div class="admin-card">
         {% if posts %}
         <div class="admin-table-wrapper">
@@ -25,48 +141,85 @@
                 <thead>
                     <tr>
                         <th class="admin-th" style="width:60px;">شماره</th>
-                        <th class="admin-th">عنوان</th>
+                        <th class="admin-th" style="min-width:200px;">عنوان</th>
                         <th class="admin-th" style="width:140px;">وضعیت</th>
-                        <th class="admin-th" style="width:120px;">تاریخ</th>
-                        <th class="admin-th" style="width:150px;">عملیات</th>
+                        <th class="admin-th" style="width:120px;">نوع</th>
+                        <th class="admin-th" style="width:130px;">تاریخ</th>
+                        <th class="admin-th" style="width:200px;">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for post in posts %}
                     <tr class="admin-table__row">
                         <td class="admin-table__cell admin-table__cell--number">{{ post.id }}</td>
-                        <td class="admin-table__cell">
+                        <td class="admin-table__cell" style="max-width:300px;">
                             <a href="/admin/posts/{{ post.id }}" class="admin-table__link">{{ post.title }}</a>
-                        </td>
-                        <td class="admin-table__cell">
-                            {% if post.website_status.name == 'PUBLISHED' %}
-                            <span class="admin-badge admin-badge--success">منتشر شده</span>
-                            {% elif post.website_status.name == 'DRAFT' %}
-                            <span class="admin-badge admin-badge--info">پیش‌نویس</span>
-                            {% else %}
-                            <span class="admin-badge admin-badge--warning">{{ post.website_status.name }}</span>
+                            {% if post.topic %}
+                            <small style="color: var(--color-text-muted); display: block; margin-top: 4px; font-size: 12px; white-space: normal; word-break: break-word;">
+                                {{ post.topic[:80] }}{% if post.topic|length > 80 %}...{% endif %}
+                            </small>
                             {% endif %}
                         </td>
-                        <td class="admin-table__cell admin-table__cell--date">{{ post.jalali_date }}</td>
                         <td class="admin-table__cell">
-                            <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                            </a>
-                            <a href="/admin/posts/{{ post.id }}/edit" class="admin-btn admin-btn--sm admin-btn--primary" title="ویرایش">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                            </a>
-                            <button type="button" class="admin-btn admin-btn--sm admin-btn--danger" onclick="confirmDeletePost({{ post.id }}, '{{ post.title }}')" title="حذف">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                            </button>
+                            {% if post.website_status == 'published' %}
+                            <span class="admin-badge admin-badge--success">منتشر شده</span>
+                            {% elif post.website_status == 'draft' %}
+                            <span class="admin-badge admin-badge--info">پیش‌نویس</span>
+                            {% else %}
+                            <span class="admin-badge admin-badge--warning">{{ post.website_status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="admin-table__cell">
+                            {% if post.source_type == 'ai' %}
+                            <span class="admin-badge" style="background: rgba(59, 130, 246, 0.1); color: #93c5fd;">AI</span>
+                            {% elif post.source_type == 'job' %}
+                            <span class="admin-badge admin-badge--warning">فرآیند</span>
+                            {% elif post.source_type == 'manual' %}
+                            <span class="admin-badge" style="background: rgba(107, 114, 128, 0.15); color: #9CA3AF;">دستی</span>
+                            {% else %}
+                            <span class="admin-badge" style="background: rgba(107, 114, 128, 0.15); color: #9CA3AF;">{{ post.source_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="admin-table__cell admin-table__cell--date" style="font-family: 'Shabnam', 'IRANSansX', sans-serif; white-space: nowrap; direction: ltr; text-align: center;">
+                            {{ post.jalali_date if post.jalali_date else '—' }}
+                        </td>
+                        <td class="admin-table__cell">
+                            <div class="admin-table__actions">
+                                <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </a>
+                                <a href="/admin/posts/{{ post.id }}/edit" class="admin-btn admin-btn--sm admin-btn--primary" title="ویرایش">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </a>
+                                <button type="button" class="admin-btn admin-btn--sm admin-btn--danger" onclick="confirmDeletePost({{ post.id }})" title="حذف">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                                {% if post.website_status != 'published' %}
+                                <button type="button" class="admin-btn admin-btn--sm" onclick="confirmPublishPost({{ post.id }})" title="انتشار" style="background: #16a34a; color: white; border-color: #16a34a;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                                {% if post.slug %}
+                                <a href="/blog/{{ post.slug }}" target="_blank" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده در سایت">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -75,14 +228,135 @@
         </div>
         {% else %}
         <div class="admin-empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                 <polyline points="14 2 14 8 20 8"/>
             </svg>
-            <p>هنوز پست‌ای وجود ندارد</p>
+            <p>هنوز پستی وجود ندارد</p>
             <a href="/admin/posts/create" class="admin-btn admin-btn--primary">ایجاد اولین پست</a>
+            <p style="margin-top: 12px; font-size: 13px; color: var(--color-text-secondary);">
+                می‌توانید پست جدید به‌صورت دستی ایجاد کنید یا از طریق
+                <a href="/admin/jobs" style="color: var(--color-ember);">فرآیندهای هوش مصنوعی</a> محتوا تولید کنید.
+            </p>
         </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/toastr.min.js"></script>
+<script>
+// Configure toastr
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
+function confirmPublishPost(postId) {
+    Swal.fire({
+        title: 'انتشار در بلاگ',
+        text: 'آیا از انتشار این پست در وبلاگ اطمینان دارید؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'بله، منتشر کن',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'swal2-popup-persian',
+            title: 'swal2-title-persian',
+            htmlContainer: 'swal2-html-persian',
+            confirmButton: 'swal2-confirm-persian swal2-confirm-success',
+            cancelButton: 'swal2-cancel-persian'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            publishPost(postId);
+        }
+    });
+}
+
+function confirmDeletePost(postId) {
+    Swal.fire({
+        title: 'حذف پست',
+        text: 'آیا از حذف این پست اطمینان دارید؟ این عملیات قابل بازگشت نیست.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'بله، حذف کن',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'swal2-popup-persian',
+            title: 'swal2-title-persian',
+            htmlContainer: 'swal2-html-persian',
+            confirmButton: 'swal2-confirm-persian swal2-confirm-danger',
+            cancelButton: 'swal2-cancel-persian'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deletePost(postId);
+        }
+    });
+}
+
+function publishPost(postId) {
+    fetch(`/admin/posts/${postId}/publish`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            toastr.success('پست با موفقیت منتشر شد', 'موفقیت');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'خطا در انتشار');
+        }
+    })
+    .catch(error => {
+        toastr.error('خطا در انتشار پست', 'خطا');
+    });
+}
+
+function deletePost(postId) {
+    fetch(`/admin/posts/${postId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            toastr.success('پست با موفقیت حذف شد', 'موفقیت');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error('خطا در حذف پست');
+        }
+    })
+    .catch(error => {
+        toastr.error('خطا در حذف پست', 'خطا');
+    });
+}
+</script>
 {% endblock %}

@@ -198,6 +198,7 @@ def process_job_task(self, job_id: int):
                     hashtags=hashtags,
                     instagram_status="draft",
                     website_status="published" if job.auto_publish else "draft",
+                    source_type="ai",  # ✅ Set source as AI
                     ai_prompt=json.dumps({
                         "blog_text_instructions": job.blog_text_instructions,
                         "blog_image_instructions": job.blog_image_instructions,
@@ -208,31 +209,22 @@ def process_job_task(self, job_id: int):
                         "blog_content": blog_content,
                         "instagram_content": instagram_content,
                     }, ensure_ascii=False),
-                    blog_enabled=True,
-                    instagram_enabled=bool(job.instagram_image_count),
                 )
                 db.add(post)
                 await db.commit()
                 await db.refresh(post)
-                logger.info(f"✅ Post created with id={post.id}")
 
-                # ==========================================
-                # ۶. ذخیره تصاویر بلاگ
-                # ==========================================
-                logger.info("=" * 60)
-                logger.info("💾 SAVING BLOG IMAGES")
-
-                for i, img_url in enumerate(blog_images):
+                for i, img_url in enumerate(blog_images[:1]):  # ✅ Only first image (cover)
                     if img_url:
-                        logger.info(f"   Downloading blog image {i+1}/{len(blog_images)}...")
-                        local_path = await download_and_save_image(img_url, f"blog_{post.id}_{i}")
+                        logger.info(f"   Downloading blog cover image...")
+                        local_path = await download_and_save_image(img_url, f"blog_cover_{post.id}")
 
                         asset = MediaAsset(
                             post_id=post.id,
-                            role="blog_cover" if i == 0 else "blog_image",
+                            role="blog_cover",  # ✅ Always blog_cover now
                             prompt=blog_image_prompts[0] if blog_image_prompts else "",
                             public_url=local_path if local_path else img_url,
-                            sort_order=i,
+                            sort_order=0,
                         )
                         db.add(asset)
 
