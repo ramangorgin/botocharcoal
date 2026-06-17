@@ -1,163 +1,541 @@
-<!-- app/templates/admin/jobs/show.html -->
 {% extends "admin/base.html" %}
 
 {% block title %}جزئیات فرآیند #{{ job.id }} | پنل مدیریت{% endblock %}
 
 {% block header_title %}جزئیات فرآیند{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+<style>
+    .show-job-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .job-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .job-breadcrumb a {
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .job-breadcrumb a:hover {
+        color: var(--color-ember);
+    }
+
+    .job-header {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .job-header__title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--color-white);
+        margin: 0 0 16px 0;
+    }
+
+    .job-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .job-meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .job-meta-item__label {
+        font-size: 11px;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .job-meta-item__value {
+        font-size: 14px;
+        color: var(--color-text-primary);
+    }
+
+    .job-instructions {
+        margin-top: 16px;
+        padding: 12px;
+        background: var(--color-charcoal);
+        border-radius: var(--border-radius-md);
+        border-right: 3px solid var(--color-ember);
+    }
+
+    .job-instructions__label {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .job-instructions__text {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .job-error {
+        margin-top: 16px;
+        padding: 12px 16px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: var(--border-radius-md);
+        color: #fca5a5;
+        font-size: 13px;
+    }
+
+    .job-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .content-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .content-card__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .content-card__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--color-white);
+        margin: 0;
+    }
+
+    .content-section {
+        margin-bottom: 24px;
+    }
+
+    .content-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .content-section__label {
+        font-size: 12px;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .content-section__text {
+        font-size: 14px;
+        color: var(--color-text-primary);
+        line-height: 1.8;
+        margin: 0;
+    }
+
+    .instagram-caption-box {
+        background: var(--color-charcoal);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        padding: 16px;
+        position: relative;
+    }
+
+    .instagram-caption-box__text {
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--color-text-primary);
+        white-space: pre-wrap;
+        margin: 0;
+    }
+
+    .hashtags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .hashtag-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #93c5fd;
+        border-radius: 999px;
+        font-size: 12px;
+    }
+
+    .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    .image-card {
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        background: var(--color-charcoal);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .image-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .image-card__img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-card__fallback {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-charcoal-light);
+        color: var(--color-text-muted);
+        font-size: 13px;
+    }
+
+    .image-card__footer {
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .image-card__label {
+        font-size: 12px;
+        color: var(--color-text-muted);
+    }
+
+    .html-content {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 16px;
+        background: var(--color-charcoal);
+        border-radius: var(--border-radius-md);
+        line-height: 1.8;
+        color: var(--color-text-primary);
+    }
+
+    .html-content img {
+        max-width: 100%;
+        border-radius: var(--border-radius-sm);
+    }
+
+    .status-state {
+        text-align: center;
+        padding: 60px 24px;
+    }
+
+    .status-state__icon {
+        margin-bottom: 16px;
+        animation: spin 2s linear infinite;
+    }
+
+    .status-state__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--color-white);
+        margin: 0 0 8px 0;
+    }
+
+    .status-state__text {
+        color: var(--color-text-muted);
+        font-size: 13px;
+        margin: 0 0 20px 0;
+    }
+
+    .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: var(--color-ember);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: var(--font-family);
+    }
+
+    .copy-btn:hover {
+        background: var(--color-ember-hover);
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+        .job-meta-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .job-header {
+            padding: 16px;
+        }
+
+        .content-card {
+            padding: 16px;
+        }
+
+        .images-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .job-actions {
+            flex-direction: column;
+        }
+
+        .job-actions .admin-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .content-card__header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .job-meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="admin-page">
-    <!-- هدر با breadcrumb -->
-    <div class="admin-toolbar" style="margin-bottom: 24px;">
-        <div class="admin-toolbar__title">
-            <a href="/admin/jobs" style="color: var(--color-text-secondary); text-decoration: none;">
-                <span>فرآیندها</span>
-            </a>
-            <span style="margin: 0 8px; color: var(--color-text-muted);">/</span>
-            <span>فرآیند #{{ job.id }}</span>
-        </div>
-        <div class="admin-toolbar__actions">
-            {% if job.status == 'failed' %}
-            <form method="post" action="/admin/jobs/{{ job.id }}/retry" style="display:inline;">
-                <button type="submit" class="admin-btn admin-btn--primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
-                        <polyline points="23 4 23 10 17 10"/>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                    <span>تلاش مجدد</span>
-                </button>
-            </form>
+<div class="admin-page show-job-container">
+    <!-- Breadcrumb -->
+    <div class="job-breadcrumb">
+        <a href="/admin/jobs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align: middle; margin-left: 4px;">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            فرآیندها
+        </a>
+        <span style="color: var(--color-text-muted);">/</span>
+        <span style="color: var(--color-text-primary);">فرآیند #{{ job.id }}</span>
+    </div>
+
+    <!-- Job Header -->
+    <div class="job-header">
+        <h2 class="job-header__title">{{ job.topic }}</h2>
+
+        <div class="job-meta-grid">
+            <div class="job-meta-item">
+                <span class="job-meta-item__label">وضعیت</span>
+                <span class="job-meta-item__value">
+                    {% if job.status == 'completed' %}
+                    <span class="admin-badge admin-badge--success">تکمیل شده</span>
+                    {% elif job.status == 'pending' %}
+                    <span class="admin-badge admin-badge--info">در صف</span>
+                    {% elif job.status == 'processing' %}
+                    <span class="admin-badge admin-badge--warning">در حال اجرا</span>
+                    {% elif job.status == 'aborted' %}
+                    <span class="admin-badge" style="background: rgba(107, 114, 128, 0.15); color: #9CA3AF;">لغو شده</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge--error">شکست</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="job-meta-item">
+                <span class="job-meta-item__label">تاریخ ایجاد</span>
+                <span class="job-meta-item__value" style="font-family: 'Shabnam', 'IRANSansX', sans-serif;">{{ job.jalali_date if job.jalali_date else '-' }}</span>
+            </div>
+
+            <div class="job-meta-item">
+                <span class="job-meta-item__label">تصاویر بلاگ</span>
+                <span class="job-meta-item__value">{{ job.blog_image_count }}</span>
+            </div>
+
+            <div class="job-meta-item">
+                <span class="job-meta-item__label">تصاویر اینستاگرام</span>
+                <span class="job-meta-item__value">{{ job.instagram_image_count }}</span>
+            </div>
+
+            {% if job.auto_publish %}
+            <div class="job-meta-item">
+                <span class="job-meta-item__label">انتشار</span>
+                <span class="job-meta-item__value">
+                    <span class="admin-badge admin-badge--info" style="font-size: 11px;">انتشار خودکار</span>
+                </span>
+            </div>
             {% endif %}
-            {% if job.status == 'completed' and post %}
-            <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--outline">
+        </div>
+
+        {% if job.text_instructions %}
+        <div class="job-instructions">
+            <span class="job-instructions__label">دستورالعمل‌های متن</span>
+            <p class="job-instructions__text">{{ job.text_instructions }}</p>
+        </div>
+        {% endif %}
+
+        {% if job.image_instructions %}
+        <div class="job-instructions">
+            <span class="job-instructions__label">دستورالعمل‌های تصویر</span>
+            <p class="job-instructions__text">{{ job.image_instructions }}</p>
+        </div>
+        {% endif %}
+
+        {% if job.status == 'failed' and job.error_message %}
+        <div class="job-error">
+            <strong>خطا:</strong> {{ job.error_message }}
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="job-actions">
+            <a href="/admin/jobs" class="admin-btn admin-btn--outline admin-btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>بازگشت</span>
+            </a>
+
+            {% if job.status in ('pending', 'processing') %}
+            <button type="button" class="admin-btn admin-btn--danger admin-btn--lg" onclick="confirmAbortJob({{ job.id }})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                </svg>
+                <span>لغو فرآیند</span>
+            </button>
+            {% endif %}
+
+            {% if job.status == 'failed' %}
+            <a href="/admin/jobs/{{ job.id }}/edit" class="admin-btn admin-btn--outline admin-btn--lg">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                <span>ویرایش پست</span>
+                <span>ویرایش</span>
             </a>
+            <button type="button" class="admin-btn admin-btn--primary admin-btn--lg" onclick="confirmRetryJob({{ job.id }})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                <span>تلاش مجدد</span>
+            </button>
+            {% endif %}
+
+            {% if job.status == 'aborted' %}
+            <a href="/admin/jobs/{{ job.id }}/edit" class="admin-btn admin-btn--outline admin-btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>ویرایش</span>
+            </a>
+            <button type="button" class="admin-btn admin-btn--primary admin-btn--lg" onclick="confirmRestartJob({{ job.id }})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>شروع مجدد</span>
+            </button>
             {% endif %}
         </div>
     </div>
 
-    <!-- کارت اطلاعات فرآیند -->
-    <div class="admin-card" style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-            <div style="flex: 1; min-width: 250px;">
-                <h3 style="margin: 0 0 12px 0; font-size: 18px;">{{ job.topic }}</h3>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
-                    <div>
-                        <span style="color: var(--color-text-muted); font-size: 12px;">وضعیت:</span>
-                        {% if job.status == 'completed' %}
-                        <span class="admin-badge admin-badge--success">تکمیل شده</span>
-                        {% elif job.status == 'pending' %}
-                        <span class="admin-badge admin-badge--info">در صف</span>
-                        {% elif job.status == 'processing' %}
-                        <span class="admin-badge admin-badge--warning">در حال اجرا</span>
-                        {% else %}
-                        <span class="admin-badge admin-badge--error">شکست</span>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <span style="color: var(--color-text-muted); font-size: 12px;">تاریخ ایجاد:</span>
-                        <span style="font-size: 13px;">{{ job.created_at.strftime('%Y/%m/%d %H:%M') if job.created_at else '-' }}</span>
-                    </div>
-                    <div>
-                        <span style="color: var(--color-text-muted); font-size: 12px;">تصاویر بلاگ:</span>
-                        <span style="font-size: 13px;">{{ job.blog_image_count }}</span>
-                    </div>
-                    <div>
-                        <span style="color: var(--color-text-muted); font-size: 12px;">تصاویر اینستاگرام:</span>
-                        <span style="font-size: 13px;">{{ job.instagram_image_count }}</span>
-                    </div>
-                </div>
-                {% if job.text_instructions %}
-                <div style="margin-bottom: 12px;">
-                    <span style="color: var(--color-text-muted); font-size: 12px;">دستورالعمل‌های متن:</span>
-                    <p style="margin: 4px 0; font-size: 13px; background: var(--color-bg-secondary); padding: 8px; border-radius: 4px;">{{ job.text_instructions }}</p>
-                </div>
-                {% endif %}
-                {% if job.image_instructions %}
-                <div style="margin-bottom: 12px;">
-                    <span style="color: var(--color-text-muted); font-size: 12px;">دستورالعمل‌های تصویر:</span>
-                    <p style="margin: 4px 0; font-size: 13px; background: var(--color-bg-secondary); padding: 8px; border-radius: 4px;">{{ job.image_instructions }}</p>
-                </div>
-                {% endif %}
-                {% if job.auto_publish %}
-                <span class="admin-badge admin-badge--info" style="font-size: 11px;">انتشار خودکار</span>
-                {% endif %}
-            </div>
+    <!-- Completed Job Content -->
+    {% if job.status == 'completed' and post %}
+
+    <!-- Blog Content Card -->
+    {% if post.blog_enabled %}
+    <div class="content-card">
+        <div class="content-card__header">
+            <h3 class="content-card__title">محتوای بلاگ</h3>
+            {% if post.slug %}
+            <a href="/blog/{{ post.slug }}" target="_blank" class="admin-btn admin-btn--sm admin-btn--outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                <span>مشاهده در سایت</span>
+            </a>
+            {% endif %}
         </div>
 
-        {% if job.status == 'failed' and job.error_message %}
-        <div style="margin-top: 16px; padding: 12px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px; color: #ff4d4f;">
-            <strong>خطا:</strong> {{ job.error_message }}
+        {% if post.title %}
+        <div class="content-section">
+            <span class="content-section__label">عنوان</span>
+            <p class="content-section__text">{{ post.title }}</p>
+        </div>
+        {% endif %}
+
+        {% if post.summary %}
+        <div class="content-section">
+            <span class="content-section__label">خلاصه</span>
+            <p class="content-section__text">{{ post.summary }}</p>
+        </div>
+        {% endif %}
+
+        {% if post.body_html %}
+        <div class="content-section">
+            <span class="content-section__label">محتوای کامل</span>
+            <div class="html-content">
+                {{ post.body_html|safe }}
+            </div>
         </div>
         {% endif %}
     </div>
+    {% endif %}
 
-    <!-- نتایج تولید محتوا -->
-    {% if job.status == 'completed' and post %}
-
-    <!-- کارت محتوای متنی -->
-    <div class="admin-card" style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="margin: 0; font-size: 16px;">محتوای تولید شده</h3>
-            <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--outline">
-                مشاهده کامل پست
-            </a>
+    <!-- Instagram Content Card -->
+    {% if post.instagram_enabled and (post.instagram_caption or post.hashtags) %}
+    <div class="content-card">
+        <div class="content-card__header">
+            <h3 class="content-card__title">محتوای اینستاگرام</h3>
         </div>
 
-        <!-- عنوان -->
-        <div style="margin-bottom: 16px;">
-            <label style="display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px;">عنوان:</label>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 15px; font-weight: 500;">{{ post.title }}</span>
-                <button
-                    onclick="copyToClipboard('{{ post.title|replace("'", "\\'") }}')"
-                    class="admin-btn admin-btn--sm admin-btn--outline"
-                    title="کپی عنوان"
-                    style="padding: 4px 8px; min-width: auto;"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- خلاصه -->
-        {% if post.summary %}
-        <div style="margin-bottom: 16px;">
-            <label style="display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px;">خلاصه:</label>
-            <div style="display: flex; align-items: flex-start; gap: 8px;">
-                <p style="margin: 0; font-size: 13px; line-height: 1.6; flex: 1;">{{ post.summary }}</p>
-                <button
-                    onclick="copyToClipboard('{{ post.summary|replace("'", "\\'") }}')"
-                    class="admin-btn admin-btn--sm admin-btn--outline"
-                    title="کپی خلاصه"
-                    style="padding: 4px 8px; min-width: auto;"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- کپشن اینستاگرام -->
         {% if post.instagram_caption %}
-        <div style="margin-bottom: 16px; padding: 12px; background: var(--color-bg-secondary); border-radius: 6px; border-right: 3px solid var(--color-primary);">
+        <div class="content-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label style="font-size: 12px; color: var(--color-text-muted);">📱 کپشن اینستاگرام:</label>
-                <button
-                    onclick="copyToClipboard('{{ post.instagram_caption|replace("'", "\\'") }}')"
-                    class="admin-btn admin-btn--sm admin-btn--primary"
-                    style="padding: 4px 12px; min-width: auto;"
-                >
+                <span class="content-section__label" style="margin-bottom: 0;">کپشن</span>
+                <button type="button" class="copy-btn" onclick="copyToClipboard('{{ post.instagram_caption|replace("'", "\\'") }}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -165,20 +543,17 @@
                     <span>کپی کپشن</span>
                 </button>
             </div>
-            <p style="margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-wrap;">{{ post.instagram_caption }}</p>
+            <div class="instagram-caption-box">
+                <p class="instagram-caption-box__text">{{ post.instagram_caption }}</p>
+            </div>
         </div>
         {% endif %}
 
-        <!-- هشتگ‌ها -->
         {% if post.hashtags %}
-        <div style="margin-bottom: 16px;">
+        <div class="content-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label style="font-size: 12px; color: var(--color-text-muted);">#⃣ هشتگ‌ها:</label>
-                <button
-                    onclick="copyToClipboard('{{ post.hashtags|replace("'", "\\'") }}')"
-                    class="admin-btn admin-btn--sm admin-btn--primary"
-                    style="padding: 4px 12px; min-width: auto;"
-                >
+                <span class="content-section__label" style="margin-bottom: 0;">هشتگ‌ها</span>
+                <button type="button" class="copy-btn" onclick="copyToClipboard('{{ post.hashtags|replace("'", "\\'") }}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -186,200 +561,264 @@
                     <span>کپی هشتگ‌ها</span>
                 </button>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <div class="hashtags-container">
                 {% for tag in post.hashtags.split() %}
-                <span class="admin-badge admin-badge--info" style="font-size: 12px;">{{ tag }}</span>
+                <span class="hashtag-item">{{ tag }}</span>
                 {% endfor %}
             </div>
         </div>
-        {% endif %}
-
-        <!-- محتوای HTML بلاگ -->
-        {% if post.body_html %}
-        <div style="margin-bottom: 16px;">
-            <details>
-                <summary style="cursor: pointer; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px;">
-                    مشاهده محتوای HTML بلاگ ▼
-                </summary>
-                <div style="max-height: 500px; overflow-y: auto; padding: 12px; background: var(--color-bg-secondary); border-radius: 6px; font-size: 13px; line-height: 1.8;">
-                    {{ post.body_html|safe }}
-                </div>
-            </details>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- کارت تصاویر -->
-    {% if media_assets %}
-    <div class="admin-card">
-        <h3 style="margin: 0 0 16px 0; font-size: 16px;">تصاویر تولید شده</h3>
-
-        <!-- تصاویر بلاگ -->
-        {% set blog_images = media_assets|selectattr('role', 'equalto', 'blog_image')|list %}
-        {% if blog_images %}
-        <div style="margin-bottom: 24px;">
-            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--color-text-secondary);">تصاویر بلاگ ({{ blog_images|length }})</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                {% for asset in blog_images %}
-                <div style="border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; background: var(--color-bg-secondary);">
-                    <img
-                        src="{{ asset.public_url }}"
-                        alt="Blog image {{ loop.index }}"
-                        style="width: 100%; height: 200px; object-fit: cover;"
-                        loading="lazy"
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                    />
-                    <div style="display: none; width: 100%; height: 200px; align-items: center; justify-content: center; background: var(--color-bg-secondary); color: var(--color-text-muted); font-size: 13px;">
-                        تصویر در دسترس نیست
-                    </div>
-                    <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 12px; color: var(--color-text-muted);">تصویر {{ loop.index }}</span>
-                        <a
-                            href="{{ asset.public_url }}"
-                            download
-                            target="_blank"
-                            class="admin-btn admin-btn--sm admin-btn--primary"
-                            style="padding: 4px 12px; min-width: auto;"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            <span>دانلود</span>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- تصاویر اینستاگرام -->
-        {% set instagram_images = media_assets|selectattr('role', 'equalto', 'instagram_image')|list %}
-        {% if instagram_images %}
-        <div>
-            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--color-text-secondary);">تصاویر اینستاگرام ({{ instagram_images|length }})</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                {% for asset in instagram_images %}
-                <div style="border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; background: var(--color-bg-secondary);">
-                    <img
-                        src="{{ asset.public_url }}"
-                        alt="Instagram image {{ loop.index }}"
-                        style="width: 100%; height: 200px; object-fit: cover;"
-                        loading="lazy"
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                    />
-                    <div style="display: none; width: 100%; height: 200px; align-items: center; justify-content: center; background: var(--color-bg-secondary); color: var(--color-text-muted); font-size: 13px;">
-                        تصویر در دسترس نیست
-                    </div>
-                    <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 12px; color: var(--color-text-muted);">تصویر {{ loop.index }}</span>
-                        <a
-                            href="{{ asset.public_url }}"
-                            download
-                            target="_blank"
-                            class="admin-btn admin-btn--sm admin-btn--primary"
-                            style="padding: 4px 12px; min-width: auto;"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            <span>دانلود</span>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        {% if not blog_images and not instagram_images %}
-        <p style="color: var(--color-text-muted); font-size: 13px;">هنوز تصویری تولید نشده است.</p>
         {% endif %}
     </div>
     {% endif %}
 
-    {% elif job.status == 'processing' %}
-    <div class="admin-card" style="text-align: center; padding: 48px 24px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="color: var(--color-warning); margin-bottom: 16px; animation: spin 2s linear infinite;">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-        </svg>
-        <h3 style="margin: 0 0 8px 0;">در حال پردازش...</h3>
-        <p style="color: var(--color-text-muted); font-size: 13px;">لطفاً چند لحظه صبر کنید. این صفحه را refresh کنید.</p>
-        <button onclick="location.reload()" class="admin-btn admin-btn--primary" style="margin-top: 16px;">
-            بروزرسانی صفحه
-        </button>
-    </div>
+    <!-- Images Card -->
+    {% if media_assets %}
+    <div class="content-card">
+        <div class="content-card__header">
+            <h3 class="content-card__title">تصاویر تولید شده</h3>
+        </div>
 
-    {% elif job.status == 'pending' %}
-    <div class="admin-card" style=text-align: center; padding: 48px 24px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="color: var(--color-info); margin-bottom: 16px;">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <h3 style="margin: 0 0 8px 0;">در انتظار پردازش</h3>
-        <p style="color: var(--color-text-muted); font-size: 13px;">این فرآیند در صف پردازش قرار دارد. به زودی شروع می‌شود.</p>
-    </div>
-
-    {% elif job.status == 'failed' %}
-    <div class="admin-card" style="text-align: center; padding: 48px 24px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="color: var(--color-danger); margin-bottom: 16px;">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        <h3 style="margin: 0 0 8px 0;">پردازش ناموفق</h3>
-        {% if job.error_message %}
-        <p style="color: var(--color-danger); font-size: 13px; margin-bottom: 16px;">{{ job.error_message }}</p>
+        {% set blog_images = media_assets|selectattr('role', 'equalto', 'blog_image')|list %}
+        {% if blog_images %}
+        <div class="content-section">
+            <span class="content-section__label">تصاویر بلاگ ({{ blog_images|length }})</span>
+            <div class="images-grid">
+                {% for asset in blog_images %}
+                <div class="image-card">
+                    <img src="{{ asset.public_url }}" alt="Blog image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="image-card__fallback" style="display: none;">
+                        <span>تصویر در دسترس نیست</span>
+                    </div>
+                    <div class="image-card__footer">
+                        <span class="image-card__label">تصویر {{ loop.index }}</span>
+                        <a href="{{ asset.public_url }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>دانلود</span>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endif %}
-        <form method="post" action="/admin/jobs/{{ job.id }}/retry">
-            <button type="submit" class="admin-btn admin-btn--primary">
-                تلاش مجدد
+
+        {% set instagram_images = media_assets|selectattr('role', 'equalto', 'instagram_image')|list %}
+        {% if instagram_images %}
+        <div class="content-section">
+            <span class="content-section__label">تصاویر اینستاگرام ({{ instagram_images|length }})</span>
+            <div class="images-grid">
+                {% for asset in instagram_images %}
+                <div class="image-card">
+                    <img src="{{ asset.public_url }}" alt="Instagram image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="image-card__fallback" style="display: none;">
+                        <span>تصویر در دسترس نیست</span>
+                    </div>
+                    <div class="image-card__footer">
+                        <span class="image-card__label">تصویر {{ loop.index }}</span>
+                        <a href="{{ asset.public_url }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>دانلود</span>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Processing State -->
+    {% elif job.status == 'processing' %}
+    <div class="content-card">
+        <div class="status-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="color: var(--color-warning);" class="status-state__icon">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+            </svg>
+            <h3 class="status-state__title">در حال پردازش</h3>
+            <p class="status-state__text">لطفاً چند لحظه صبر کنید. این صفحه را به‌روزرسانی کنید.</p>
+            <button onclick="location.reload()" class="admin-btn admin-btn--primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                <span>به‌روزرسانی صفحه</span>
             </button>
-        </form>
+        </div>
+    </div>
+
+    <!-- Pending State -->
+    {% elif job.status == 'pending' %}
+    <div class="content-card">
+        <div class="status-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48" style="color: var(--color-info); margin-bottom: 16px;">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <h3 class="status-state__title">در انتظار پردازش</h3>
+            <p class="status-state__text">این فرآیند در صف پردازش قرار دارد و به زودی شروع می‌شود.</p>
+        </div>
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
-<style>
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-</style>
-
+{% block scripts %}
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/toastr.min.js"></script>
 <script>
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function() {
-            // نمایش پیام موفقیت
-            const toast = document.createElement('div');
-            toast.textContent = '✓ کپی شد!';
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #52c41a;
-                color: white;
-                padding: 8px 24px;
-                border-radius: 6px;
-                font-size: 14px;
-                z-index: 9999;
-                animation: fadeInUp 0.3s ease;
-            `;
-            document.body.appendChild(toast);
-            setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 2000);
-        }).catch(function(err) {
-            console.error('Failed to copy:', err);
-        });
-    }
+toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": true,
+    "progressBar": true,
+    "positionClass": "toast-top-left",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "rtl": true
+};
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        toastr.success('متن با موفقیت کپی شد', 'موفقیت');
+    }).catch(function() {
+        toastr.error('خطا در کپی متن', 'خطا');
+    });
+}
+
+function confirmAbortJob(jobId) {
+    Swal.fire({
+        title: 'لغو فرآیند',
+        text: 'آیا از لغو این فرآیند اطمینان دارید؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'بله، لغو کن',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'swal2-popup-persian',
+            title: 'swal2-title-persian',
+            htmlContainer: 'swal2-html-persian',
+            confirmButton: 'swal2-confirm-persian swal2-confirm-danger',
+            cancelButton: 'swal2-cancel-persian'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/jobs/${jobId}/abort`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    toastr.success('فرآیند با موفقیت لغو شد', 'موفقیت');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(() => toastr.error('خطا در لغو فرآیند', 'خطا'));
+        }
+    });
+}
+
+function confirmRetryJob(jobId) {
+    Swal.fire({
+        title: 'تلاش مجدد',
+        text: 'آیا مایل به تلاش مجدد برای این فرآیند هستید؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'بله، تلاش مجدد',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'swal2-popup-persian',
+            title: 'swal2-title-persian',
+            htmlContainer: 'swal2-html-persian',
+            confirmButton: 'swal2-confirm-persian',
+            cancelButton: 'swal2-cancel-persian'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/jobs/${jobId}/retry`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    toastr.success('فرآیند با موفقیت دوباره ارسال شد', 'موفقیت');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(() => toastr.error('خطا در تلاش مجدد', 'خطا'));
+        }
+    });
+}
+
+function confirmRestartJob(jobId) {
+    Swal.fire({
+        title: 'شروع مجدد',
+        text: 'آیا مایل به شروع مجدد این فرآیند هستید؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'بله، شروع کن',
+        cancelButtonText: 'انصراف',
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        customClass: {
+            popup: 'swal2-popup-persian',
+            title: 'swal2-title-persian',
+            htmlContainer: 'swal2-html-persian',
+            confirmButton: 'swal2-confirm-persian swal2-confirm-success',
+            cancelButton: 'swal2-cancel-persian'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/jobs/${jobId}/restart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    toastr.success('فرآیند با موفقیت شروع مجدد شد', 'موفقیت');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(() => toastr.error('خطا در شروع مجدد', 'خطا'));
+        }
+    });
+}
+
+// Auto-reload for processing jobs
+{% if job.status == 'processing' %}
+setTimeout(() => window.location.reload(), 10000);
+{% endif %}
 </script>
 {% endblock %}
