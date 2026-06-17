@@ -1,29 +1,36 @@
+# app/core/logging.py - Add or update this file
 import logging
-import structlog
-from app.core.config import settings
+import sys
 
+def setup_logging():
+    """Configure logging for the application"""
 
-def configure_logging() -> None:
-    level = logging.INFO if settings.is_production else logging.DEBUG
-
-    logging.basicConfig(
-        format="%(message)s",
-        level=level,
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    structlog.configure(
-        processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.JSONRenderer() if settings.is_production
-            else            structlog.dev.ConsoleRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(level),
-        context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
-    )
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.DEBUG)
 
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(console_handler)
 
-logger = structlog.get_logger()
+    # Set specific loggers
+    logging.getLogger('app.services.ai_service').setLevel(logging.DEBUG)
+    logging.getLogger('app.tasks.generate_post').setLevel(logging.DEBUG)
+
+    # Reduce noise from other libraries
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+    return root_logger
+
+# Call setup when module is imported
+logger = setup_logging()

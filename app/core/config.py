@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     TEXT_MODEL: str = "gpt-4o"
     IMAGE_MODEL: str = "dall-e-3"
 
+    GAPGPT_API_KEY: str = "sk-0FsvMZCv8ULe5XyudGIqcldiF46t3GFBWaUj3w6VrEYrq2lI"
+    GAPGPT_BASE_URL: str = "https://api.gapgpt.app/v1"
+    AI_FALLBACK_SYSTEM_PROMPT: str = "You are a helpful AI assistant that creates blog posts and Instagram content."
+
     GRAPH_API_VERSION: str = "v20.0"
     IG_LONG_LIVED_ACCESS_TOKEN: str = ""
     IG_BUSINESS_ACCOUNT_ID: str = ""
@@ -47,3 +51,5 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
