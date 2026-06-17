@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "public/base.html" %}
 
 {% block title %}Botocharcoal | Premium Charcoal{% endblock %}
 {% block meta_description %}Botocharcoal | زغال باکیفیت برای مصرف خانگی، رستورانی و صنعتی.{% endblock %}
@@ -247,8 +247,15 @@
                                 <span style="font-size:var(--fs-xs); opacity:0.3; color:white;">بدون تصویر</span>
                             </div>
 
-                            {# ۲. تصویر اصلی #}
-                            {% set img_url = post.cover_image_url or (post.media_assets[0].file_path if post.media_assets else '') %}
+                                                        {# ۲. تصویر اصلی #}{% set img_url = post.cover_image_url %}
+                            {% if not img_url and post.media_assets %}
+                                {% set first_asset = post.media_assets[0] %}
+                                {% if first_asset.local_path %}
+                                    {% set img_url = first_asset.local_path %}
+                                {% elif first_asset.public_url %}
+                                    {% set img_url = first_asset.public_url %}
+                                {% endif %}
+                            {% endif %}
                             <img
                                 src="{{ img_url }}"
                                 alt="{{ post.title }}"

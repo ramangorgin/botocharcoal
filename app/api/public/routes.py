@@ -1,34 +1,46 @@
+# app/api/public/routes.py
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from fastapi.templating import Jinja2Templates
-from app.core.config import settings
+from sqlalchemy.orm import selectinload
+import logging
 
-from app.db.session import get_db, AsyncSessionLocal
-from app.db.models import Post, MediaAsset
+from app.db.session import get_db
+from app.db.models.post import Post
+from app.db.models.media_asset import MediaAsset
+from app.core.template_config import templates  # Use shared templates
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates/public")
 
+@router.get("/", response_class=HTMLResponse)
+async def home(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Home page with recent posts"""
 
-@router.get("/")
-async def home(request: Request):
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(
-            select(Post)
-            .where(
-                Post.blog_enabled == True,
-                Post.website_status == "published"
-            )
-            .order_by(Post.created_at.desc())
-            .limit(6)
+    # Eagerly load media_assets to avoid DetachedInstanceError
+    query = (
+        select(Post)
+        .where(
+            Post.website_status == "published",
+            Post.blog_enabled == True
         )
-        recent_posts = result.scalars().all()
+        .options(selectinload(Post.media_assets))
+        .order_by(Post.created_at.desc())
+        .limit(6)
+    )
+
+    result = await db.execute(query)
+    recent_posts = result.scalars().all()
+
+    logger.info(f"📊 Home page: loaded {len(recent_posts)} recent posts")
 
     return templates.TemplateResponse(
-        "home.html",
+        "public/home.html",  # Note: full path from templates directory
         {
             "request": request,
             "recent_posts": recent_posts,
@@ -37,72 +49,98 @@ async def home(request: Request):
 
 
 @router.get("/blog", response_class=HTMLResponse)
-async def blog_index(request: Request, db: AsyncSession = Depends(get_db)):
+async def blog_index(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Blog listing page"""
 
-    result = await db.execute(
+    # Eagerly load media_assets
+    query = (
         select(Post)
         .where(Post.website_status == "published")
+        .options(selectinload(Post.media_assets))
         .order_by(Post.published_to_website_at.desc())
     )
 
+    result = await db.execute(query)
     posts = result.scalars().all()
 
+    logger.info(f"📊 Blog index: loaded {len(posts)} posts")
+
     return templates.TemplateResponse(
-        "blog/index.html",
+        "public/blog/index.html",
         {
             "request": request,
             "posts": posts,
-        },
+        }
     )
 
 
 @router.get("/blog/{slug}", response_class=HTMLResponse)
-async def blog_detail(slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+async def blog_detail(
+    slug: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Single blog post page"""
 
-    result = await db.execute(
-        select(Post).where(Post.slug == slug)
+    # Eagerly load relationships
+    query = (
+        select(Post)
+        .where(Post.slug == slug)
+        .options(
+            selectinload(Post.media_assets),
+            selectinload(Post.tags),
+            selectinload(Post.categories),
+        )
     )
 
+    result = await db.execute(query)
     post = result.scalar_one_or_none()
 
     if not post:
+        logger.warning(f"📊 Blog post not found: {slug}")
         return templates.TemplateResponse(
-            "404.html",
+            "public/errors/404.html",
             {"request": request},
-            status_code=404,
+            status_code=404
         )
 
-    media = await db.execute(
+    # Get images separately (ordered)
+    images_query = (
         select(MediaAsset)
         .where(MediaAsset.post_id == post.id)
         .order_by(MediaAsset.sort_order)
     )
+    images_result = await db.execute(images_query)
+    images = images_result.scalars().all()
 
-    images = media.scalars().all()
+    logger.info(f"📊 Blog post: {post.title}")
 
     return templates.TemplateResponse(
-        "blog/show.html",
+        "public/blog/show.html",
         {
             "request": request,
             "post": post,
             "images": images,
-        },
+        }
     )
 
 
 @router.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
-
+    """About page"""
     return templates.TemplateResponse(
-        "about.html",
+        "public/about.html",
         {"request": request},
     )
 
 
 @router.get("/contact", response_class=HTMLResponse)
 async def contact(request: Request):
-
+    """Contact page"""
     return templates.TemplateResponse(
-        "contact.html",
+        "public/contact.html",
         {"request": request},
     )
