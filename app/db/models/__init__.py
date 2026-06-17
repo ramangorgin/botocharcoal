@@ -6,6 +6,8 @@ from app.db.models.post import Post
 from app.db.models.media_asset import MediaAsset
 from app.db.models.tag import Tag
 from app.db.models.category import Category
+from app.db.models.job import Job
+
 
 __all__ = [
     "User",
@@ -14,4 +16,5 @@ __all__ = [
     "MediaAsset",
     "Tag",
     "Category",
+    "Job"
 ]
