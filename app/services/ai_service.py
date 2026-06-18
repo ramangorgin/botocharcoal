@@ -342,7 +342,7 @@ class AIService:
 
 
 async def download_and_save_image(image_url: str, filename_prefix: str = "image") -> Optional[str]:
-    """Download image from URL and save locally, return local path"""
+    """Download image from URL and save locally, return web-accessible path"""
     try:
         media_dir = Path("media/generated_images")
         media_dir.mkdir(parents=True, exist_ok=True)
@@ -359,13 +359,17 @@ async def download_and_save_image(image_url: str, filename_prefix: str = "image"
             async with aiofiles.open(file_path, 'wb') as f:
                 await f.write(response.content)
 
-            logger.info(f"✅ Image downloaded to: {file_path}")
-            return str(file_path)
+        logger.info(f"✅ Image downloaded to: {file_path}")
+
+        # Return web-accessible path (for serving via /media/ mount)
+        # Convert "media/generated_images/file.png" to "/media/generated_images/file.png"
+        web_path = "/" + str(file_path).replace("\\", "/")
+        logger.info(f"   Web path: {web_path}")
+        return web_path
 
     except Exception as e:
         logger.error(f"❌ Failed to download image: {str(e)}")
         return None
-
 
 # Helper functions for backward compatibility
 async def generate_content_with_ai(topic: str, instructions: str = "") -> Dict[str, Any]:
