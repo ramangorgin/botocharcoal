@@ -19,7 +19,6 @@ from app.services.post_service import PostService
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-
 @router.get("/posts", response_class=HTMLResponse)
 async def list_posts(
     request: Request,
@@ -60,6 +59,31 @@ async def list_posts(
     result = await db.execute(query)
     posts = result.scalars().all()
 
+    # Convert dates to Jalali for each post
+    import jdatetime
+
+    def gregorian_to_jalali_date_only(dt):
+        """Convert Gregorian datetime to Jalali date string with Persian digits"""
+        if not dt:
+            return None
+
+        jalali_date = jdatetime.datetime.fromgregorian(datetime=dt)
+
+        persian_digits = {
+            '0': '۰', '1': '۱', '2': '۲', '3': '۳', '4': '۴',
+            '5': '۵', '6': '۶', '7': '۷', '8': '۸', '9': '۹'
+        }
+
+        date_str = jalali_date.strftime('%Y/%m/%d')
+
+        for eng, per in persian_digits.items():
+            date_str = date_str.replace(eng, per)
+
+        return date_str
+
+    for post in posts:
+        post.jalali_date = gregorian_to_jalali_date_only(post.created_at)
+
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
 
     return templates.TemplateResponse(
@@ -75,7 +99,6 @@ async def list_posts(
             "current_source": source,
         },
     )
-
 
 @router.get("/posts/create", response_class=HTMLResponse)
 async def create_post_form(
