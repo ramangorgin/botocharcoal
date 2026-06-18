@@ -1304,24 +1304,28 @@ button {
   align-items: center;
   gap: 6px;
 }
-
-/* تصویر شاخص */
 .featured-image-wrapper {
   max-width: 1100px;
-  margin: 0 auto 60px;
+  margin: 0 auto 60px !important;
   padding: 0 20px;
+  display: block !important;
+  text-align: center !important;
 }
 
+.featured-image-wrapper img,
 .featured-image {
-  width: 100%;
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  float: none !important;
+  width: auto !important;
+  max-width: 100%;
   height: auto;
   max-height: 550px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 24px;
   box-shadow: 0 30px 60px rgba(0,0,0,0.5);
 }
-
-/* چیدمان محتوا و سایدبار */
 .post-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
