@@ -31,7 +31,7 @@ async def ai_settings_page(
     )
 
 
-@router.post("admin/ai-settings")
+@router.post("/ai-settings")
 async def update_ai_settings(
     request: Request,
     provider: str = Form(...),

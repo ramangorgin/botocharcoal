@@ -328,5 +328,3 @@ alembic downgrade -1
 ## License
 
 Proprietary - All rights reserved.
-# Production deployed Thu Jun 18 06:56:36 PM +0330 2026
-# testing the deploy
