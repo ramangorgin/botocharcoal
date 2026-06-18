@@ -1,4 +1,3 @@
-<!-- app/templates/admin/jobs/show.html -->
 {% extends "admin/base.html" %}
 
 {% block title %}جزئیات فرآیند #{{ job.id }} | پنل مدیریت{% endblock %}
@@ -43,20 +42,23 @@
         font-size: 20px;
         font-weight: 700;
         color: var(--color-white);
-        margin: 0 0 16px 0;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .job-meta-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
 
     .job-meta-item {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
     }
 
     .job-meta-item__label {
@@ -69,22 +71,32 @@
     .job-meta-item__value {
         font-size: 14px;
         color: var(--color-text-primary);
-        font-family: 'Shabnam', 'IRANSansX', 'Vazirmatn', sans-serif;
+        font-family: 'Shabnam', 'IRANSansX', sans-serif;
     }
 
     .job-instructions {
-        margin-top: 16px;
-        padding: 12px;
+        margin-top: 12px;
+        padding: 14px 16px;
         background: var(--color-charcoal);
         border-radius: var(--border-radius-md);
         border-right: 3px solid var(--color-ember);
     }
 
+    .job-instructions__header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .job-instructions__icon {
+        color: var(--color-ember);
+        flex-shrink: 0;
+    }
+
     .job-instructions__label {
         font-size: 12px;
         color: var(--color-text-muted);
-        margin-bottom: 8px;
-        display: block;
     }
 
     .job-instructions__text {
@@ -96,12 +108,21 @@
 
     .job-error {
         margin-top: 16px;
-        padding: 12px 16px;
+        padding: 14px 16px;
         background: rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.3);
         border-radius: var(--border-radius-md);
         color: #fca5a5;
         font-size: 13px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .job-error__icon {
+        flex-shrink: 0;
+        color: #ef4444;
+        margin-top: 1px;
     }
 
     .job-actions {
@@ -135,6 +156,14 @@
         font-weight: 600;
         color: var(--color-white);
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .content-card__title-icon {
+        color: var(--color-ember);
+        flex-shrink: 0;
     }
 
     .content-section {
@@ -186,11 +215,18 @@
     .hashtag-item {
         display: inline-flex;
         align-items: center;
-        padding: 4px 12px;
+        padding: 5px 14px;
         background: rgba(59, 130, 246, 0.1);
         color: #93c5fd;
         border-radius: 999px;
         font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .hashtag-item:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
     }
 
     .images-grid {
@@ -245,7 +281,7 @@
     .html-content {
         max-height: 600px;
         overflow-y: auto;
-        padding: 16px;
+        padding: 20px;
         background: var(--color-charcoal);
         border-radius: var(--border-radius-md);
         line-height: 1.8;
@@ -255,16 +291,31 @@
     .html-content img {
         max-width: 100%;
         border-radius: var(--border-radius-sm);
+        margin: 12px 0;
     }
 
-    /* Status states with animations */
+    .html-content h1,
+    .html-content h2,
+    .html-content h3,
+    .html-content h4,
+    .html-content h5,
+    .html-content h6 {
+        color: var(--color-white);
+        margin-top: 20px;
+        margin-bottom: 12px;
+    }
+
+    .html-content p {
+        margin-bottom: 14px;
+    }
+
     .status-state {
         text-align: center;
         padding: 60px 24px;
     }
 
     .status-state__icon {
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
 
     .status-state__icon.spinning {
@@ -272,34 +323,35 @@
     }
 
     .status-state__title {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         color: var(--color-white);
-        margin: 0 0 8px 0;
+        margin: 0 0 10px 0;
     }
 
     .status-state__text {
         color: var(--color-text-muted);
-        font-size: 13px;
-        margin: 0 0 20px 0;
+        font-size: 14px;
+        margin: 0 0 24px 0;
+        line-height: 1.6;
     }
 
     .status-state__countdown {
         color: var(--color-ember);
-        font-size: 12px;
-        margin-top: 12px;
+        font-size: 13px;
+        margin-top: 16px;
     }
 
     .copy-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 12px;
+        padding: 8px 16px;
         background: var(--color-ember);
         color: white;
         border: none;
-        border-radius: var(--border-radius-sm);
-        font-size: 12px;
+        border-radius: var(--border-radius-md);
+        font-size: 13px;
         cursor: pointer;
         transition: all 0.2s;
         font-family: var(--font-family);
@@ -307,21 +359,26 @@
 
     .copy-btn:hover {
         background: var(--color-ember-hover);
+        transform: translateY(-1px);
     }
 
-    /* View site button */
-    .view-site-btn {
-        min-width: 160px;
-        justify-content: center;
+    .copy-btn--outline {
+        background: transparent;
+        border: 1px solid var(--color-ember);
+        color: var(--color-ember);
     }
 
-    /* Publish button */
+    .copy-btn--outline:hover {
+        background: var(--color-ember);
+        color: white;
+    }
+
     .publish-btn {
-        background: var(--color-success, #16a34a);
+        background: #16a34a;
         color: white;
         border: none;
         border-radius: var(--border-radius-md);
-        padding: 8px 20px;
+        padding: 10px 24px;
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
@@ -337,21 +394,25 @@
     .publish-btn:hover {
         background: #15803d;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
     }
 
     .publish-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
     }
 
-    /* Countdown bar */
     .countdown-bar {
         width: 100%;
         height: 4px;
         background: var(--color-charcoal);
         border-radius: 2px;
-        margin-top: 16px;
+        margin-top: 20px;
         overflow: hidden;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .countdown-bar__fill {
@@ -397,7 +458,8 @@
             flex-direction: column;
         }
 
-        .job-actions .admin-btn {
+        .job-actions .admin-btn,
+        .job-actions .publish-btn {
             width: 100%;
             justify-content: center;
         }
@@ -407,9 +469,10 @@
             align-items: flex-start;
         }
 
-        .view-site-btn,
-        .publish-btn {
-            width: 100%;
+        .html-content {
+            max-height: 400px;
+            padding: 12px;
+            font-size: 13px;
         }
     }
 
@@ -437,7 +500,12 @@
 
     <!-- Job Header -->
     <div class="job-header">
-        <h2 class="job-header__title">{{ job.topic }}</h2>
+        <h2 class="job-header__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" style="color: var(--color-ember);">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+            {{ job.topic }}
+        </h2>
 
         <div class="job-meta-grid">
             <div class="job-meta-item">
@@ -459,9 +527,7 @@
 
             <div class="job-meta-item">
                 <span class="job-meta-item__label">تاریخ ایجاد</span>
-                <span class="job-meta-item__value" style="font-family: 'Shabnam', 'IRANSansX', 'Vazirmatn', sans-serif;">
-                    {{ job.created_at|format_jalali if job.created_at else '-' }}
-                </span>
+                <span class="job-meta-item__value">{{ job.jalali_date if job.jalali_date else '—' }}</span>
             </div>
 
             <div class="job-meta-item">
@@ -484,53 +550,45 @@
             {% endif %}
         </div>
 
-        <!-- Show new separate instructions -->
-        {% if job.blog_text_instructions %}
+        {% if job.text_instructions %}
         <div class="job-instructions">
-            <span class="job-instructions__label">📝 دستورالعمل متن بلاگ</span>
-            <p class="job-instructions__text">{{ job.blog_text_instructions }}</p>
-        </div>
-        {% endif %}
-
-        {% if job.blog_image_instructions %}
-        <div class="job-instructions">
-            <span class="job-instructions__label">🖼️ دستورالعمل تصویر بلاگ</span>
-            <p class="job-instructions__text">{{ job.blog_image_instructions }}</p>
-        </div>
-        {% endif %}
-
-        {% if job.instagram_text_instructions %}
-        <div class="job-instructions">
-            <span class="job-instructions__label">📱 دستورالعمل کپشن اینستاگرام</span>
-            <p class="job-instructions__text">{{ job.instagram_text_instructions }}</p>
-        </div>
-        {% endif %}
-
-        {% if job.instagram_image_instructions %}
-        <div class="job-instructions">
-            <span class="job-instructions__label">📸 دستورالعمل تصاویر اینستاگرام</span>
-            <p class="job-instructions__text">{{ job.instagram_image_instructions }}</p>
-        </div>
-        {% endif %}
-
-        <!-- Fallback for old fields -->
-        {% if not job.blog_text_instructions and job.text_instructions %}
-        <div class="job-instructions">
-            <span class="job-instructions__label">دستورالعمل‌های متن (قدیمی)</span>
+            <div class="job-instructions__header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="job-instructions__icon">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span class="job-instructions__label">دستورالعمل متن</span>
+            </div>
             <p class="job-instructions__text">{{ job.text_instructions }}</p>
         </div>
         {% endif %}
 
-        {% if not job.blog_image_instructions and job.image_instructions %}
+        {% if job.image_instructions %}
         <div class="job-instructions">
-            <span class="job-instructions__label">دستورالعمل‌های تصویر (قدیمی)</span>
+            <div class="job-instructions__header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="job-instructions__icon">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span class="job-instructions__label">دستورالعمل تصویر</span>
+            </div>
             <p class="job-instructions__text">{{ job.image_instructions }}</p>
         </div>
         {% endif %}
 
         {% if job.status == 'failed' and job.error_message %}
         <div class="job-error">
-            <strong>⚠️ خطا:</strong> {{ job.error_message }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" class="job-error__icon">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div>
+                <strong>خطا:</strong> {{ job.error_message }}
+            </div>
         </div>
         {% endif %}
 
@@ -586,6 +644,16 @@
                 <span>شروع مجدد</span>
             </button>
             {% endif %}
+
+            {% if job.status == 'completed' and post %}
+            <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--primary admin-btn--lg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>مشاهده پست</span>
+            </a>
+            {% endif %}
         </div>
     </div>
 
@@ -593,32 +661,44 @@
     {% if job.status == 'completed' and post %}
 
     <!-- Blog Content Card -->
-    {% if post.blog_enabled %}
     <div class="content-card">
         <div class="content-card__header">
-            <h3 class="content-card__title">📝 محتوای بلاگ</h3>
-            {% if post.slug %}
-                {% if job.auto_publish %}
-                <!-- Auto-publish was on: Show view button -->
-                <a href="/blog/{{ post.slug }}" target="_blank" class="admin-btn admin-btn--sm admin-btn--outline view-site-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/>
-                        <line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>
-                    <span>مشاهده در سایت</span>
-                </a>
-                {% else %}
-                <!-- Auto-publish was off: Show publish button -->
-                <button type="button" class="publish-btn" onclick="publishPost({{ post.id }})" id="publishBtn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                        <path d="M22 2L11 13"/>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                    <span>انتشار در بلاگ</span>
-                </button>
+            <h3 class="content-card__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" class="content-card__title-icon">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                محتوای بلاگ
+            </h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% if post.slug %}
+                    {% if job.auto_publish %}
+                    <a href="/blog/{{ post.slug }}" target="_blank" class="admin-btn admin-btn--sm admin-btn--outline" style="min-width: 150px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        <span>مشاهده در سایت</span>
+                    </a>
+                    {% else %}
+                    <button type="button" class="publish-btn" onclick="publishPost({{ post.id }})" id="publishBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                            <path d="M22 2L11 13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        <span>انتشار در بلاگ</span>
+                    </button>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
+                <a href="/admin/posts/{{ post.id }}" class="admin-btn admin-btn--sm admin-btn--primary" style="min-width: 150px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>مشاهده پست</span>
+                </a>
+            </div>
         </div>
 
         {% if post.title %}
@@ -635,20 +715,6 @@
         </div>
         {% endif %}
 
-        {% if post.meta_title %}
-        <div class="content-section">
-            <span class="content-section__label">عنوان سئو</span>
-            <p class="content-section__text">{{ post.meta_title }}</p>
-        </div>
-        {% endif %}
-
-        {% if post.meta_description %}
-        <div class="content-section">
-            <span class="content-section__label">توضیحات سئو</span>
-            <p class="content-section__text">{{ post.meta_description }}</p>
-        </div>
-        {% endif %}
-
         {% if post.body_html %}
         <div class="content-section">
             <span class="content-section__label">محتوای کامل</span>
@@ -658,20 +724,26 @@
         </div>
         {% endif %}
     </div>
-    {% endif %}
 
     <!-- Instagram Content Card -->
-    {% if post.instagram_enabled and (post.instagram_caption or post.hashtags) %}
+    {% if post.instagram_caption or post.hashtags %}
     <div class="content-card">
         <div class="content-card__header">
-            <h3 class="content-card__title">📱 محتوای اینستاگرام</h3>
+            <h3 class="content-card__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" class="content-card__title-icon">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                محتوای اینستاگرام
+            </h3>
         </div>
 
         {% if post.instagram_caption %}
         <div class="content-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span class="content-section__label" style="margin-bottom: 0;">کپشن</span>
-                <button type="button" class="copy-btn" onclick="copyToClipboard(document.getElementById('instagramCaption').textContent)">
+                <button type="button" class="copy-btn copy-btn--outline" onclick="copyToClipboard(document.getElementById('instagramCaption').textContent)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -680,7 +752,7 @@
                 </button>
             </div>
             <div class="instagram-caption-box">
-                <p class="instagram-caption-box__text" id="instagramCaption">{{ post.instagram_caption|clean_hashtags }}</p>
+                <p class="instagram-caption-box__text" id="instagramCaption">{{ post.instagram_caption }}</p>
             </div>
         </div>
         {% endif %}
@@ -689,7 +761,7 @@
         <div class="content-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span class="content-section__label" style="margin-bottom: 0;">هشتگ‌ها</span>
-                <button type="button" class="copy-btn" onclick="copyToClipboard('{{ post.hashtags|replace("'", "\\'") }}')">
+                <button type="button" class="copy-btn copy-btn--outline" onclick="copyToClipboard('{{ post.hashtags|replace("'", "\\'") }}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -699,9 +771,7 @@
             </div>
             <div class="hashtags-container">
                 {% for tag in post.hashtags.split() %}
-                    {% if tag.startswith('#') %}
-                    <span class="hashtag-item">{{ tag }}</span>
-                    {% endif %}
+                <span class="hashtag-item" onclick="copyToClipboard('{{ tag|replace("'", "\\'") }}')">{{ tag }}</span>
                 {% endfor %}
             </div>
         </div>
@@ -713,7 +783,14 @@
     {% if media_assets %}
     <div class="content-card">
         <div class="content-card__header">
-            <h3 class="content-card__title">🖼️ تصاویر تولید شده</h3>
+            <h3 class="content-card__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" class="content-card__title-icon">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                تصاویر تولید شده
+            </h3>
         </div>
 
         {% set blog_images = media_assets|selectattr('role', 'in', ['blog_cover', 'blog_image'])|list %}
@@ -723,8 +800,8 @@
             <div class="images-grid">
                 {% for asset in blog_images %}
                 <div class="image-card">
-                    {% if asset.local_path or asset.public_url %}
-                    <img src="{{ asset.local_path if asset.local_path else asset.public_url }}" alt="Blog image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    {% if asset.public_url or asset.local_path %}
+                    <img src="{{ asset.public_url if asset.public_url else asset.local_path }}" alt="Blog image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="image-card__fallback" style="display: none;">
                         <span>تصویر در دسترس نیست</span>
                     </div>
@@ -734,8 +811,8 @@
                     </div>
                     {% endif %}
                     <div class="image-card__footer">
-                        <span class="image-card__label">تصویر {{ loop.index|to_persian }}</span>
-                        <a style="min-width: 100px;" href="{{ asset.local_path if asset.local_path else asset.public_url }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
+                        <span class="image-card__label">تصویر {{ loop.index|string|replace('0','۰')|replace('1','۱')|replace('2','۲')|replace('3','۳')|replace('4','۴')|replace('5','۵')|replace('6','۶')|replace('7','۷')|replace('8','۸')|replace('9','۹') }}</span>
+                        <a style="min-width: 100px;" href="{{ asset.public_url if asset.public_url else asset.local_path }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                 <polyline points="7 10 12 15 17 10"/>
@@ -757,8 +834,8 @@
             <div class="images-grid">
                 {% for asset in instagram_images %}
                 <div class="image-card">
-                    {% if asset.local_path or asset.public_url %}
-                    <img src="{{ asset.local_path if asset.local_path else asset.public_url }}" alt="Instagram image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    {% if asset.public_url or asset.local_path %}
+                    <img src="{{ asset.public_url if asset.public_url else asset.local_path }}" alt="Instagram image {{ loop.index }}" class="image-card__img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="image-card__fallback" style="display: none;">
                         <span>تصویر در دسترس نیست</span>
                     </div>
@@ -768,8 +845,8 @@
                     </div>
                     {% endif %}
                     <div class="image-card__footer">
-                        <span class="image-card__label">تصویر {{ loop.index|to_persian }}</span>
-                        <a style="min-width: 100px;" href="{{ asset.local_path if asset.local_path else asset.public_url }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
+                        <span class="image-card__label">تصویر {{ loop.index|string|replace('0','۰')|replace('1','۱')|replace('2','۲')|replace('3','۳')|replace('4','۴')|replace('5','۵')|replace('6','۶')|replace('7','۷')|replace('8','۸')|replace('9','۹') }}</span>
+                        <a style="min-width: 100px;" href="{{ asset.public_url if asset.public_url else asset.local_path }}" download target="_blank" class="admin-btn admin-btn--sm admin-btn--primary">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                 <polyline points="7 10 12 15 17 10"/>
@@ -786,24 +863,21 @@
     </div>
     {% endif %}
 
-    <!-- Processing State with spinning animation and countdown -->
+    <!-- Processing State -->
     {% elif job.status == 'processing' %}
     <div class="content-card">
         <div class="status-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64" style="color: var(--color-warning);" class="status-state__icon spinning">
-                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4"/>
+                <circle cx="12" cy="12" r="10"/>
                 <path d="M12 6v6l4 2"/>
             </svg>
             <h3 class="status-state__title pulse-animation">در حال پردازش</h3>
             <p class="status-state__text">هوش مصنوعی در حال تولید محتوا است. لطفاً چند لحظه صبر کنید.</p>
             <p class="status-state__countdown" id="countdownText">به‌روزرسانی خودکار تا <span id="countdownTimer">۱۰</span> ثانیه دیگر</p>
-
-            <!-- Countdown bar -->
-            <div class="countdown-bar" style="max-width: 400px; margin: 0 auto;">
+            <div class="countdown-bar">
                 <div class="countdown-bar__fill" id="countdownBar" style="width: 100%;"></div>
             </div>
-
-            <button onclick="location.reload()" class="admin-btn admin-btn--primary" style="margin-top: 20px;">
+            <button onclick="location.reload()" class="admin-btn admin-btn--primary" style="margin-top: 24px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
                     <polyline points="23 4 23 10 17 10"/>
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
@@ -813,7 +887,7 @@
         </div>
     </div>
 
-    <!-- Pending State with clock animation -->
+    <!-- Pending State -->
     {% elif job.status == 'pending' %}
     <div class="content-card">
         <div class="status-state">
@@ -834,7 +908,6 @@
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/toastr.min.js"></script>
 <script>
-// Toastr configuration
 toastr.options = {
     "closeButton": true,
     "debug": false,
@@ -855,7 +928,6 @@ toastr.options = {
 };
 
 function copyToClipboard(text) {
-    // Clean the text - remove extra whitespace
     text = text.trim();
     navigator.clipboard.writeText(text).then(function() {
         toastr.success('متن با موفقیت کپی شد', 'موفقیت');
@@ -867,8 +939,7 @@ function copyToClipboard(text) {
 function publishPost(postId) {
     const btn = document.getElementById('publishBtn');
     const originalHTML = btn.innerHTML;
-
-    btn.innerHTML = '<span>⏳ در حال انتشار...</span>';
+    btn.innerHTML = '<span>در حال انتشار...</span>';
     btn.disabled = true;
 
     fetch(`/admin/posts/${postId}/publish`, {
@@ -882,7 +953,6 @@ function publishPost(postId) {
     .then(data => {
         if (data.status === 'success') {
             toastr.success('پست با موفقیت در بلاگ منتشر شد', 'موفقیت');
-            // Reload after short delay
             setTimeout(() => window.location.reload(), 1500);
         } else {
             throw new Error(data.message || 'خطا در انتشار');
@@ -1008,45 +1078,26 @@ function confirmRestartJob(jobId) {
     });
 }
 
-// Countdown timer for processing state
 {% if job.status == 'processing' %}
 (function() {
     let secondsLeft = 10;
     const timerElement = document.getElementById('countdownTimer');
     const countdownBar = document.getElementById('countdownBar');
-
     function updateCountdown() {
         secondsLeft--;
-        if (secondsLeft <= 0) {
-            window.location.reload();
-            return;
-        }
-
-        // Update text
-        if (timerElement) {
-            timerElement.textContent = secondsLeft;
-        }
-
-        // Update bar
+        if (secondsLeft <= 0) { window.location.reload(); return; }
+        if (timerElement) timerElement.textContent = secondsLeft;
         if (countdownBar) {
             const percentage = (secondsLeft / 10) * 100;
             countdownBar.style.width = percentage + '%';
-
-            // Change color when low
-            if (secondsLeft <= 3) {
-                countdownBar.style.background = '#ef4444';
-            }
+            if (secondsLeft <= 3) countdownBar.style.background = '#ef4444';
         }
-
         setTimeout(updateCountdown, 1000);
     }
-
-    // Start countdown
     setTimeout(updateCountdown, 1000);
 })();
 {% endif %}
 
-// Auto-reload for pending jobs
 {% if job.status == 'pending' %}
 setTimeout(() => window.location.reload(), 10000);
 {% endif %}

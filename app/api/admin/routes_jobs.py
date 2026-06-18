@@ -4,8 +4,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import selectinload
 from typing import Optional
 import logging
+import jdatetime
 from pathlib import Path
 
 from app.db.session import get_db
@@ -18,12 +20,30 @@ from app.tasks.generate_post import process_job_task
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Fix template directory - use absolute path or correct relative path
-# Option 1: Use absolute path (recommended)
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # Goes up to app/
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 from app.core.template_config import templates
-# Option 2: Or if you want to keep relative path, use:
-# templates = Jinja2Templates(directory="app/templates")
+
+
+def gregorian_to_jalali_str(dt):
+    """Convert Gregorian datetime to Jalali string with Persian digits"""
+    if not dt:
+        return "-"
+
+    jalali_date = jdatetime.datetime.fromgregorian(datetime=dt)
+
+    persian_digits = {
+        '0': '۰', '1': '۱', '2': '۲', '3': '۳', '4': '۴',
+        '5': '۵', '6': '۶', '7': '۷', '8': '۸', '9': '۹'
+    }
+
+    date_str = jalali_date.strftime('%Y/%m/%d')
+    time_str = jalali_date.strftime('%H:%M')
+
+    for eng, per in persian_digits.items():
+        date_str = date_str.replace(eng, per)
+        time_str = time_str.replace(eng, per)
+
+    return f"{date_str} {time_str}"
 
 
 @router.get("/jobs", response_class=HTMLResponse)
@@ -40,7 +60,6 @@ async def list_jobs(
     if status:
         query = query.where(Job.status == status)
 
-    # Get total count for pagination
     count_query = select(Job)
     if status:
         count_query = count_query.where(Job.status == status)
@@ -48,15 +67,18 @@ async def list_jobs(
     total = result.scalars().all()
     total_count = len(total)
 
-    # Apply pagination
     query = query.offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     jobs = result.scalars().all()
 
+    # Convert dates to Jalali for each job
+    for job in jobs:
+        job.jalali_date = gregorian_to_jalali_str(job.created_at)
+
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
 
     return templates.TemplateResponse(
-        "admin/jobs/index.html",  # Note: full path from templates directory
+        "admin/jobs/index.html",
         {
             "request": request,
             "jobs": jobs,
@@ -97,7 +119,6 @@ async def create_job(
     user=Depends(get_current_admin),
 ):
     try:
-        # Create job with separate instructions
         job = Job(
             topic=topic,
             blog_text_instructions=blog_text_instructions,
@@ -113,13 +134,11 @@ async def create_job(
         await db.commit()
         await db.refresh(job)
 
-        logger.info(f"✅ Job created: id={job.id}, topic='{job.topic}'")
+        logger.info(f"Job created: id={job.id}, topic='{job.topic}'")
 
-        # Send to Celery for processing
         process_job_task.delay(job.id)
-        logger.info(f"📤 Job {job.id} sent to Celery")
+        logger.info(f"Job {job.id} sent to Celery")
 
-        # Check if it's an AJAX request
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({
                 "status": "success",
@@ -127,11 +146,10 @@ async def create_job(
                 "redirect": f"/admin/jobs/{job.id}"
             })
 
-        # Redirect to job detail page
         return RedirectResponse(f"/admin/jobs/{job.id}", status_code=303)
 
     except Exception as e:
-        logger.error(f"❌ Failed to create job: {str(e)}")
+        logger.error(f"Failed to create job: {str(e)}")
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({
                 "status": "error",
@@ -157,16 +175,25 @@ async def show_job(
             status_code=404
         )
 
+    # Convert date to Jalali
+    job.jalali_date = gregorian_to_jalali_str(job.created_at)
+
     post = None
     media_assets = []
 
     if job.post_id:
-        post_result = await db.execute(select(Post).where(Post.id == job.post_id))
+        post_result = await db.execute(
+            select(Post)
+            .where(Post.id == job.post_id)
+            .options(selectinload(Post.media_assets))
+        )
         post = post_result.scalar_one_or_none()
 
         if post:
             assets_result = await db.execute(
-                select(MediaAsset).where(MediaAsset.post_id == post.id).order_by(MediaAsset.sort_order)
+                select(MediaAsset)
+                .where(MediaAsset.post_id == post.id)
+                .order_by(MediaAsset.sort_order)
             )
             media_assets = assets_result.scalars().all()
 
@@ -205,6 +232,51 @@ async def edit_job_form(
             "job": job,
         },
     )
+
+
+@router.post("/jobs/{job_id}/update")
+async def update_job(
+    request: Request,
+    job_id: int,
+    topic: str = Form(..., min_length=3),
+    text_instructions: str = Form(""),
+    image_instructions: str = Form(""),
+    blog_image_count: int = Form(1, ge=0, le=10),
+    instagram_image_count: int = Form(1, ge=0, le=10),
+    auto_publish: bool = Form(False),
+    action: str = Form("save"),
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_admin),
+):
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status not in ("aborted", "failed"):
+        raise HTTPException(status_code=400, detail="Only aborted or failed jobs can be edited")
+
+    job.topic = topic
+    job.text_instructions = text_instructions
+    job.image_instructions = image_instructions
+    job.blog_image_count = blog_image_count
+    job.instagram_image_count = instagram_image_count
+    job.auto_publish = auto_publish
+
+    if action == "start":
+        job.status = "pending"
+        job.error_message = None
+        await db.commit()
+        process_job_task.delay(job.id)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JSONResponse({"status": "success", "message": "Job started successfully"})
+        return RedirectResponse(url="/admin/jobs", status_code=303)
+
+    await db.commit()
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JSONResponse({"status": "success", "message": "Job updated successfully"})
+    return RedirectResponse(url="/admin/jobs", status_code=303)
 
 
 @router.post("/jobs/{job_id}/abort")
