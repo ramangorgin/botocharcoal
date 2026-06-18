@@ -252,15 +252,14 @@ button {
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at center, rgba(230, 81, 0, 0.10), transparent 20%),
-    linear-gradient(180deg, var(--clr-charcoal-deep), var(--clr-charcoal));
-  transition: opacity 0.45s ease, visibility 0.45s ease;
+  radial-gradient(circle at center, rgba(230, 81, 0, 0.10), transparent 20%),
+  linear-gradient(180deg, var(--clr-charcoal-deep), var(--clr-charcoal));
+  /* Remove transition to prevent lag - preloader is removed instantly by JS */
+  pointer-events: all;
 }
 
 .preloader.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  display: none;
 }
 
 .preloader__inner {
@@ -276,7 +275,6 @@ button {
   height: 88px;
   object-fit: contain;
   filter: drop-shadow(0 0 28px rgba(255, 109, 0, 0.24));
-  animation: floatLogo 2.4s ease-in-out infinite;
 }
 
 .preloader__ring {

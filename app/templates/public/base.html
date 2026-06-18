@@ -37,6 +37,14 @@
     <link rel="stylesheet" href="/static/css/main.css">
 
     <title>{% block title %}بوتوچارکول| زغال مرغوب اندونزیایی{% endblock %}</title>
+
+    <!-- Hide preloader immediately if JS is disabled, otherwise let JS handle it -->
+    <noscript>
+        <style>
+            .preloader { display: none !important; }
+        </style>
+    </noscript>
+
     {% block head %}{% endblock %}
 </head>
 <body>
