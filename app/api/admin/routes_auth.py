@@ -15,7 +15,7 @@ from app.core.template_config import templates
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str | None = None):
     return templates.TemplateResponse(
-        "login.html",
+        "admin/login.html",
         {
             "request": request,
             "error": error,
@@ -38,7 +38,7 @@ async def login(
 
     if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
-            "login.html",
+            "admin/login.html",
             {
                 "request": request,
                 "error": "نام کاربری یا رمز اشتباه است",

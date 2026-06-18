@@ -2,6 +2,7 @@
 import asyncio
 import json
 import logging
+import re
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -102,16 +103,20 @@ def process_job_task(self, job_id: int):
 
                 blog_image_prompts = []
                 if job.blog_image_instructions:
-                    blog_image_prompts.append(f"Professional blog cover image: {job.topic} - {job.blog_image_instructions}")
+                    blog_image_prompts.append(
+                        f"Professional blog cover image (wide/landscape format, 16:9 ratio): {job.topic} - {job.blog_image_instructions}"
+                    )
                 else:
-                    blog_image_prompts.append(f"Professional blog cover image for article about: {job.topic}. Clean, modern design with Persian text space.")
+                    blog_image_prompts.append(
+                        f"Professional blog cover image (wide/landscape format, 16:9 ratio) for article about: {job.topic}. Clean, modern design with Persian text space."
+                    )
 
                 blog_images = []
                 if job.blog_image_count > 0:
                     blog_images = await generate_images_with_ai(
                         prompts=blog_image_prompts,
                         count=job.blog_image_count,
-                        size="1024x1024"
+                        # No size - let the AI decide based on the model's capabilities
                     )
                     logger.info(f"✅ Generated {len(blog_images)} blog images")
                 else:
@@ -125,16 +130,20 @@ def process_job_task(self, job_id: int):
 
                 instagram_image_prompts = []
                 if job.instagram_image_instructions:
-                    instagram_image_prompts.append(f"Instagram post image: {job.topic} - {job.instagram_image_instructions}")
+                    instagram_image_prompts.append(
+                        f"Instagram post image (square format, 1:1 ratio, 1080x1080): {job.topic} - {job.instagram_image_instructions}"
+                    )
                 else:
-                    instagram_image_prompts.append(f"Instagram post image about: {job.topic}. Square format, modern style, Persian-friendly design.")
+                    instagram_image_prompts.append(
+                        f"Instagram post image (square format, 1:1 ratio, 1080x1080) about: {job.topic}. Modern style, Persian-friendly design."
+                    )
 
                 instagram_images = []
                 if job.instagram_image_count > 0:
                     instagram_images = await generate_images_with_ai(
                         prompts=instagram_image_prompts,
                         count=job.instagram_image_count,
-                        size="1080x1080"
+                        # No size - let the AI decide based on the model's capabilities
                     )
                     logger.info(f"✅ Generated {len(instagram_images)} instagram images")
                 else:
@@ -153,7 +162,6 @@ def process_job_task(self, job_id: int):
                     # Generate slug from title
                     slug = title.lower().replace(" ", "-")[:200]
                     # Remove special characters
-                    import re
                     slug = re.sub(r'[^\w\-]', '', slug)
 
                 # Extract body_html
@@ -169,7 +177,6 @@ def process_job_task(self, job_id: int):
                 summary = blog_content.get("summary", "")
                 if not summary and body_html:
                     # Take first 200 chars as summary
-                    import re
                     clean_text = re.sub(r'<[^>]+>', '', body_html)
                     summary = clean_text[:200] + "..." if len(clean_text) > 200 else clean_text
 
@@ -198,7 +205,7 @@ def process_job_task(self, job_id: int):
                     hashtags=hashtags,
                     instagram_status="draft",
                     website_status="published" if job.auto_publish else "draft",
-                    source_type="ai",  # ✅ Set source as AI
+                    source_type="ai",
                     ai_prompt=json.dumps({
                         "blog_text_instructions": job.blog_text_instructions,
                         "blog_image_instructions": job.blog_image_instructions,
@@ -213,28 +220,31 @@ def process_job_task(self, job_id: int):
                 db.add(post)
                 await db.commit()
                 await db.refresh(post)
+                logger.info(f"✅ Post created with id={post.id}")
 
-                for i, img_url in enumerate(blog_images[:1]):  # ✅ Only first image (cover)
+                # ==========================================
+                # ۶. ذخیره تصاویر بلاگ (فقط کاور)
+                # ==========================================
+                logger.info("=" * 60)
+                logger.info("💾 SAVING BLOG COVER IMAGE")
+
+                for i, img_url in enumerate(blog_images[:1]):  # Only first image as cover
                     if img_url:
                         logger.info(f"   Downloading blog cover image...")
                         local_path = await download_and_save_image(img_url, f"blog_cover_{post.id}")
 
                         asset = MediaAsset(
                             post_id=post.id,
-                            role="blog_cover",  # ✅ Always blog_cover now
+                            role="blog_cover",
                             prompt=blog_image_prompts[0] if blog_image_prompts else "",
                             public_url=local_path if local_path else img_url,
                             sort_order=0,
                         )
                         db.add(asset)
-
-                        # Set first image as cover
-                        if i == 0:
-                            post.cover_image_url = local_path if local_path else img_url
-                            logger.info(f"   ✅ Set as cover image: {post.cover_image_url}")
+                        logger.info(f"   ✅ Blog cover image saved")
 
                 await db.commit()
-                logger.info(f"✅ Saved {len(blog_images)} blog images")
+                logger.info(f"✅ Saved {len(blog_images[:1])} blog cover image(s)")
 
                 # ==========================================
                 # ۷. ذخیره تصاویر اینستاگرام

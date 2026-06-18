@@ -1,70 +1,177 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}داشبورد | پنل مدیریت{% endblock %}
 
 {% block header_title %}داشبورد{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="/static/css/toastr.min.css">
+<style>
+    @media (max-width: 768px) {
+        .admin-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -16px;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .admin-table {
+            min-width: 650px;
+            white-space: nowrap;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        .admin-badge {
+            white-space: nowrap;
+            display: inline-flex;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-track {
+            background: var(--color-charcoal);
+            border-radius: 3px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--color-charcoal-lighter);
+            border-radius: 3px;
+        }
+
+        .admin-table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--color-ash-gray);
+        }
+
+        .admin-quick-actions {
+            flex-direction: column;
+        }
+
+        .admin-action-card {
+            width: 100%;
+        }
+
+        .admin-stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .admin-stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-{% set persian_digits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'] %}
-{% macro to_persian(n) -%}
-{% if n is number -%}
-    {{- n|replace('0','۰')|replace('1','۱')|replace('2','۲')|replace('3','۳')|replace('4','۴')|replace('5','۵')|replace('6','۶')|replace('7','۷')|replace('8','۸')|replace('9','۹') -}}
-{%- else -%}
-    {{- n -}}
-{%- endif -%}
-{%- endmacro %}
-<div class="admin-dashboard">
+<div class="admin-page">
     <!-- Stats Cards -->
-    <div class="admin-stats-grid">
+    <div class="admin-stats-grid" style="margin-bottom: 24px;">
         <div class="admin-stat-card">
-            <div class="admin-stat-card__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="admin-stat-card__icon admin-stat-card__icon--primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
             </div>
             <div class="admin-stat-card__content">
-                <span class="admin-stat-card__value">{{ to_persian(total_posts) }}</span>
+                <span class="admin-stat-card__value">{{ total_posts }}</span>
                 <span class="admin-stat-card__label">مجموع پست‌ها</span>
             </div>
         </div>
 
         <div class="admin-stat-card">
             <div class="admin-stat-card__icon admin-stat-card__icon--warning">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                 </svg>
             </div>
             <div class="admin-stat-card__content">
-                <span class="admin-stat-card__value">{{ to_persian(recent_jobs|length) }}</span>
+                <span class="admin-stat-card__value">{{ recent_jobs|length if recent_jobs else 0 }}</span>
                 <span class="admin-stat-card__label">فرآیندهای اخیر</span>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__icon admin-stat-card__icon--success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="admin-stat-card__content">
+                <span class="admin-stat-card__value">
+                    {{ recent_jobs|selectattr('status', 'equalto', 'completed')|list|length if recent_jobs else 0 }}
+                </span>
+                <span class="admin-stat-card__label">تکمیل شده</span>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="admin-stat-card__icon admin-stat-card__icon--info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="admin-stat-card__content">
+                <span class="admin-stat-card__value">
+                    {{ recent_jobs|selectattr('status', 'equalto', 'pending')|list|length + recent_jobs|selectattr('status', 'equalto', 'processing')|list|length if recent_jobs else 0 }}
+                </span>
+                <span class="admin-stat-card__label">در حال اجرا</span>
             </div>
         </div>
     </div>
 
     <!-- Health Status -->
-    <div class="admin-section">
+    <div class="admin-section" style="margin-bottom: 24px;">
         <div class="admin-section__header">
-            <h2 class="admin-section__title">وضعیت سیستم</h2>
+            <h2 class="admin-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="vertical-align: middle; margin-left: 8px; color: var(--color-ember);">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                وضعیت سیستم
+            </h2>
         </div>
-        <div class="admin-card">
-            <div class="admin-health-grid">
+        <div class="admin-form-card" style="padding: 20px;">
+            <div class="admin-health-grid" style="display: grid; gap: 12px;">
                 {% if health %}
-                <div class="admin-health-item {% if health.database %}admin-health-item--ok{% endif %}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="admin-health-item {% if health.database %}admin-health-item--ok{% endif %}" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--color-charcoal); border-radius: var(--border-radius-md); {% if health.database %}border-right: 3px solid #22c55e;{% else %}border-right: 3px solid #ef4444;{% endif %}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" style="flex-shrink: 0; color: var(--color-ember);">
                         <ellipse cx="12" cy="5" rx="9" ry="3"/>
                         <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
                         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
                     </svg>
                     <div>
-                        <strong>پایگاه داده</strong>
+                        <strong style="display: block; color: var(--color-white); font-size: 14px; margin-bottom: 4px;">پایگاه داده</strong>
                         {% if health.database %}
-                        <span class="admin-health-item__status">متصل</span>
+                        <span style="font-size: 13px; color: #22c55e; font-weight: 500;">متصل و سالم</span>
                         {% else %}
-                        <span class="admin-health-item__status admin-health-item__status--error">خطا در اتصال</span>
+                        <span style="font-size: 13px; color: #ef4444; font-weight: 500;">خطا در اتصال</span>
                         {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="admin-health-item" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--color-charcoal); border-radius: var(--border-radius-md); border-right: 3px solid #ef4444;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" style="flex-shrink: 0; color: #ef4444;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div>
+                        <strong style="display: block; color: var(--color-white); font-size: 14px; margin-bottom: 4px;">وضعیت سیستم</strong>
+                        <span style="font-size: 13px; color: #ef4444; font-weight: 500;">اطلاعات سلامت سیستم در دسترس نیست</span>
                     </div>
                 </div>
                 {% endif %}
@@ -73,10 +180,20 @@
     </div>
 
     <!-- Recent Jobs -->
-    <div class="admin-section">
+    <div class="admin-section" style="margin-bottom: 24px;">
         <div class="admin-section__header">
-            <h2 class="admin-section__title">فرآیندهای اخیر</h2>
-            <a href="/admin/jobs" class="admin-link">مشاهده همه</a>
+            <h2 class="admin-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="vertical-align: middle; margin-left: 8px; color: var(--color-ember);">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                فرآیندهای اخیر
+            </h2>
+            <a style="min-width: 150px;" href="/admin/jobs" class="admin-btn admin-btn--sm admin-btn--outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>مشاهده همه</span>
+            </a>
         </div>
         <div class="admin-card">
             {% if recent_jobs %}
@@ -84,32 +201,49 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>عنوان</th>
-                            <th>وضعیت</th>
-                            <th>تاریخ ایجاد</th>
-                            <th>عملیات</th>
+                            <th class="admin-th" style="width:60px;">شماره</th>
+                            <th class="admin-th">موضوع</th>
+                            <th class="admin-th" style="width:120px;">وضعیت</th>
+                            <th class="admin-th" style="width:130px;">تاریخ ایجاد</th>
+                            <th class="admin-th" style="width:120px;">عملیات</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for job in recent_jobs %}
-                        <tr>
-                            <td>{{ job.subject }}</td>
-                            <td>
-                                {% if job.status == 'completed' %}
-                                <span class="admin-badge admin-badge--success">تکمیل شده</span>
-                                {% elif job.status == 'running' %}
-                                <span class="admin-badge admin-badge--warning">در حال اجرا</span>
-                                {% elif job.status == 'queued' %}
-                                <span class="admin-badge admin-badge--info">در صف</span>
-                                {% else %}
-                                <span class="admin-badge admin-badge--error">خطا</span>
+                        <tr class="admin-table__row">
+                            <td class="admin-table__cell admin-table__cell--number">{{ job.id }}</td>
+                            <td class="admin-table__cell">
+                                <a href="/admin/jobs/{{ job.id }}" class="admin-table__link">{{ job.topic }}</a>
+                                {% if job.text_instructions %}
+                                <small style="color: var(--color-text-muted); display: block; margin-top: 4px; font-size: 12px; white-space: normal; word-break: break-word;">
+                                    {{ job.text_instructions[:60] }}{% if job.text_instructions|length > 60 %}...{% endif %}
+                                </small>
                                 {% endif %}
                             </td>
-                            <td>
-                                {{ job.jalali_created if job.jalali_created else '-' }}
+                            <td class="admin-table__cell">
+                                {% if job.status == 'completed' %}
+                                <span class="admin-badge admin-badge--success">تکمیل شده</span>
+                                {% elif job.status == 'processing' %}
+                                <span class="admin-badge admin-badge--warning">در حال اجرا</span>
+                                {% elif job.status == 'pending' %}
+                                <span class="admin-badge admin-badge--info">در صف</span>
+                                {% elif job.status == 'aborted' %}
+                                <span class="admin-badge" style="background: rgba(107, 114, 128, 0.15); color: #9CA3AF;">لغو شده</span>
+                                {% else %}
+                                <span class="admin-badge admin-badge--error">شکست</span>
+                                {% endif %}
                             </td>
-                            <td>
-                                <a href="/admin/jobs/{{ job.id }}" class="admin-btn admin-btn--sm admin-btn--outline">مشاهده</a>
+                            <td class="admin-table__cell admin-table__cell--date" style="font-family: 'Shabnam', 'IRANSansX', sans-serif; white-space: nowrap; direction: ltr; text-align: center;">
+                                {{ job.jalali_created if job.jalali_created else job.jalali_date if job.jalali_date else '—' }}
+                            </td>
+                            <td class="admin-table__cell">
+                                <a style="min-width: 100px;" href="/admin/jobs/{{ job.id }}" class="admin-btn admin-btn--sm admin-btn--outline" title="مشاهده">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <span>مشاهده</span>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -118,11 +252,11 @@
             </div>
             {% else %}
             <div class="admin-empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v6l4 2"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                 </svg>
                 <p>هنوز فرآیندی وجود ندارد</p>
+                <a href="/admin/jobs/create" class="admin-btn admin-btn--primary" style="margin-top: 16px;">ایجاد فرآیند جدید</a>
             </div>
             {% endif %}
         </div>
@@ -131,22 +265,40 @@
     <!-- Quick Actions -->
     <div class="admin-section">
         <div class="admin-section__header">
-            <h2 class="admin-section__title">عملیات سریع</h2>
+            <h2 class="admin-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="vertical-align: middle; margin-left: 8px; color: var(--color-ember);">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                عملیات سریع
+            </h2>
         </div>
-        <div class="admin-quick-actions">
+        <div class="admin-quick-actions" style="display: flex; gap: 16px; flex-wrap: wrap;">
             <a href="/admin/posts/create" class="admin-action-card">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 <span>پست جدید</span>
             </a>
             <a href="/admin/posts" class="admin-action-card">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <span>لیست پست‌ها</span>
+            </a>
+            <a href="/admin/jobs/create" class="admin-action-card">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                <span>فرآیند جدید</span>
+            </a>
+            <a href="/admin/ai-settings" class="admin-action-card">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51 1V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09"/>
+                </svg>
+                <span>تنظیمات AI</span>
             </a>
         </div>
     </div>

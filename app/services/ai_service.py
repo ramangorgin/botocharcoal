@@ -247,20 +247,23 @@ class AIService:
 
             raise
 
-    async def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
+    async def generate_image(self, prompt: str, size: str = None) -> str:
+        """
+        Generate an image. Size is optional - if not specified, the model decides.
+        If specified and unsupported, it will be ignored with a warning.
+        """
         logger.info("=" * 60)
         logger.info("🖼️  GENERATING IMAGE")
         logger.info(f"   Prompt: {prompt[:150]}...")
-        logger.info(f"   Size: {size}")
 
         try:
             ai = await self.get_settings()
             client = await self._get_client()
 
-            # Validate image model - try multiple fallbacks
+            # Validate image model
             image_model = ai.image_model.strip() if ai.image_model else "dall-e-3"
 
-            # Known working image models for GapGPT
+            # Known working image models
             working_models = ["dall-e-3", "gpt-image-1", "dall-e-2"]
 
             if image_model not in working_models:
@@ -268,33 +271,46 @@ class AIService:
                 image_model = "dall-e-3"
 
             logger.info(f"   Model: {image_model}")
+
+            # Build request params - only include size if specified and supported
+            request_params = {
+                "model": image_model,
+                "prompt": prompt,
+                "n": 1,
+            }
+
+            # Only add size if it's a valid size for the model
+            if size:
+                if image_model == "dall-e-3":
+                    valid_sizes = ["1024x1024", "1024x1792", "1792x1024"]
+                    if size in valid_sizes:
+                        request_params["size"] = size
+                        logger.info(f"   Size: {size}")
+                    else:
+                        logger.warning(f"   Size '{size}' not supported by dall-e-3, letting model decide")
+                elif image_model in ["dall-e-2", "gpt-image-1"]:
+                    request_params["size"] = size
+                    logger.info(f"   Size: {size}")
+                else:
+                    logger.info(f"   Size not specified, letting model decide")
+            else:
+                logger.info(f"   Size: default (model's choice)")
+
             logger.info(f"📤 Sending image generation request to: {ai.base_url}/images/generations")
 
             # Make the API call
-            response = client.images.generate(
-                model=image_model,
-                prompt=prompt,
-                size=size,
-                n=1,
-            )
+            response = client.images.generate(**request_params)
 
-            # Handle different response formats
-            logger.info(f"📥 Image response received")
-            logger.debug(f"   Response data: {response}")
-
-            # Extract image URL - handle different response structures
+            # Extract image URL
             image_url = None
             if hasattr(response, 'data') and response.data and len(response.data) > 0:
                 image_url = response.data[0].url
-            elif hasattr(response, 'url'):
-                image_url = response.url
 
             if not image_url:
-                logger.error(f"❌ No image URL in response. Response: {response}")
+                logger.error(f"❌ No image URL in response")
                 raise ValueError("No image URL in API response")
 
             logger.info(f"✅ IMAGE URL OBTAINED: {image_url[:100]}...")
-
             return image_url
 
         except Exception as e:
@@ -309,34 +325,31 @@ class AIService:
                 except:
                     pass
 
-            # If the first model fails, try with a fallback
-            if "404" in str(e) or "403" in str(e) or "NoneType" in str(e):
-                logger.warning("🔄 Trying with fallback image model 'dall-e-3'...")
+            # If size was the problem, retry without it
+            if "400" in str(e) and size:
+                logger.warning("🔄 Size error detected - retrying without size parameter...")
                 try:
-                    client = await self._get_client()
                     response = client.images.generate(
-                        model="dall-e-3",
+                        model=image_model,
                         prompt=prompt,
-                        size=size,
                         n=1,
                     )
                     image_url = response.data[0].url if response.data else None
                     if image_url:
-                        logger.info(f"✅ Fallback image generated: {image_url[:100]}...")
+                        logger.info(f"✅ Fallback image generated (no size): {image_url[:100]}...")
                         return image_url
                 except Exception as fallback_error:
                     logger.error(f"❌ Fallback also failed: {str(fallback_error)}")
 
             raise
 
-    async def generate_images(self, prompts: List[str], count: int = 1, size: str = "1024x1024") -> List[str]:
+    async def generate_images(self, prompts: List[str], count: int = 1, size: str = None) -> List[str]:
         """Generate multiple images"""
         logger.info("=" * 60)
         logger.info(f"🖼️  GENERATING MULTIPLE IMAGES")
         logger.info(f"   Number of prompts: {len(prompts)}")
         logger.info(f"   Images per prompt: {count}")
         logger.info(f"   Total images to generate: {len(prompts) * count}")
-        logger.info(f"   Size: {size}")
 
         images = []
         total_attempted = 0
@@ -415,7 +428,7 @@ async def generate_content_with_ai(topic: str, instructions: str = "") -> Dict[s
         return result
 
 
-async def generate_images_with_ai(prompts: List[str], count: int = 1, size: str = "1024x1024") -> List[str]:
+async def generate_images_with_ai(prompts: List[str], count: int = 1, size: str = None) -> List[str]:
     """Helper function for generating images (used in tasks)"""
     logger.info("🔄 Using helper function generate_images_with_ai")
 

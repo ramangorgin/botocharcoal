@@ -1,22 +1,20 @@
+# app/api/admin/routes_dashboard.py - Fixed version
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from fastapi.templating import Jinja2Templates
 
 from app.db.session import get_db
-from app.db.models import Post # فرض می‌کنیم از اینجا استفاده میشه
-# از dependencies.py هم get_current_admin رو داریم
+from app.db.models.post import Post
+from app.db.models.job import Job
 from app.api.admin.dependencies import get_current_admin
+from app.core.template_config import templates
 
 router = APIRouter()
 
-from app.core.template_config import templates
 
-# این تابع الان وضعیت دیتابیس رو هم چک میکنه
 async def check_db_health(db: AsyncSession) -> bool:
     try:
-        # یک کوئری ساده برای چک کردن اتصال
         await db.execute(select(func.now()))
         return True
     except Exception:
@@ -29,29 +27,37 @@ async def dashboard(
     db: AsyncSession = Depends(get_db),
     user=Depends(get_current_admin),
 ):
-    # چک کردن وضعیت دیتابیس
+    # Check database health
     db_is_healthy = await check_db_health(db)
 
-    # محاسبهٔ آمارهای مربوط به پست‌ها
-    total_posts_count = await db.execute(select(func.count(Post.id)))
-    published_posts_count = await db.execute(
+    # Get post statistics
+    total_result = await db.execute(select(func.count(Post.id)))
+    total_posts = total_result.scalar() or 0
+
+    published_result = await db.execute(
         select(func.count(Post.id)).where(Post.website_status == "published")
     )
-    drafts_count = await db.execute(
+    published_posts = published_result.scalar() or 0
+
+    drafts_result = await db.execute(
         select(func.count(Post.id)).where(Post.website_status == "draft")
     )
+    draft_posts = drafts_result.scalar() or 0
 
-    # ارسال داده‌ها به template
-    # حالا health شامل وضعیت دیتابیس میشه
+    # Get recent jobs
+    jobs_result = await db.execute(
+        select(Job).order_by(Job.created_at.desc()).limit(5)
+    )
+    recent_jobs = jobs_result.scalars().all()
+
     return templates.TemplateResponse(
-        "dashboard.html",
+        "admin/dashboard.html",
         {
             "request": request,
-            "total_posts": total_posts_count.scalar(),
-            "published_posts": published_posts_count.scalar(),
-            "draft_posts": drafts_count.scalar(),
-            # این متغیر رو به template می‌فرستیم
-            # که در dashboard.html با {% if health %} چک میشه
+            "total_posts": total_posts,
+            "published_posts": published_posts,
+            "draft_posts": draft_posts,
+            "recent_jobs": recent_jobs,
             "health": {
                 "database": db_is_healthy
             }
