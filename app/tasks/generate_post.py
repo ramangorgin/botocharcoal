@@ -129,7 +129,7 @@ def process_job_task(self, job_id: int):
                     logger.info(f"✅ Generated {len(blog_images)} blog images")
 
                     # Wait before next image generation
-                    if job.instagram_image_count > 0:
+                    if job.instagram_image_count > 0 and blog_images:
                         await asyncio.sleep(5)
                 else:
                     logger.info("   Skipping blog images (count=0)")

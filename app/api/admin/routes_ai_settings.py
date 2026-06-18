@@ -23,7 +23,7 @@ async def ai_settings_page(
     settings = result.scalar_one_or_none()
 
     return templates.TemplateResponse(
-        "ai_settings.html",
+        "admin/ai_settings.html",
         {
             "request": request,
             "settings": settings,  # Make sure this matches the template variable name
@@ -31,7 +31,7 @@ async def ai_settings_page(
     )
 
 
-@router.post("/ai-settings")
+@router.post("admin/ai-settings")
 async def update_ai_settings(
     request: Request,
     provider: str = Form(...),

@@ -30,6 +30,7 @@ KNOWN_WORKING_MODELS = {
         "deepseek-chat",
     ],
     "image": [
+        "gapgpt/z-image",      # ✅ Cheapest & working - primary
         "dall-e-3",
         "gpt-image-1",
         "gpt-image-2",
@@ -204,6 +205,7 @@ class AIService:
         """
         Generate an image with rate limit handling and retries.
         Size is optional - model decides if not specified.
+        Falls back to gapgpt/z-image if the configured model fails.
         """
         logger.info("=" * 60)
         logger.info("🖼️  GENERATING IMAGE")
@@ -213,15 +215,17 @@ class AIService:
             ai = await self.get_settings()
             client = await self._get_client()
 
-            # Use configured image model or fallback
-            image_model = ai.image_model.strip() if ai.image_model else "dall-e-3"
+            # Use configured image model - validate it
+            image_model = ai.image_model.strip() if ai.image_model else "gapgpt/z-image"
 
-            # Known working models
-            working_models = ["dall-e-3", "gpt-image-1", "gpt-image-2", "dall-e-2"]
+            # Known working models in order of preference
+            primary_models = ["gapgpt/z-image"]  # Cheapest, tested working
+            fallback_models = ["dall-e-3", "gpt-image-1", "dall-e-2"]
 
-            if image_model not in working_models:
-                logger.warning(f"⚠️  Image model '{image_model}' not in known list. Trying dall-e-3 instead")
-                image_model = "dall-e-3"
+            # If the configured model isn't in our known list, use gapgpt/z-image
+            if image_model not in primary_models + fallback_models:
+                logger.warning(f"⚠️  Image model '{image_model}' not recognized. Using gapgpt/z-image instead")
+                image_model = "gapgpt/z-image"
 
             logger.info(f"   Model: {image_model}")
 
@@ -240,47 +244,59 @@ class AIService:
                         request_params["size"] = size
                         logger.info(f"   Size: {size}")
                     else:
-                        logger.warning(f"   Size '{size}' not supported by dall-e-3, ignoring")
+                        logger.warning(f"   Size '{size}' not supported by {image_model}, ignoring")
                 elif image_model in ["dall-e-2", "gpt-image-1", "gpt-image-2"]:
                     request_params["size"] = size
                     logger.info(f"   Size: {size}")
+                # gapgpt/z-image doesn't need size - it decides
 
             logger.info(f"📤 Sending image generation request...")
 
-            # Retry with exponential backoff for rate limits
-            max_retries = 5
-            for attempt in range(max_retries):
-                try:
-                    response = client.images.generate(**request_params)
+            # Try primary model first, then fallbacks
+            models_to_try = [image_model] + [m for m in fallback_models if m != image_model]
 
-                    image_url = None
-                    if hasattr(response, 'data') and response.data and len(response.data) > 0:
-                        image_url = response.data[0].url
+            for attempt_model in models_to_try:
+                request_params["model"] = attempt_model
 
-                    if not image_url:
-                        raise ValueError("No image URL in API response")
+                # Retry with exponential backoff for rate limits
+                max_retries = 5
+                for attempt in range(max_retries):
+                    try:
+                        response = client.images.generate(**request_params)
 
-                    logger.info(f"✅ IMAGE URL OBTAINED: {image_url[:100]}...")
-                    return image_url
+                        image_url = None
+                        if hasattr(response, 'data') and response.data and len(response.data) > 0:
+                            image_url = response.data[0].url
 
-                except Exception as e:
-                    error_str = str(e)
-                    if "429" in error_str and attempt < max_retries - 1:
-                        wait_time = (2 ** attempt) * 5  # 5, 10, 20, 40, 80 seconds
-                        logger.warning(f"⏳ Rate limited (429). Waiting {wait_time}s before retry {attempt + 2}/{max_retries}...")
-                        await asyncio.sleep(wait_time)
-                    elif "400" in error_str and size:
-                        # Size issue - retry without size
-                        logger.warning("🔄 Size error - retrying without size parameter...")
-                        request_params.pop("size", None)
-                        if attempt < max_retries - 1:
-                            continue
+                        if image_url:
+                            logger.info(f"✅ IMAGE URL OBTAINED ({attempt_model}): {image_url[:100]}...")
+                            return image_url
                         else:
-                            raise
-                    else:
-                        raise
+                            logger.warning(f"   Model {attempt_model} returned no image URL")
+                            break  # Try next model
 
-            raise Exception("Max retries exceeded for image generation")
+                    except Exception as e:
+                        error_str = str(e)
+
+                        if "429" in error_str and attempt < max_retries - 1:
+                            wait_time = (2 ** attempt) * 5
+                            logger.warning(f"⏳ Rate limited (429). Waiting {wait_time}s before retry {attempt + 2}/{max_retries}...")
+                            await asyncio.sleep(wait_time)
+                        elif "400" in error_str and size and "size" in error_str.lower():
+                            logger.warning("🔄 Size error - retrying without size...")
+                            request_params.pop("size", None)
+                            continue
+                        elif "401" in error_str or "403" in error_str:
+                            logger.error(f"   Authentication error with {attempt_model}")
+                            break  # Try next model
+                        elif "404" in error_str:
+                            logger.warning(f"   Model {attempt_model} not found, trying next...")
+                            break  # Try next model
+                        else:
+                            logger.warning(f"   Error with {attempt_model}: {error_str[:150]}")
+                            break  # Try next model
+
+            raise Exception("All image models failed")
 
         except Exception as e:
             logger.error(f"❌ ERROR GENERATING IMAGE: {type(e).__name__}: {str(e)[:300]}")
