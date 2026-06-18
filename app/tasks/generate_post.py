@@ -13,7 +13,6 @@ from app.db.models.post import Post
 from app.db.models.media_asset import MediaAsset
 from app.services.ai_service import generate_content_with_ai, generate_images_with_ai, download_and_save_image
 
-# Import celery app
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,15 @@ def _run_async(coro):
         return asyncio.run(coro)
 
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+@celery_app.task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+    soft_time_limit=300,
+    time_limit=600,
+    acks_late=True,
+    name='app.tasks.generate_post.process_job_task',
+)
 def process_job_task(self, job_id: int):
     """
     تسک Celery برای پردازش Job
@@ -69,13 +76,14 @@ def process_job_task(self, job_id: int):
                 if not blog_instructions:
                     blog_instructions = "یک مقاله کامل و جامع با فرمت HTML تولید کن. شامل تگ‌های h2, h3, p, ul, li, strong, blockquote باشد. مقاله باید حداقل ۱۰۰۰ کلمه و دارای بخش‌های مقدمه، بدنه اصلی و نتیجه‌گیری باشد."
 
-                logger.info(f"   Blog instructions: {blog_instructions[:200]}...")
-
                 blog_content = await generate_content_with_ai(
                     topic=job.topic,
                     instructions=blog_instructions
                 )
-                logger.info(f"✅ Blog content generated: {json.dumps(blog_content, ensure_ascii=False)[:300]}...")
+                logger.info(f"✅ Blog content generated")
+
+                # Wait to avoid rate limits
+                await asyncio.sleep(3)
 
                 # ==========================================
                 # ۲. تولید کپشن اینستاگرام
@@ -87,13 +95,14 @@ def process_job_task(self, job_id: int):
                 if not instagram_instructions:
                     instagram_instructions = "یک کپشن جذاب و کوتاه برای اینستاگرام بنویس. شامل: یک سوال تعاملی در ابتدا، متن اصلی (حداکثر ۱۵۰ کلمه)، و ۱۰-۱۵ هشتگ مرتبط در پایان. لحن متن باید صمیمی و خودمانی باشد."
 
-                logger.info(f"   Instagram instructions: {instagram_instructions[:200]}...")
-
                 instagram_content = await generate_content_with_ai(
                     topic=job.topic,
                     instructions=instagram_instructions
                 )
-                logger.info(f"✅ Instagram content generated: {json.dumps(instagram_content, ensure_ascii=False)[:300]}...")
+                logger.info(f"✅ Instagram content generated")
+
+                # Wait to avoid rate limits
+                await asyncio.sleep(3)
 
                 # ==========================================
                 # ۳. تولید تصاویر بلاگ (کاور)
@@ -104,11 +113,11 @@ def process_job_task(self, job_id: int):
                 blog_image_prompts = []
                 if job.blog_image_instructions:
                     blog_image_prompts.append(
-                        f"Professional blog cover image (wide/landscape format, 16:9 ratio): {job.topic} - {job.blog_image_instructions}"
+                        f"Professional blog cover image: {job.topic} - {job.blog_image_instructions}"
                     )
                 else:
                     blog_image_prompts.append(
-                        f"Professional blog cover image (wide/landscape format, 16:9 ratio) for article about: {job.topic}. Clean, modern design with Persian text space."
+                        f"Professional blog cover image for article about: {job.topic}. Clean, modern design."
                     )
 
                 blog_images = []
@@ -116,9 +125,12 @@ def process_job_task(self, job_id: int):
                     blog_images = await generate_images_with_ai(
                         prompts=blog_image_prompts,
                         count=job.blog_image_count,
-                        # No size - let the AI decide based on the model's capabilities
                     )
                     logger.info(f"✅ Generated {len(blog_images)} blog images")
+
+                    # Wait before next image generation
+                    if job.instagram_image_count > 0:
+                        await asyncio.sleep(5)
                 else:
                     logger.info("   Skipping blog images (count=0)")
 
@@ -131,11 +143,11 @@ def process_job_task(self, job_id: int):
                 instagram_image_prompts = []
                 if job.instagram_image_instructions:
                     instagram_image_prompts.append(
-                        f"Instagram post image (square format, 1:1 ratio, 1080x1080): {job.topic} - {job.instagram_image_instructions}"
+                        f"Instagram post image (square): {job.topic} - {job.instagram_image_instructions}"
                     )
                 else:
                     instagram_image_prompts.append(
-                        f"Instagram post image (square format, 1:1 ratio, 1080x1080) about: {job.topic}. Modern style, Persian-friendly design."
+                        f"Instagram post image (square format) about: {job.topic}. Modern style."
                     )
 
                 instagram_images = []
@@ -143,7 +155,6 @@ def process_job_task(self, job_id: int):
                     instagram_images = await generate_images_with_ai(
                         prompts=instagram_image_prompts,
                         count=job.instagram_image_count,
-                        # No size - let the AI decide based on the model's capabilities
                     )
                     logger.info(f"✅ Generated {len(instagram_images)} instagram images")
                 else:
@@ -155,45 +166,30 @@ def process_job_task(self, job_id: int):
                 logger.info("=" * 60)
                 logger.info("💾 CREATING POST IN DATABASE")
 
-                # Extract title and slug from blog content
                 title = blog_content.get("title", job.topic)
                 slug = blog_content.get("slug", "")
                 if not slug:
-                    # Generate slug from title
-                    slug = title.lower().replace(" ", "-")[:200]
-                    # Remove special characters
-                    slug = re.sub(r'[^\w\-]', '', slug)
+                    slug = re.sub(r'[^\w\-]', '', title.lower().replace(" ", "-")[:200])
 
-                # Extract body_html
                 body_html = blog_content.get("body_html", blog_content.get("content", ""))
-                if not body_html and isinstance(blog_content, dict):
-                    # Try to find any long text content
-                    for key in ["body", "article", "text", "html"]:
-                        if key in blog_content and len(str(blog_content[key])) > 100:
-                            body_html = blog_content[key]
-                            break
 
-                # Extract summary
                 summary = blog_content.get("summary", "")
                 if not summary and body_html:
-                    # Take first 200 chars as summary
                     clean_text = re.sub(r'<[^>]+>', '', body_html)
                     summary = clean_text[:200] + "..." if len(clean_text) > 200 else clean_text
 
-                # Extract instagram caption and hashtags
-                instagram_caption = instagram_content.get("instagram_caption", instagram_content.get("caption", instagram_content.get("content", "")))
+                instagram_caption = instagram_content.get(
+                    "instagram_caption",
+                    instagram_content.get("caption", instagram_content.get("content", ""))
+                )
                 hashtags = instagram_content.get("hashtags", instagram_content.get("tags", ""))
-
-                # If hashtags is a list, join them
                 if isinstance(hashtags, list):
                     hashtags = " ".join(hashtags)
 
                 logger.info(f"   Title: {title}")
                 logger.info(f"   Slug: {slug}")
                 logger.info(f"   Body HTML length: {len(body_html)}")
-                logger.info(f"   Summary length: {len(summary)}")
-                logger.info(f"   Instagram caption length: {len(instagram_caption)}")
-                logger.info(f"   Hashtags: {hashtags}")
+                logger.info(f"   Hashtags: {hashtags[:100]}")
 
                 post = Post(
                     topic=job.topic,
@@ -223,12 +219,12 @@ def process_job_task(self, job_id: int):
                 logger.info(f"✅ Post created with id={post.id}")
 
                 # ==========================================
-                # ۶. ذخیره تصاویر بلاگ (فقط کاور)
+                # ۶. ذخیره تصاویر بلاگ (کاور)
                 # ==========================================
                 logger.info("=" * 60)
                 logger.info("💾 SAVING BLOG COVER IMAGE")
 
-                for i, img_url in enumerate(blog_images[:1]):  # Only first image as cover
+                for i, img_url in enumerate(blog_images[:1]):
                     if img_url:
                         logger.info(f"   Downloading blog cover image...")
                         local_path = await download_and_save_image(img_url, f"blog_cover_{post.id}")
@@ -244,7 +240,6 @@ def process_job_task(self, job_id: int):
                         logger.info(f"   ✅ Blog cover image saved")
 
                 await db.commit()
-                logger.info(f"✅ Saved {len(blog_images[:1])} blog cover image(s)")
 
                 # ==========================================
                 # ۷. ذخیره تصاویر اینستاگرام
@@ -267,7 +262,6 @@ def process_job_task(self, job_id: int):
                         db.add(asset)
 
                 await db.commit()
-                logger.info(f"✅ Saved {len(instagram_images)} instagram images")
 
                 # ==========================================
                 # ۸. به‌روزرسانی Job
@@ -296,22 +290,16 @@ def process_job_task(self, job_id: int):
                 logger.error(f"❌ JOB {job_id} FAILED: {str(exc)}")
                 logger.error(f"   Error type: {type(exc).__name__}")
 
-                # ثبت خطا در Job
                 try:
-                    result = await db.execute(
-                        select(Job).where(Job.id == job_id)
-                    )
+                    result = await db.execute(select(Job).where(Job.id == job_id))
                     job = result.scalar_one_or_none()
                     if job:
                         job.status = "failed"
                         job.error_message = str(exc)[:1000]
                         await db.commit()
-                        logger.info(f"📊 Job status updated to 'failed'")
                 except Exception as db_error:
                     logger.error(f"❌ Failed to update job error status: {str(db_error)}")
 
-                # تلاش مجدد
                 raise self.retry(exc=exc)
 
-    # اجرای async در sync
     return _run_async(_process_async())

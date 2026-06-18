@@ -3,6 +3,7 @@ import json
 import logging
 import httpx
 import aiofiles
+import asyncio
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -31,6 +32,7 @@ KNOWN_WORKING_MODELS = {
     "image": [
         "dall-e-3",
         "gpt-image-1",
+        "gpt-image-2",
         "dall-e-2",
     ]
 }
@@ -48,7 +50,6 @@ class AIService:
         if self._client is None:
             ai = await self.get_settings()
 
-            # Debug logging - Database values
             logger.info("=" * 60)
             logger.info("🔧 INITIALIZING OPENAI CLIENT")
             logger.info(f"   Provider: {ai.provider}")
@@ -57,12 +58,11 @@ class AIService:
             logger.info(f"   Image Model: {ai.image_model}")
             logger.info(f"   API Key: {ai.api_key[:10]}...{ai.api_key[-4:] if len(ai.api_key) > 4 else 'N/A'}")
             logger.info(f"   API Key Length: {len(ai.api_key)}")
-            logger.info(f"   System Prompt: {ai.system_prompt[:100] if ai.system_prompt else 'None'}...")
 
             # Clean and validate API key
             api_key = ai.api_key.strip()
 
-            # Check for common issues with API key
+            # Check for common issues
             issues_found = []
             if api_key != ai.api_key:
                 issues_found.append("API key had leading/trailing whitespace")
@@ -78,7 +78,7 @@ class AIService:
                 for issue in issues_found:
                     logger.warning(f"   - {issue}")
 
-            # Use environment variable as fallback if database key seems invalid
+            # Use environment variable as fallback
             if not api_key or len(api_key) < 10:
                 from app.core.config import settings as app_settings
                 fallback_key = getattr(app_settings, 'GAPGPT_API_KEY', '')
@@ -88,18 +88,14 @@ class AIService:
                 else:
                     raise ValueError("❌ No valid API key found in database or environment variables")
 
-            # Validate and fix model names
-            text_model = ai.text_model.strip() if ai.text_model else "gpt-4o"
-            if text_model not in KNOWN_WORKING_MODELS["text"]:
-                logger.warning(f"⚠️  Text model '{text_model}' not in known working models list")
-                logger.warning(f"   Will attempt to use it anyway, but consider switching to one of: {KNOWN_WORKING_MODELS['text']}")
-
-            # Create the client
-            logger.info(f"🚀 Creating OpenAI client with base_url={ai.base_url.strip()}, model={text_model}")
+            # Create the client with increased timeout and retries
+            logger.info(f"🚀 Creating OpenAI client with base_url={ai.base_url.strip()}")
             try:
                 self._client = OpenAI(
                     base_url=ai.base_url.strip(),
                     api_key=api_key,
+                    timeout=180.0,  # 3 minutes
+                    max_retries=2,
                 )
                 logger.info("✅ OpenAI client created successfully")
             except Exception as e:
@@ -115,18 +111,9 @@ class AIService:
                 result = await self.db.execute(select(AISettings).limit(1))
                 self._settings = result.scalar_one()
                 logger.info(f"✅ Settings loaded - Provider: {self._settings.provider}, Base URL: {self._settings.base_url}")
-
-                # Log full settings for debugging (mask sensitive data)
-                logger.debug(f"   Full settings: provider={self._settings.provider}, "
-                           f"base_url={self._settings.base_url}, "
-                           f"text_model={self._settings.text_model}, "
-                           f"image_model={self._settings.image_model}, "
-                           f"api_key_masked={self._settings.api_key[:10]}...")
-
             except Exception as e:
                 logger.error(f"❌ Failed to fetch AI settings: {str(e)}")
                 raise ValueError(f"No AI settings found in database. Please configure AI settings first.") from e
-
         return self._settings
 
     def _reset_client(self):
@@ -144,12 +131,11 @@ class AIService:
             ai = await self.get_settings()
             client = await self._get_client()
 
-            # Prepare system prompt
             system_prompt = ai.system_prompt or "You are a helpful AI assistant that creates blog posts and Instagram content in Persian."
             logger.info(f"   System Prompt: {system_prompt[:100]}...")
             logger.info(f"   Model: {ai.text_model}")
 
-            # Prepare messages based on model compatibility
+            # Prepare messages
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -163,7 +149,6 @@ class AIService:
                     {"role": "user", "content": f"System instructions: {system_prompt}\n\nUser request: {user_prompt}"}
                 ]
 
-            # Prepare request parameters
             request_params = {
                 "model": ai.text_model,
                 "messages": messages,
@@ -175,21 +160,17 @@ class AIService:
                        f"messages_count={len(request_params['messages'])}, "
                        f"temperature={request_params['temperature']}")
 
-            # Make the API call
             response = client.chat.completions.create(**request_params)
 
-            # Log success
             logger.info(f"✅ RESPONSE RECEIVED")
             logger.info(f"   Response ID: {response.id}")
             logger.info(f"   Model Used: {response.model}")
-            logger.info(f"   Usage: {response.usage}")
 
             content = response.choices[0].message.content
             logger.info(f"   Content Length: {len(content)} chars")
             logger.info(f"   Content Preview: {content[:200]}...")
 
-            # Try to parse as JSON if it's a JSON string
-            # First, clean the content - remove markdown code blocks if present
+            # Clean content - remove markdown code blocks
             cleaned_content = content.strip()
             if cleaned_content.startswith("```json"):
                 cleaned_content = cleaned_content[7:]
@@ -202,7 +183,6 @@ class AIService:
             try:
                 parsed_content = json.loads(cleaned_content)
                 logger.info("   ✅ Content parsed as JSON successfully")
-                logger.debug(f"   JSON keys: {list(parsed_content.keys())}")
                 return parsed_content
             except json.JSONDecodeError:
                 logger.info("   ℹ️  Content is not JSON, wrapping in default structure")
@@ -217,40 +197,13 @@ class AIService:
                 }
 
         except Exception as e:
-            logger.error(f"❌ ERROR GENERATING TEXT")
-            logger.error(f"   Error Type: {type(e).__name__}")
-            logger.error(f"   Error Message: {str(e)}")
-
-            if hasattr(e, 'response'):
-                try:
-                    logger.error(f"   HTTP Status: {e.response.status_code}")
-                    logger.error(f"   Response Body: {e.response.text[:500]}")
-                except:
-                    pass
-
-            if hasattr(e, 'body'):
-                try:
-                    logger.error(f"   Error Body: {e.body}")
-                except:
-                    pass
-
-            # Provide helpful debug info
-            if "403" in str(e):
-                logger.error("   🔍 403 ERROR ANALYSIS:")
-                logger.error("   - Check if the model name is correct and available")
-                logger.error("   - Check if your API key has access to this model")
-                logger.error(f"   - Known working models: {KNOWN_WORKING_MODELS['text']}")
-            elif "401" in str(e):
-                logger.error("   🔍 401 ERROR ANALYSIS:")
-                logger.error("   - API key might be invalid or expired")
-                logger.error("   - Check if the API key has sufficient credits")
-
+            logger.error(f"❌ ERROR GENERATING TEXT: {type(e).__name__}: {str(e)}")
             raise
 
     async def generate_image(self, prompt: str, size: str = None) -> str:
         """
-        Generate an image. Size is optional - if not specified, the model decides.
-        If specified and unsupported, it will be ignored with a warning.
+        Generate an image with rate limit handling and retries.
+        Size is optional - model decides if not specified.
         """
         logger.info("=" * 60)
         logger.info("🖼️  GENERATING IMAGE")
@@ -260,26 +213,26 @@ class AIService:
             ai = await self.get_settings()
             client = await self._get_client()
 
-            # Validate image model
+            # Use configured image model or fallback
             image_model = ai.image_model.strip() if ai.image_model else "dall-e-3"
 
-            # Known working image models
-            working_models = ["dall-e-3", "gpt-image-1", "dall-e-2"]
+            # Known working models
+            working_models = ["dall-e-3", "gpt-image-1", "gpt-image-2", "dall-e-2"]
 
             if image_model not in working_models:
-                logger.warning(f"⚠️  Image model '{image_model}' might not work. Trying dall-e-3 instead")
+                logger.warning(f"⚠️  Image model '{image_model}' not in known list. Trying dall-e-3 instead")
                 image_model = "dall-e-3"
 
             logger.info(f"   Model: {image_model}")
 
-            # Build request params - only include size if specified and supported
+            # Build request params
             request_params = {
                 "model": image_model,
                 "prompt": prompt,
                 "n": 1,
             }
 
-            # Only add size if it's a valid size for the model
+            # Only add size if valid for the model
             if size:
                 if image_model == "dall-e-3":
                     valid_sizes = ["1024x1024", "1024x1792", "1792x1024"]
@@ -287,69 +240,58 @@ class AIService:
                         request_params["size"] = size
                         logger.info(f"   Size: {size}")
                     else:
-                        logger.warning(f"   Size '{size}' not supported by dall-e-3, letting model decide")
-                elif image_model in ["dall-e-2", "gpt-image-1"]:
+                        logger.warning(f"   Size '{size}' not supported by dall-e-3, ignoring")
+                elif image_model in ["dall-e-2", "gpt-image-1", "gpt-image-2"]:
                     request_params["size"] = size
                     logger.info(f"   Size: {size}")
-                else:
-                    logger.info(f"   Size not specified, letting model decide")
-            else:
-                logger.info(f"   Size: default (model's choice)")
 
-            logger.info(f"📤 Sending image generation request to: {ai.base_url}/images/generations")
+            logger.info(f"📤 Sending image generation request...")
 
-            # Make the API call
-            response = client.images.generate(**request_params)
+            # Retry with exponential backoff for rate limits
+            max_retries = 5
+            for attempt in range(max_retries):
+                try:
+                    response = client.images.generate(**request_params)
 
-            # Extract image URL
-            image_url = None
-            if hasattr(response, 'data') and response.data and len(response.data) > 0:
-                image_url = response.data[0].url
+                    image_url = None
+                    if hasattr(response, 'data') and response.data and len(response.data) > 0:
+                        image_url = response.data[0].url
 
-            if not image_url:
-                logger.error(f"❌ No image URL in response")
-                raise ValueError("No image URL in API response")
+                    if not image_url:
+                        raise ValueError("No image URL in API response")
 
-            logger.info(f"✅ IMAGE URL OBTAINED: {image_url[:100]}...")
-            return image_url
+                    logger.info(f"✅ IMAGE URL OBTAINED: {image_url[:100]}...")
+                    return image_url
+
+                except Exception as e:
+                    error_str = str(e)
+                    if "429" in error_str and attempt < max_retries - 1:
+                        wait_time = (2 ** attempt) * 5  # 5, 10, 20, 40, 80 seconds
+                        logger.warning(f"⏳ Rate limited (429). Waiting {wait_time}s before retry {attempt + 2}/{max_retries}...")
+                        await asyncio.sleep(wait_time)
+                    elif "400" in error_str and size:
+                        # Size issue - retry without size
+                        logger.warning("🔄 Size error - retrying without size parameter...")
+                        request_params.pop("size", None)
+                        if attempt < max_retries - 1:
+                            continue
+                        else:
+                            raise
+                    else:
+                        raise
+
+            raise Exception("Max retries exceeded for image generation")
 
         except Exception as e:
-            logger.error(f"❌ ERROR GENERATING IMAGE")
-            logger.error(f"   Error Type: {type(e).__name__}")
-            logger.error(f"   Error Message: {str(e)}")
-
-            if hasattr(e, 'response'):
-                try:
-                    logger.error(f"   HTTP Status: {e.response.status_code}")
-                    logger.error(f"   Response Body: {e.response.text[:500]}")
-                except:
-                    pass
-
-            # If size was the problem, retry without it
-            if "400" in str(e) and size:
-                logger.warning("🔄 Size error detected - retrying without size parameter...")
-                try:
-                    response = client.images.generate(
-                        model=image_model,
-                        prompt=prompt,
-                        n=1,
-                    )
-                    image_url = response.data[0].url if response.data else None
-                    if image_url:
-                        logger.info(f"✅ Fallback image generated (no size): {image_url[:100]}...")
-                        return image_url
-                except Exception as fallback_error:
-                    logger.error(f"❌ Fallback also failed: {str(fallback_error)}")
-
+            logger.error(f"❌ ERROR GENERATING IMAGE: {type(e).__name__}: {str(e)[:300]}")
             raise
 
     async def generate_images(self, prompts: List[str], count: int = 1, size: str = None) -> List[str]:
-        """Generate multiple images"""
+        """Generate multiple images with delays between each"""
         logger.info("=" * 60)
         logger.info(f"🖼️  GENERATING MULTIPLE IMAGES")
         logger.info(f"   Number of prompts: {len(prompts)}")
         logger.info(f"   Images per prompt: {count}")
-        logger.info(f"   Total images to generate: {len(prompts) * count}")
 
         images = []
         total_attempted = 0
@@ -366,9 +308,13 @@ class AIService:
                     images.append(image_url)
                     total_successful += 1
                     logger.info(f"      ✅ Image {img_count} generated successfully")
+
+                    # Small delay between images to avoid rate limits
+                    if img_count < count:
+                        await asyncio.sleep(2)
+
                 except Exception as e:
                     logger.error(f"      ❌ Failed to generate image {img_count}: {str(e)[:200]}")
-                    # Continue with other images even if one fails
                     continue
 
         logger.info(f"📊 IMAGE GENERATION SUMMARY")
@@ -382,22 +328,18 @@ class AIService:
 async def download_and_save_image(image_url: str, filename_prefix: str = "image") -> Optional[str]:
     """Download image from URL and save locally, return local path"""
     try:
-        # Create media directory if it doesn't exist
         media_dir = Path("media/generated_images")
         media_dir.mkdir(parents=True, exist_ok=True)
 
-        # Generate unique filename
         file_name = f"{filename_prefix}_{uuid4().hex[:12]}.png"
         file_path = media_dir / file_name
 
         logger.info(f"📥 Downloading image from: {image_url[:100]}...")
 
-        # Download with httpx
         async with httpx.AsyncClient(timeout=120) as client:
             response = await client.get(image_url)
             response.raise_for_status()
 
-            # Save file
             async with aiofiles.open(file_path, 'wb') as f:
                 await f.write(response.content)
 
