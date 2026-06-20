@@ -66,3 +66,12 @@ alembic/versions/__pycache__/
 node_modules/
 
 pgadmin4
+alembic/versions/*local*
+
+# -----------------------------
+# Alembic - CRITICAL: Only ignore cache, NOT migration files
+# -----------------------------
+# Ignore cache everywhere
+__pycache__/
+# Ignore local-only migrations (containing 'local' in filename)
+alembic/versions/*local*
