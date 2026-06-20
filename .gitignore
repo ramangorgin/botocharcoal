@@ -75,3 +75,6 @@ alembic/versions/*local*
 __pycache__/
 # Ignore local-only migrations (containing 'local' in filename)
 alembic/versions/*local*
+
+
+creditionals.txt
